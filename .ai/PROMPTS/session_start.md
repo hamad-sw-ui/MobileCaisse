@@ -1,0 +1,90 @@
+# 🚀 PROMPT DE DÉMARRAGE DE SESSION
+
+> À copier-coller tel quel au début de chaque nouvelle session.
+
+---
+
+```
+Tu es l'équipe technique officielle du dépôt MobileCaisse.
+
+Applique la procédure permanente :
+
+1. Lis TOUS les fichiers du dossier .ai/ — ils sont la source officielle de vérité.
+2. Analyse ensuite le code réel (app/src/...).
+3. Si le code a changé sans que la documentation soit à jour, mets d'abord .ai/ à jour.
+4. Lis .ai/CURRENT_TASK.md et exécute UNIQUEMENT cette tâche.
+5. Respecte .ai/CODING_RULES.md et .ai/ANDROID_RULES.md.
+6. Mets à jour .ai/PROGRESS.md et .ai/BACKLOG.md.
+7. Attends mes instructions avant de passer à la tâche suivante.
+
+Pour toute décision technique importante, raisonne successivement comme :
+Architecte logiciel, Développeur Android senior, Expert Kotlin, Expert Room,
+Expert Jetpack Compose, Expert Hilt, Expert SQL, Ingénieur QA, Expert sécurité,
+Ingénieur DevOps, Relecteur de code — puis seulement valide l'implémentation.
+
+Ne me propose pas un nouveau système de travail : celui-ci existe déjà et fait foi.
+```
+
+---
+
+## Ordre de lecture recommandé de `.ai/`
+
+Pour une session courte (économiser la fenêtre de contexte) :
+
+1. `CURRENT_TASK.md` — **la seule tâche autorisée**
+2. `PROGRESS.md` — dernière entrée uniquement (où en est-on)
+3. `CODING_RULES.md` + `ANDROID_RULES.md` — les règles
+4. Puis, **selon la nature de la tâche** :
+
+| Nature de la tâche | Lire en plus |
+|---|---|
+| Base de données, migration | `DATABASE.md`, `CHECKLISTS/migration_room.md` |
+| Sécurité, crypto, permissions | `SECURITY.md` |
+| Refactor, nouvelle couche | `ARCHITECTURE.md` |
+| Tests | `TEST_PLAN.md` |
+| Build, dépendances | `DEPENDENCIES.md` |
+| SMS, Bluetooth, impression, licence | `API.md` |
+| Correction de bug | `BUGS.md` |
+| Planification | `ROADMAP.md`, `BACKLOG.md` |
+
+`PROJECT_CONTEXT.md` et `MISSION.md` : à lire lors de la première session, puis
+en rappel si le contexte métier est perdu.
+
+---
+
+## Vérifications d'entrée de session
+
+```bash
+git status                    # l'arbre est-il propre ?
+git log --oneline -5          # qu'a fait la session précédente ?
+cat .ai/CURRENT_TASK.md       # que dois-je faire ?
+head -40 .ai/PROGRESS.md      # où en étions-nous ?
+```
+
+Puis contrôler la **dérive documentaire** :
+
+```bash
+# Le nombre d'entités correspond-il à DATABASE.md (22) ?
+ls app/src/main/java/com/reconsiliation/caisse/data/local/entity/ | wc -l
+
+# La version du schéma correspond-elle (28) ?
+grep -n "version = " app/src/main/java/com/reconsiliation/caisse/data/local/AppDatabase.kt
+
+# Le nombre de routes correspond-il à ARCHITECTURE.md (33) ?
+grep -c "data object" app/src/main/java/com/reconsiliation/caisse/ui/navigation/AppNavigation.kt
+```
+
+Toute divergence → **mettre `.ai/` à jour AVANT de coder** (règle 3).
+
+---
+
+## Clôture de session
+
+1. Renseigner l'entrée du jour dans `PROGRESS.md` (les 6 rubriques imposées).
+2. Cocher `☑` les tâches terminées dans `BACKLOG.md` et mettre à jour le tableau de synthèse.
+3. Mettre à jour `BUGS.md` si un bug a été corrigé ou découvert.
+4. Mettre à jour `ARCHITECTURE.md` / `DATABASE.md` / `DEPENDENCIES.md` si la
+   structure a changé.
+5. Remplacer `CURRENT_TASK.md` par la tâche suivante **seulement si elle a été validée**.
+6. Dérouler `CHECKLISTS/avant_commit.md`.
+7. Ajouter un journal dans `LOGS/`.
