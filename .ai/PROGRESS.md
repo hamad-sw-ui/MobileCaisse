@@ -6,6 +6,69 @@
 
 ---
 
+## 2026-07-28 — Session 9 : traitement des erreurs par cause racine (§19)
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **`CODING_RULES.md` §19** : ne jamais s'arrêter à la première erreur · classer
+  par cause racine · distinguer les dérivées · corriger ensemble les causes
+  indépendantes · ne recompiler qu'après traitement complet · rapport obligatoire.
+- **§19.7 — passe pré-compilation** : quand l'agent ne peut pas compiler,
+  anticiper les causes racines par analyse statique. Règle née de son
+  application immédiate.
+- **`PROMPTS/analyse_resultats_build.md`** mis à jour avec la méthode.
+
+### Application immédiate — 2 causes racines trouvées avant tout build
+- **CR-1** : mon `git mv` de la session précédente avait créé un **doublon de
+  861 Ko** (`brand_logo.png` en plus de `app_logo.png`). Erreur **dérivée** : les
+  `ic_launcher.xml` référencent `@drawable/app_logo` — nettoyer le mauvais
+  fichier plus tard aurait cassé l'icône de l'application. ✅ corrigé.
+- **CR-2** : mon propre test `aucune API superieure a l API 24` **aurait
+  échoué**. Il cherchait `"java.time."` dans tout le fichier, or mes commentaires
+  citent cette API pour expliquer pourquoi elle est bannie. Le test analysait
+  donc sa propre documentation. ✅ corrigé — analyse du code seul (commentaires
+  et KDoc retirés), vérifiée par simulation : 4/4 motifs absents.
+
+### 3 faux positifs écartés
+- `R.drawable.ic_dialog_*` → ce sont des `android.R.drawable.*` (ressources système) ;
+- accolade déséquilibrée dans le test → quantificateurs d'une regex ISO-8601 en
+  chaîne triple-quote ; la classe est correctement fermée ligne 457 ;
+- `AppCompat` dans `themes.xml` → uniquement dans un commentaire explicatif.
+
+### Fichiers modifiés
+```
+D app/src/main/res/drawable-nodpi/brand_logo.png   (doublon 861 Ko)
+M app/src/test/.../BackupManagerTest.kt            (CR-2)
+M .ai/CODING_RULES.md §19 · PROMPTS/analyse_resultats_build.md · CURRENT_TASK
+A .ai/REPORTS/analyse_erreurs_2026-07-28_pre_compilation.md
+```
+
+### Tests exécutés
+Aucun build. Vérification par **simulation Python** de la logique du test CR-2 :
+4/4 motifs interdits absents du code après filtrage des commentaires.
+
+### Problèmes rencontrés
+1. **Mes propres outils d'analyse produisent des faux positifs.** Le compteur de
+   délimiteurs ne gérait ni l'interpolation `${...}` ni les quantificateurs de
+   regex en chaîne triple-quote. Corrigé au fil de l'analyse — et c'est
+   précisément pourquoi §19 impose de **vérifier** avant de conclure.
+2. **CR-1 est une erreur que j'ai moi-même introduite** à la session précédente.
+   Un `git mv` vers un nom différent duplique au lieu de renommer lorsque la
+   cible n'existait pas encore sous ce nom.
+
+### Rétrospective *(§17)*
+- **A bien fonctionné** : la passe pré-compilation a trouvé une erreur que
+  j'avais introduite et un test qui se contredisait lui-même — sans compilateur.
+- **A ralenti** : rien ; ~15 min pour économiser ≈ 2 cycles de build.
+- **Erreur évitable** : CR-1, en vérifiant le résultat de `git mv` sur le coup.
+- **Nouvelle règle ?** ❌ Non. §19 couvre le cas. Conformément au mode
+  développement, aucune règle supplémentaire.
+
+### Étape suivante
+`make validate`. À réception : classement §19, correction groupée des causes
+indépendantes, une seule recompilation, puis rapport §19.6.
+
 ## 2026-07-28 — Session 8 : J0 terminé + pinSalt corrigé (mode développement)
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
