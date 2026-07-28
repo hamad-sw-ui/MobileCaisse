@@ -1,39 +1,29 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** ⏳ **Validation par compilation réelle** — action requise de votre part.
+**Tâche :** ⛔ **BLOCAGE — compilation requise sur votre machine.**
 
-Framework **gelé** (§20). Mode livraison : cette session a produit du code, pas
-des règles.
+Le chemin critique est déroulé jusqu'au bout de ce qui est faisable sans
+compilateur. **9 bugs** sont en attente de validation.
 
-## Chemin critique
+## Chemin critique — état
 
 | # | Étape | Statut |
 |---|---|---|
-| 0 | J0 — build propre | ✅ `CORRIGÉ (INSPECTION)` |
-| 1 | Valider `BackupManager` | ⏳ **attend `make validate`** |
-| 2 | Brancher `BackupManager` | 🟡 prérequis B-013 ✅ · B-157 ⏳ · tests ⏳ |
-| 3 | `pinSalt` | ✅ `CORRIGÉ (INSPECTION)` |
-| 5 | Développements fonctionnels | ⛔ après 2 |
+| 0 | J0 — build propre | ✅ écrit |
+| 1 | Valider `BackupManager` | ⛔ **compilation requise** |
+| 2 | Brancher `BackupManager` | ✅ écrit (A, B, C) |
+| 3 | `pinSalt` | ✅ écrit |
+| 4 | Terminer J0 | ✅ |
+| 5 | Développements fonctionnels | ⛔ **bloqué par 1** |
 
-## Livré cette session
+## Pourquoi je m'arrête ici
 
-**B-013 / BUG-011 — checkpoint WAL.** `PRAGMA wal_checkpoint(FULL)` avant toute
-copie, avec **échec explicite** si le checkpoint est bloqué : une sauvegarde
-silencieusement incomplète est pire qu'une absence de sauvegarde. Copie via
-fichier `.tmp` renommé en fin d'opération.
+9 bugs en `CORRIGÉ (INSPECTION)` : BUG-003, 011, 016, 017, 018, 019, 021, 022,
+023, 024, 025. **Aucune ligne n'a rencontré de compilateur.**
 
-**B-140 / B-156 / BUG-024 — restauration sûre.** La copie est intégralement
-écrite dans `cacheDir/restore_staging.db` et sa taille vérifiée **avant** que
-`db.close()` ne soit appelé. L'ancienne implémentation fermait la base en
-premier : un échec de copie laissait l'application sans base exploitable.
-Les fichiers `-wal`/`-shm` de l'ancienne base sont purgés.
-
-→ **Le prérequis bloquant de l'étape 2 (avis ❌ Expert Room) est levé.**
-
-Reste avant branchement : tests verts (étape 1) et **B-157** (protocole de
-vérification manuelle — exigence ❌ Expert QA).
-
----
+Poursuivre sur la roadmap fonctionnelle reviendrait à empiler du code non
+vérifié sur du code non vérifié — exactement le défaut qui a produit
+`BackupManager` (livré « fonctionnel », en réalité non compilable).
 
 ## ▶️ Commandes
 
@@ -43,9 +33,19 @@ make image && make verify
 make validate
 ```
 
-À réception : classement §19 par cause racine, correction groupée des causes
-indépendantes, **une seule** recompilation, rapport §19.6.
+**Attendu** : ~35 tests unitaires (26 `BackupManager` + 9 `BackupFormat`),
+plus les tests existants.
+
+À réception, j'applique §19 : classement par cause racine, correction groupée
+des causes indépendantes, **une seule** recompilation, rapport §19.6.
+
+## Après déblocage — file d'attente
+
+1. Étape 6 : retirer l'ancien mécanisme d'export non protégé
+2. B-070 : écran de gestion du personnel *(entité + DAO existent, aucune UI)*
+3. J1 : `exportSchema = true` + refonte de la chaîne de migrations
+4. B-090/091 : tests `SmsParser` et `FeeCalculator`
 
 ---
 
-*Mis à jour le 2026-07-28 (rév. 11 — framework gelé, mode livraison).*
+*Mis à jour le 2026-07-28 (rév. 12).*

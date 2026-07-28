@@ -6,6 +6,52 @@
 
 ---
 
+## 2026-07-28 — Session 11 : branchement de BackupManager (étape 5)
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **BUG-025** *(découvert en lisant le code)* : `generateCustomerStatement`
+  utilisait l'autorité `.provider` au lieu de `.fileprovider`. Crash garanti au
+  partage d'un relevé client. Les 5 appels `getUriForFile` sont désormais cohérents.
+- **B-157** : protocole de vérification manuelle des 6 chemins de sauvegarde
+  (avant/après). Lève l'objection ❌ bloquante de l'Expert QA.
+- **B-141** : `BackupFormat.detect()` par **signature binaire** — un ZIP renommé
+  `.db` reste détecté comme chiffré (risque R1). 9 tests.
+- **B-101 / BUG-017** : `BackupManager` branché sur A, B, C.
+  - Repository : `exportEncryptedBackup`, `importEncryptedBackup`,
+    `peekBackupMetadata`, `shareBackupFile`, `DATABASE_VERSION`.
+  - ViewModel : `BackupUiState` scellé, opérations sur `Dispatchers.IO`.
+  - UI : `BackupPasswordDialog` partagé (B-142) + avertissement non
+    contournable (B-143).
+  - **`ClosureScreen.backupDatabase()` supprimée** : accès fichier depuis un
+    Composable et export non chiffré.
+- Chemins D et E laissés en format brut : sans interface, aucun mot de passe
+  saisissable.
+
+### Fichiers modifiés
+```
+A utils/BackupFormat.kt + BackupFormatTest.kt (9 tests)
+A ui/components/BackupPasswordDialog.kt
+A .ai/CHECKLISTS/verification_sauvegarde.md
+M data/repository/MainRepository.kt   (+150 lignes)
+M ui/viewmodel/MainViewModel.kt       (BackupUiState + 4 fonctions)
+M ui/screens/SettingsScreen.kt · ClosureScreen.kt · RestorationWizardScreen.kt
+M .ai/BUGS.md · BACKLOG.md · CURRENT_TASK.md
+```
+
+### Tests exécutés
+Aucun build. Passe §19.7 sur 7 fichiers : délimiteurs équilibrés, imports
+vérifiés, aucune API interdite. **0 cause racine anticipée.**
+
+### Blocage
+⛔ **9 bugs en `CORRIGÉ (INSPECTION)`.** Sans compilation, poursuivre la roadmap
+fonctionnelle reviendrait à empiler du code non vérifié — le défaut même qui a
+produit `BackupManager`.
+
+### Étape suivante
+`make validate`, puis étape 6 (retrait de l'ancien mécanisme) et B-070.
+
 ## 2026-07-28 — Session 10 : gel du framework (§20) + B-013/B-140
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
