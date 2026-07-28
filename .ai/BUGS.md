@@ -5,7 +5,9 @@ Gravités : 🔴 CRITIQUE · 🟠 MAJEUR · 🟡 MINEUR
 
 > Recensés lors de l'audit du **2026-07-28**, **révisés le 2026-07-28 (rév. 2)**
 > après information du responsable sur un audit de sécurité antérieur
-> (GitHub Copilot + Gemini Code Assist).
+> (GitHub Copilot + Gemini Code Assist), puis **enrichis (rév. 3)** lors de
+> l'inspection ligne à ligne de `BackupManager` préalable à son branchement
+> (BUG-018 à BUG-021).
 
 ---
 
@@ -251,6 +253,92 @@ implémenté : l'app ignore les refus.
 
 ---
 
+## 🔴 BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
+
+**Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE *(nouveau — rév. 3)*
+**Fichier** : `utils/BackupManager.kt:233-270`
+
+`Cipher.doFinal()` en mode GCM retourne **déjà** `ciphertext || tag` concaténés.
+Le code extrait ensuite le tag *sans le retirer* du ciphertext :
+
+```kotlin
+val ciphertext = cipher.doFinal(plaintext)              // = CT || TAG
+val tag = ciphertext.takeLast(16).toByteArray()         // copie du TAG
+return EncryptedData(ciphertext = ciphertext, ...)      // CT || TAG stocké entier
+```
+
+Au déchiffrement, le tag est concaténé une **seconde** fois :
+
+```kotlin
+val input = ciphertext + tag        // = CT || TAG || TAG
+return cipher.doFinal(input)        // → AEADBadTagException
+```
+
+**Conséquence** : `importBackupWithPassword` échoue **systématiquement**, avec le
+message trompeur « Mot de passe incorrect ou sauvegarde corrompue » — même avec
+le bon mot de passe. Toute sauvegarde produite est **irrécupérable**.
+
+**Non détecté jusqu'ici** parce que le module n'est appelé par personne (BUG-017)
+et n'a aucun test unitaire.
+
+**Correction** : ne stocker que le ciphertext nu, ou ne pas ré-ajouter le tag au
+déchiffrement. Option la plus simple et la plus sûre : supprimer entièrement la
+gestion manuelle du tag, `doFinal` s'en charge.
+
+---
+
+## 🟠 BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
+
+**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 3)*
+**Fichier** : `utils/BackupManager.kt:114-118`
+
+```kotlin
+// Add encrypted database      ← le commentaire est faux
+zip.putNextEntry(ZipEntry("database.db"))
+zip.write(dbBytes)             ← octets bruts, aucun appel à encryptAesGcm
+```
+
+Seules les **métadonnées** sont chiffrées par la clé dérivée du mot de passe.
+Le fichier de base est écrit tel quel dans le ZIP.
+
+**Nuance** : le `.db` reste chiffré par SQLCipher, la fuite n'est donc pas
+immédiate. Mais la promesse « sauvegarde protégée par mot de passe » n'est pas
+tenue : la protection réelle repose toujours sur le seul `managerCode`.
+
+**Correction** : chiffrer `dbBytes` avec `backupKey` avant écriture, et
+déchiffrer symétriquement à l'import. À traiter avec BUG-018.
+
+---
+
+## 🟠 BUG-020 — `java.time.Instant` incompatible avec minSdk 24
+
+**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 3)*
+**Fichiers** : `utils/BackupManager.kt:13,77`, `app/build.gradle.kts`
+
+`Instant.now()` requiert **API 26**. Le projet déclare `minSdk = 24` et
+`coreLibraryDesugaring` **n'est pas activé** (vérifié dans `build.gradle.kts`).
+
+**Conséquence** : `NoClassDefFoundError` sur Android 7.0 / 7.1 dès le premier
+export. Là encore masqué par BUG-017.
+
+**Correction** : activer le desugaring, ou remplacer par
+`System.currentTimeMillis()` / `SimpleDateFormat` (cohérent avec le reste du
+projet, qui utilise `java.util.Date` partout).
+
+---
+
+## 🟡 BUG-021 — `BackupMetadata.databaseVersion` figé à 27
+
+**Statut** : OUVERT · **Gravité** : 🟡 MINEUR *(nouveau — rév. 3)*
+**Fichier** : `utils/BackupManager.kt:28,81`
+
+`databaseVersion: Int = 27` en dur, alors que le schéma est en **v28**. La
+métadonnée censée permettre de refuser une sauvegarde incompatible est fausse.
+
+**Correction** : lire la version réelle depuis `AppDatabase`.
+
+---
+
 ## 🟠 BUG-017 — La sauvegarde chiffrée `BackupManager` n'est branchée nulle part
 
 **Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 2)*
@@ -323,6 +411,60 @@ les trois fichiers, ou utiliser l'API de sauvegarde SQLCipher.
 Deux classes homonymes avec des canaux différents (`mobile_caisse_alerts` d'un
 côté, `stock_alerts`/`subscription_alerts` de l'autre). `SmsReceiver` utilise la
 première, `MainViewModel` et `SubscriptionWorker` la seconde. Confusion garantie.
+
+---
+
+## 🟠 BUG-022 — Contradiction `staff.pinSalt` : NOT NULL en migration vs nullable en logique
+
+**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(analysé — rév. 3)*
+**Fichiers** : `AppDatabase.kt:71` (MIGRATION_25_26), `entity/StaffEntity.kt:11`, `MainViewModel.kt:495`
+
+### Les trois sources
+| Source | Déclaration |
+|---|---|
+| `MIGRATION_25_26` | `pinSalt TEXT **NOT NULL**` |
+| `StaffEntity` | `val pinSalt: String? = null` → **nullable** |
+| `MainViewModel.checkPin:495` | `if (staff.pinSalt == null) { … re-hash PBKDF2 … }` |
+
+### Verdict : **c'est la migration qui a tort**
+
+Deux arguments concordants, et un troisième décisif :
+
+1. **La logique métier exige `null`.** La migration paresseuse des PIN
+   (correctif de sécurité n°5) utilise `pinSalt == null` comme **marqueur** d'un
+   hash legacy SHA-256 à convertir en PBKDF2. `SecurityUtil.verifyPin(pin, hash,
+   salt)` suit la même convention : `savedSalt != null` → PBKDF2, sinon → SHA-256
+   legacy. Avec `NOT NULL`, ce marqueur devient inexprimable et **la migration
+   paresseuse ne peut plus jamais se déclencher**.
+2. **`BoutiqueEntity` fait déjà autorité.** `pinHash` et `pinSalt` y sont tous
+   deux nullables, et le même mécanisme y fonctionne (`MainViewModel:526`).
+   La table `staff` est l'anomalie.
+3. **`NOT NULL` sans `DEFAULT` est de toute façon invalide** ici : la migration
+   crée la table pour des comptes qui n'ont pas encore de sel. Toute insertion
+   d'un compte legacy échouerait avec une contrainte violée.
+
+### Correction retenue
+Aligner la **migration** sur l'entité : `pinSalt TEXT` (nullable).
+Au passage, la même migration déclare `permissions` et `createdAt` qui
+n'existent pas dans `StaffEntity`, et omet `phone` qui y figure — cela relève de
+la refonte globale de la chaîne (BUG-001, décision J1.3 : refonte complète).
+
+**Schéma cible conforme à `StaffEntity`** :
+```sql
+CREATE TABLE IF NOT EXISTS `staff` (
+  `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+  `name` TEXT NOT NULL,
+  `pinHash` TEXT NOT NULL,
+  `pinSalt` TEXT,                      -- nullable : marqueur de hash legacy
+  `phone` TEXT,
+  `isActive` INTEGER NOT NULL,
+  `role` TEXT NOT NULL
+)
+```
+
+⚠️ **Aucune base réelle n'existe** (confirmé par le responsable) : la correction
+peut se faire directement dans la refonte de la chaîne, sans migration
+corrective ni conservation de données.
 
 ---
 
