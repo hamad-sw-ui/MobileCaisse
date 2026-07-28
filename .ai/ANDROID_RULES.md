@@ -99,6 +99,16 @@ Complément de `CODING_RULES.md`, ciblé plateforme.
 - `proguard-rules.pro` référencé dans `build.gradle.kts` **doit exister**.
 - `gradlew` doit être exécutable (`git update-index --chmod=+x gradlew`).
 
+## 9bis. Environnement Docker obligatoire  *(Phase 6)*
+
+- **Toute** compilation, analyse ou exécution de tests unitaires se fait dans
+  `docker/` — voir `.ai/DEV_ENVIRONMENT.md`.
+- Ne jamais lancer `./gradlew` directement sur l'hôte pour valider une
+  modification : le résultat ne serait pas reproductible.
+- Utiliser `sh ./gradlew` (le wrapper n'est pas exécutable — B-001).
+- Expérimentations : `make sandbox` uniquement, jamais dans le dépôt principal.
+- Exception : tests instrumentés sur appareil réel (`make instrumented`).
+
 ## 10. Qualité & outillage
 
 - `./gradlew lint` sans erreur bloquante avant toute PR.

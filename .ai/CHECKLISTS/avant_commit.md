@@ -5,27 +5,40 @@ Une case non cochable = on ne committe pas, ou on documente pourquoi.
 
 ---
 
-## 1. ☐ Compile
+## 0. ☐ Environnement Docker validé  *(Phase 6 — préalable obligatoire)*
 
 ```bash
-./gradlew assembleDebug
+make verify
 ```
 
-- [ ] La compilation réussit
+- [ ] `verify-env.sh` se termine par « Environnement validé »
+- [ ] `.ai/REPORTS/rapport_environnement_*.md` produit
+
+⛔ Si l'environnement est invalide : **ne pas modifier le code**.
+
+## 1. ☐ Compile  *(dans Docker)*
+
+```bash
+make build          # ou : ./docker/scripts/build.sh debug
+```
+
+- [ ] La compilation réussit **dans le conteneur**
 - [ ] Le module `:app` est bien construit
 - [ ] KSP a généré les classes Room sans erreur
+- [ ] `.ai/REPORTS/rapport_compilation_*.md` produit
 
-⚠️ **Environnement de l'agent** : ni JDK ni SDK Android disponibles.
+⚠️ **Environnement de l'agent** : ni Docker, ni JDK, ni SDK Android.
 Si la compilation n'a pas pu être exécutée, l'écrire **explicitement** dans
 `PROGRESS.md` (« non compilé — vérification statique uniquement »).
 **Ne jamais affirmer qu'un code compile sans l'avoir prouvé.**
 
-## 2. ☐ Aucun warning critique
+## 2. ☐ Aucun warning critique  *(dans Docker)*
 
 ```bash
-./gradlew assembleDebug --warning-mode all
-./gradlew lint
+make lint           # Android Lint + ktlint + detekt
 ```
+
+- [ ] `.ai/REPORTS/rapport_avertissements_*.md` et `rapport_qualite_*.md` produits
 
 - [ ] Aucun warning Kotlin nouveau introduit par le diff
 - [ ] Aucune erreur Android Lint de sévérité `Error`
@@ -35,9 +48,11 @@ Si la compilation n'a pas pu être exécutée, l'écrire **explicitement** dans
 ## 3. ☐ Tests réussis
 
 ```bash
-./gradlew test
-./gradlew connectedAndroidTest   # si un appareil est disponible
+make test           # unitaires — DANS Docker
+make instrumented   # instrumentés — HORS Docker, appareil requis (§7)
 ```
+
+- [ ] `.ai/REPORTS/rapport_tests_*.md` et `rapport_couverture_*.md` produits
 
 - [ ] Tous les tests unitaires passent
 - [ ] Les tests de migration passent (si le schéma a changé)
@@ -111,6 +126,17 @@ chore(build): déplacer sqlcipher vers le version catalog
 - [ ] Le bug ou la tâche est référencé (`BUG-001`, `B-010`)
 
 ---
+
+## 8bis. ☐ Chaîne de validation complète  *(Phase 6)*
+
+```bash
+make validate
+```
+
+- [ ] Verdict « ✅ VALIDATION RÉUSSIE » dans `.ai/REPORTS/rapport_validation_*.md`
+- [ ] Aucune étape en échec
+
+⛔ **Aucun code n'est « terminé » sans ce verdict.**
 
 ## 9. ☐ Branche
 

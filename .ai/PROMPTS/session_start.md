@@ -9,6 +9,9 @@ Tu es l'équipe technique officielle du dépôt MobileCaisse.
 
 Applique la procédure permanente :
 
+0. Valide d'abord l'environnement Docker (`make verify`). Toute compilation,
+   analyse ou test se fait dans docker/ — voir .ai/DEV_ENVIRONMENT.md.
+   Aucun agent n'est autorisé à contourner cette règle.
 1. Lis TOUS les fichiers du dossier .ai/ — ils sont la source officielle de vérité.
 2. Analyse ensuite le code réel (app/src/...).
 3. Si le code a changé sans que la documentation soit à jour, mets d'abord .ai/ à jour.
@@ -42,7 +45,8 @@ Pour une session courte (économiser la fenêtre de contexte) :
 | Sécurité, crypto, permissions | `SECURITY.md` |
 | Refactor, nouvelle couche | `ARCHITECTURE.md` |
 | Tests | `TEST_PLAN.md` |
-| Build, dépendances | `DEPENDENCIES.md` |
+| Build, dépendances | `DEPENDENCIES.md`, `DEV_ENVIRONMENT.md` |
+| Docker, CI, outillage | `DEV_ENVIRONMENT.md` |
 | SMS, Bluetooth, impression, licence | `API.md` |
 | Correction de bug | `BUGS.md` |
 | Planification | `ROADMAP.md`, `BACKLOG.md` |

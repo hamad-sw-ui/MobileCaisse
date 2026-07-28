@@ -1,99 +1,56 @@
 # 🎯 TÂCHE EN COURS
 
 **Tâche :**
-**Pré-jalon 0 — Fiabiliser puis brancher `BackupManager`** (priorité fixée par le
-responsable le 2026-07-28), puis **corriger la contradiction `staff.pinSalt`**.
+**Jalon D — Environnement Docker (Phase 6)** : livré, **en attente de première
+exécution par le responsable**.
 
-⛔ **BLOCAGE SIGNALÉ — en attente d'arbitrage.**
-La cartographie demandée est faite (voir ci-dessous), mais l'inspection ligne à
-ligne de `BackupManager` avant branchement a révélé **3 défauts bloquants**.
-Brancher le module en l'état produirait des sauvegardes **irrécupérables**.
+⛔ **BLOCAGE — action requise de votre part.**
+L'environnement de l'agent n'a **ni Docker, ni JDK, ni SDK Android**
+(`docker: command not found`, `java: command not found`). L'environnement est
+écrit et vérifié syntaxiquement, mais **jamais exécuté**.
 
-| Réf. | Bug | Gravité |
-|---|---|---|
-| B-120 | AES-GCM : tag concaténé 2× → tout import échoue *(BUG-018)* | 🔴 |
-| B-121 | La base n'est pas chiffrée par le mot de passe, seules les métadonnées le sont *(BUG-019)* | 🟠 |
-| B-122 | `java.time.Instant` = API 26, incompatible minSdk 24 sans desugaring *(BUG-020)* | 🟠 |
-| B-123 | `databaseVersion = 27` en dur alors que le schéma est en v28 *(BUG-021)* | 🟡 |
+```bash
+cd MobileCaisse
+make image     # ~5-10 min la première fois
+make verify    # doit conclure « Environnement validé »
+```
 
-**Ordre d'exécution proposé :**
-1. B-120 → B-123 : réparer `BackupManager`
-2. B-124 : tests unitaires (aller-retour, mauvais mot de passe, archive corrompue)
-3. B-101 : brancher sur `RestorationWizardScreen`, `SettingsScreen`, `ClosureScreen`
-4. B-125 : corriger `staff.pinSalt` (verdict rendu : c'est la **migration** qui a tort)
-5. Puis **J0**
+Puis me transmettre la sortie.
 
 **Objectif :**
-Remplacer l'export/import non protégé par un mécanisme réellement chiffré par
-mot de passe utilisateur, **vérifié par des tests**, sans perdre aucune
-fonctionnalité existante.
+Disposer d'un environnement de build reproductible et **prouvé fonctionnel**,
+préalable obligatoire à toute modification de code (Phase 6).
 
 **Contraintes :**
-- **Aucune régression** sur les 4 parcours de sauvegarde existants.
-- **Mot de passe saisi manuellement à chaque export** (décision D2-C) —
-  jamais dérivé du `managerCode`.
-- Ne pas régresser les 5 correctifs de sécurité déjà en place.
-- Ne pas toucher aux noms de fonctions internes (décision B-110).
-- ⚠️ Environnement sans JDK/SDK : je fournis les commandes, le responsable
-  exécute (D4).
+- Aucune modification de code de production tant que `make verify` n'a pas réussi.
+- ⚠️ `make validate` échouera **probablement** à la compilation à cause de
+  **BUG-003** (`androidx.appcompat` utilisé mais non déclaré). C'est **attendu**
+  et utile : première preuve objective d'un défaut jusqu'ici établi par lecture
+  seule. Sa correction est **B-003**, première tâche de J0.
+- Ne pas régresser les 5 correctifs de sécurité vérifiés (voir `SECURITY.md` §0).
 
 ---
 
-## Cartographie demandée : qui appelle l'export/import aujourd'hui
+## File d'attente validée (après déblocage de l'environnement)
 
-### Chemin A — Export manuel (Paramètres) 🎯 *cible principale*
-```
-SettingsScreen.kt:119   Button « Sauvegarder / Migrer (DB) »
-  └─ MainViewModel.kt:463  syncToCloud(context)
-       └─ MainRepository.kt:889  syncToCloud()
-            ├─ copie brute du .db dans cacheDir
-            └─ Intent.ACTION_SEND  « Synchroniser vers le Cloud / Email »
-```
+| # | Tâche | Réf. | Décision |
+|---|---|---|---|
+| 1 | Réparer `BackupManager` : AES-GCM, chiffrement de la base, `Instant`, version | B-120→B-123 | ⏳ arbitrage en attente |
+| 2 | Tests unitaires `BackupManager` | B-124 | |
+| 3 | Brancher `BackupManager` sur les chemins A, B, C | B-101 | demandé |
+| 4 | Corriger `staff.pinSalt` (la **migration** a tort) | B-125 | verdict rendu |
+| 5 | **J0** — build propre, nettoyage, `ComponentActivity` + Material3, B-110 | B-001→B-008, B-100 | D3, B-003, B-110 |
+| 6 | **J1.1 + J1.2** — `exportSchema` + harnais `MigrationTestHelper` | B-009, B-012 | D3 |
+| 7 | **J1.3** — refonte complète de la chaîne de migrations | B-010 | J1.3 |
 
-### Chemin B — Export depuis la clôture 🎯 *cible*
-```
-ClosureScreen.kt:144    Button « Sauvegarde Totale (.db) »
-  └─ ClosureScreen.kt:198  fun backupDatabase(context)   ← fonction LOCALE à l'écran,
-                                                            hors ViewModel/Repository
-       ├─ dbFile.copyTo(...)
-       └─ Intent.ACTION_SEND
-```
-⚠️ Viole MVVM : accès direct au système de fichiers depuis un Composable.
-
-### Chemin C — Restauration manuelle 🎯 *cible principale*
-```
-RestorationWizardScreen.kt:112   Assistant 2 étapes (choix fichier → confirmation)
-  └─ MainViewModel.kt:433  restoreDatabase(tempFile)
-       └─ MainRepository.kt:801  restoreDatabase()  → db.close() + copie brute
-```
-
-### Chemin D — Restauration du miroir au premier lancement
-```
-SetupScreen.kt:148   Dialog « Anciennes données trouvées »
-  └─ MainRepository.restoreDatabase(context, caisse_mirror.db)
-```
-⚠️ Miroir interne produit par `BackupWorker` : **doit rester au format brut**
-(pas de mot de passe utilisateur disponible en arrière-plan).
-
-### Chemin E — Sauvegarde automatique quotidienne
-```
-BackupWorker.kt:23,30   → MainRepository.backupDatabase()  ×2
-```
-⚠️ **Ne pas migrer vers `BackupManager`** : aucun mot de passe saisissable dans
-un worker. Reste une copie locale, protégée par SQLCipher.
-
-### Synthèse
-| Chemin | Action | Motif |
-|---|---|---|
-| A — Paramètres | ✅ migrer vers `BackupManager` | export sortant de l'appareil |
-| B — Clôture | ✅ migrer + remonter dans le ViewModel | export sortant |
-| C — Assistant restauration | ✅ migrer vers `BackupManager` | import d'archive |
-| D — Miroir au setup | ❌ conserver | pas de mot de passe disponible |
-| E — Worker quotidien | ❌ conserver | pas de mot de passe disponible |
-
-Les chemins C et D devront **détecter le format** (ZIP `BackupManager` vs `.db`
-brut) pour rester rétrocompatibles.
+### Arbitrages toujours en attente
+1. **`BackupManager` cassé** — je répare (B-120→B-124) avant de brancher, ou je
+   branche d'abord ? *(recommandation : réparer d'abord — brancher un module
+   cassé produirait des sauvegardes irrécupérables)*
+2. **BUG-019** — chiffrer la base avec le mot de passe (archive protégée en
+   propre, mémoire ×2 pendant l'opération), ou s'en tenir à SQLCipher et
+   corriger seulement le libellé ?
 
 ---
 
-*Mis à jour le 2026-07-28 (rév. 3).*
+*Mis à jour le 2026-07-28 (rév. 4 — Phase 6).*

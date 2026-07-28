@@ -1,0 +1,30 @@
+# Surcouche DÉVELOPPEMENT — MobileCaisse
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.dev.yml run --rm dev
+#
+# Différences avec le socle :
+#   - shell interactif de longue durée ;
+#   - daemon Gradle ACTIVÉ (itérations rapides) — acceptable en dev, jamais en test ;
+#   - accès ADB à un appareil/émulateur de l'hôte (voir DEV_ENVIRONMENT.md §7).
+
+name: mobilecaisse
+
+services:
+  dev:
+    extends:
+      file: docker-compose.yml
+      service: android
+    container_name: mobilecaisse-dev
+    environment:
+      GRADLE_USER_HOME: /home/builder/.gradle
+      # En dev on privilégie la vitesse : daemon + cache de configuration.
+      GRADLE_OPTS: >-
+        -Dorg.gradle.daemon=true
+        -Dorg.gradle.jvmargs=-Xmx2g
+        -Dkotlin.compiler.execution.strategy=in-process
+        -Dfile.encoding=UTF-8
+      # Permet à adb dans le conteneur de parler au serveur adb de l'hôte.
+      ADB_SERVER_SOCKET: tcp:host.docker.internal:5037
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    command: ["bash"]

@@ -1,6 +1,18 @@
 # ✅ CHECKLIST — AVANT PULL REQUEST
 
-Prérequis : `avant_commit.md` déroulée pour **chaque** commit de la branche.
+Prérequis : `avant_commit.md` déroulée pour **chaque** commit de la branche,
+et `make validate` conclu par « ✅ VALIDATION RÉUSSIE ».
+
+## 0. ☐ Preuves de validation Docker  *(Phase 6)*
+
+- [ ] `.ai/REPORTS/rapport_validation_*.md` — verdict positif, joint à la PR
+- [ ] `.ai/REPORTS/rapport_compilation_*.md`
+- [ ] `.ai/REPORTS/rapport_tests_*.md`
+- [ ] `.ai/REPORTS/rapport_avertissements_*.md`
+- [ ] `.ai/REPORTS/rapport_couverture_*.md`
+- [ ] `.ai/REPORTS/rapport_qualite_*.md`
+- [ ] Tests instrumentés exécutés sur appareil si le diff touche
+      SQLCipher / Keystore / migrations → `rapport_tests_instrumentes_*.md`
 
 ---
 

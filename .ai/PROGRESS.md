@@ -6,6 +6,80 @@
 
 ---
 
+## 2026-07-28 — Session 3 : Phase 6, environnement Docker
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **Analyse de valeur préalable** (demandée) : Docker évalué étape par étape.
+  Retenu pour compilation, tests unitaires, qualité, packaging.
+  **Écarté avec justification** pour l'instrumentation et l'émulateur.
+  Argument décisif trouvé dans le dépôt : `.kotlin/errors/*.log` révèle
+  **3 versions de Kotlin** (2.0.21, 2.2.10) contre 2.1.0 déclarée — preuve
+  matérielle que le projet a été bâti depuis des environnements divergents.
+- **Contrainte critique identifiée** : `gradle/gradle-daemon-jvm.properties`
+  impose `toolchainVersion=21` → **JDK 21 obligatoire**, alors que le code cible
+  `jvmTarget = 11`. Une image JDK 17 aurait échoué.
+- **`docker/` créé** : Dockerfile (JDK 21 Temurin, SDK 35, build-tools 35.0.0,
+  bundletool, ktlint, detekt, jacococli, git), 3 fichiers compose
+  (socle / dev / test+sandbox), 13 scripts, `.dockerignore`, README.
+- **`Makefile`** à la racine : 16 cibles (`make help`).
+- **`.ai/DEV_ENVIRONMENT.md`** : analyse de valeur, architecture, usage,
+  exception instrumentation, rapports, dépannage, interaction avec les défauts connus.
+- **Intégration au framework** : `avant_commit.md` (étape 0 « environnement
+  validé » + étape 8bis « chaîne complète »), `avant_pull_request.md` (§0
+  preuves de validation), `ANDROID_RULES.md` (§9bis), `README.md`,
+  `PROMPTS/session_start.md` (étape 0), `BACKLOG.md` (P6), `ROADMAP.md` (jalon D).
+
+### Décisions de conception notables
+- **Le code n'est pas copié dans l'image** : contexte de build limité à
+  `docker/`, dépôt monté en volume ⇒ modifier le code ne reconstruit jamais l'image.
+- **Gradle n'est pas installé** : le wrapper télécharge la version exacte (9.5.0).
+  Installer un Gradle système recréerait la divergence à éliminer.
+- **Kotlin non installé en binaire système** : fourni par le plugin Gradle 2.1.0.
+- **`sh ./gradlew`** partout : contourne B-001 sans modifier de fichier monté.
+- **`kotlin.compiler.execution.strategy=in-process`** : neutralise les échecs de
+  daemon Kotlin observés dans `.kotlin/errors/`.
+- **`configuration-cache=false`** en profil test : contourne B-006.
+
+### Fichiers modifiés
+Aucun code de production. Créations :
+```
+docker/Dockerfile, .dockerignore, README.md
+docker/docker-compose{,.dev,.test}.yml
+docker/scripts/*.sh                       (13 scripts, tous `bash -n` OK)
+Makefile
+.ai/DEV_ENVIRONMENT.md
+```
+Mises à jour : `.ai/README.md`, `ANDROID_RULES.md`, `BACKLOG.md`, `ROADMAP.md`,
+`CURRENT_TASK.md`, `CHECKLISTS/avant_commit.md`, `CHECKLISTS/avant_pull_request.md`,
+`PROMPTS/session_start.md`.
+
+### Tests exécutés
+- ✅ `bash -n` sur les **13 scripts** — aucune erreur de syntaxe.
+- ❌ **Image jamais construite, chaîne jamais exécutée** : `docker: command not
+  found` dans l'environnement de l'agent. Conformément à D4, la première
+  exécution revient au responsable.
+
+### Problèmes rencontrés
+1. **Docker indisponible côté agent** → livraison vérifiable syntaxiquement
+   seulement. Signalé explicitement dans `DEV_ENVIRONMENT.md` §10.
+2. **Couverture non mesurable en l'état** : `jacococli` est dans l'image, mais la
+   collecte exige un **plugin Gradle JaCoCo** absent du projet. Le rapport le
+   signale au lieu d'inventer un chiffre (B-136).
+3. **ktlint/detekt ne bloquent pas encore la chaîne** : sans ligne de base, le
+   code n'ayant jamais été formaté, tout bloquer stopperait chaque build (B-135).
+4. **BUG-003 fera échouer `make validate`** — anticipé et documenté comme
+   résultat attendu.
+
+### Étape suivante
+**B-133 (responsable)** : `make image && make verify`, puis transmission de la
+sortie. Ensuite, file d'attente de `CURRENT_TASK.md` : réparation de
+`BackupManager` → branchement → `pinSalt` → J0 → J1.
+
+Deux arbitrages restent en attente (réparation de `BackupManager` avant
+branchement ; portée de la correction BUG-019).
+
 ## 2026-07-28 — Session 2 : décisions D1–D4 et révision de l'audit
 
 **Date** : 2026-07-28

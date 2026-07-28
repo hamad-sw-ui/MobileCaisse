@@ -1,0 +1,53 @@
+# Surcouche TEST / CI — MobileCaisse
+#
+#   docker compose -f docker/docker-compose.yml -f docker/docker-compose.test.yml run --rm test
+#
+# Conçue pour la validation : environnement PROPRE et JETABLE.
+#   - conteneur éphémère (--rm), aucun état conservé entre deux exécutions ;
+#   - daemon Gradle DÉSACTIVÉ : chaque build repart d'une JVM neuve ;
+#   - cache de configuration désactivé : évite les faux positifs
+#     (voir BACKLOG B-006 — instabilité configuration-cache + Gradle 9.5 + KSP) ;
+#   - mode --offline possible via GRADLE_EXTRA_ARGS pour prouver l'hermétisme.
+
+name: mobilecaisse
+
+services:
+  test:
+    extends:
+      file: docker-compose.yml
+      service: android
+    environment:
+      GRADLE_USER_HOME: /home/builder/.gradle
+      GRADLE_OPTS: >-
+        -Dorg.gradle.daemon=false
+        -Dorg.gradle.jvmargs=-Xmx2g
+        -Dkotlin.compiler.execution.strategy=in-process
+        -Dorg.gradle.configuration-cache=false
+        -Dfile.encoding=UTF-8
+      CI: "true"
+    # Chaîne de validation complète imposée par la Phase 6.
+    command: ["bash", "docker/scripts/validate.sh"]
+
+  # Conteneur d'EXPÉRIMENTATION jetable.
+  # Le code est monté en LECTURE SEULE : impossible de polluer le dépôt.
+  # Les écritures vont dans des tmpfs détruits avec le conteneur.
+  sandbox:
+    extends:
+      file: docker-compose.yml
+      service: android
+    volumes:
+      - ../:/workspace:ro
+      - gradle-cache:/home/builder/.gradle
+      - android-cache:/opt/android-sdk/.android
+    tmpfs:
+      - /tmp:size=2g
+      - /workspace-tmp:size=4g
+    environment:
+      GRADLE_USER_HOME: /home/builder/.gradle
+      GRADLE_OPTS: >-
+        -Dorg.gradle.daemon=false
+        -Dorg.gradle.jvmargs=-Xmx2g
+        -Dkotlin.compiler.execution.strategy=in-process
+        -Dfile.encoding=UTF-8
+      SANDBOX: "true"
+    command: ["bash", "docker/scripts/sandbox.sh"]

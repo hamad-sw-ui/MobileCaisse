@@ -9,8 +9,22 @@ le contexte complet du dépôt **sans ré-analyser 12 000 lignes de Kotlin**.
 
 ---
 
+## 🐳 Préalable absolu : l'environnement Docker
+
+Depuis la Phase 6, **aucune compilation ni aucun test ne se fait hors Docker**.
+
+```bash
+make verify      # AVANT toute modification
+make validate    # APRÈS chaque modification
+```
+
+Documentation : [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md).
+
+---
+
 ## 🚦 Procédure obligatoire à chaque session
 
+0. **Valider l'environnement Docker** (`make verify`).
 1. **Lire tous les fichiers de `.ai/`** — ils font foi.
 2. **Analyser ensuite le code réel** (`app/src/...`).
 3. **Si le code a divergé de la documentation → mettre `.ai/` à jour EN PREMIER**,
@@ -44,6 +58,7 @@ Prompt de démarrage prêt à copier : [`PROMPTS/session_start.md`](PROMPTS/sess
 | `DEPENDENCIES.md` | Dépendances, versions, risques | À chaque `libs.versions.toml` modifié |
 | `SECURITY.md` | Modèle de menace et posture sécurité | À chaque changement crypto/permission |
 | `TEST_PLAN.md` | Stratégie et couverture de tests | À chaque nouveau test |
+| `DEV_ENVIRONMENT.md` | **Environnement Docker obligatoire** (Phase 6) | À chaque changement d'outillage |
 | `PROMPTS/` | Prompts réutilisables (démarrage, revue, rôles) | Rare |
 | `CHECKLISTS/` | Contrôles avant commit / avant PR / avant release | Rare |
 | `REPORTS/` | Modèles + rapports datés générés au fil du projet | À la demande |

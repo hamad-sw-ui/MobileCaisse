@@ -1,0 +1,50 @@
+# Socle commun — MobileCaisse
+#
+# Toujours invoqué depuis la racine du dépôt via les scripts de docker/scripts/,
+# ou manuellement :
+#   docker compose -f docker/docker-compose.yml ... 
+#
+# Les caches Gradle et Android sont des volumes nommés : ils survivent à la
+# destruction des conteneurs (builds rapides) mais restent hors du dépôt.
+
+name: mobilecaisse
+
+services:
+  # Service de référence : compilation, analyses, tests unitaires.
+  android:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Aligne l'UID/GID du conteneur sur ceux de l'hôte pour que les fichiers
+        # générés (build/, rapports) n'appartiennent pas à root.
+        USER_UID: ${USER_UID:-1000}
+        USER_GID: ${USER_GID:-1000}
+    image: mobilecaisse/android-build:1.0.0
+    working_dir: /workspace
+    volumes:
+      # Le code source, monté en lecture-écriture (Gradle écrit dans build/).
+      - ../:/workspace:rw
+      # Caches persistants : sans eux, chaque build retélécharge Gradle 9.5 et
+      # toutes les dépendances (~10 min contre ~30 s).
+      - gradle-cache:/home/builder/.gradle
+      - android-cache:/opt/android-sdk/.android
+    environment:
+      GRADLE_USER_HOME: /home/builder/.gradle
+      # Le daemon Kotlin échoue régulièrement en conteneur contraint
+      # (voir .kotlin/errors/*.log du dépôt) : compilation in-process.
+      GRADLE_OPTS: >-
+        -Dorg.gradle.daemon=false
+        -Dorg.gradle.jvmargs=-Xmx2g
+        -Dkotlin.compiler.execution.strategy=in-process
+        -Dfile.encoding=UTF-8
+    # Un shell interactif par défaut ; les scripts surchargent la commande.
+    command: ["bash"]
+    tty: true
+    stdin_open: true
+
+volumes:
+  gradle-cache:
+    name: mobilecaisse-gradle-cache
+  android-cache:
+    name: mobilecaisse-android-cache

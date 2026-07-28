@@ -13,3 +13,18 @@
 .externalNativeBuild
 .cxx
 local.properties
+
+# Rapports générés par la chaîne de validation Docker (horodatés, non versionnés).
+# Les MODÈLES et les rapports d'analyse rédigés à la main restent versionnés.
+.ai/REPORTS/rapport_compilation_*.md
+.ai/REPORTS/rapport_tests_*.md
+.ai/REPORTS/rapport_couverture_*.md
+.ai/REPORTS/rapport_qualite_*.md
+.ai/REPORTS/rapport_avertissements_*.md
+.ai/REPORTS/rapport_validation_*.md
+.ai/REPORTS/rapport_environnement_*.md
+.ai/REPORTS/rapport_experimentation_*.md
+.ai/REPORTS/rapport_tests_instrumentes_*.md
+
+# Sortie des analyses statiques
+build/quality/

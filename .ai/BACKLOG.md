@@ -98,6 +98,17 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)
 - □ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)*
 
+## P6 — Environnement Docker *(livré 2026-07-28, à valider)*
+
+- ☑ **B-130** Créer `docker/` : Dockerfile (JDK 21 + SDK 35 + build-tools 35), 3 compose, 13 scripts
+- ☑ **B-131** Documenter dans `.ai/DEV_ENVIRONMENT.md` (analyse de valeur, usage, exceptions)
+- ☑ **B-132** Intégrer Docker aux checklists et règles `.ai/`
+- □ **B-133** 🔴 **Première exécution par le responsable** : `make image && make verify` *(bloquant — l'agent n'a pas Docker)*
+- □ **B-134** Exécuter `make validate` et archiver les rapports dans `.ai/REPORTS/`
+- □ **B-135** Ajouter les plugins Gradle ktlint/detekt pour que les analyses bloquent la chaîne *(lié à B-097)*
+- □ **B-136** Ajouter le plugin JaCoCo pour rendre la couverture réellement mesurable *(lié à B-099)*
+- □ **B-137** Réutiliser l'image Docker dans la CI GitHub Actions *(lié à B-098)*
+
 ## P5 — Qualité, tests, CI
 
 - □ **B-090** Tests unitaires `SmsParser` (jeu de SMS MTN/Orange réels + pièges)
@@ -124,6 +135,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P3 — Découpage | 10 | 0 |
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 0 |
-| **TOTAL** | **76** | **3** |
+| P6 — Environnement Docker | 8 | 3 |
+| **TOTAL** | **84** | **6** |
 
-*Dernière mise à jour : 2026-07-28 (rév. 2 — décisions D1–D4 intégrées)*
+*Dernière mise à jour : 2026-07-28 (rév. 4 — Phase 6 : environnement Docker)*

@@ -27,9 +27,32 @@ fonctionnalités.
 
 ---
 
+## Jalon D — Environnement Docker *(Phase 6, livré le 2026-07-28)*
+
+Inséré **avant J0** : la Phase 6 impose que toute compilation et tout test
+passent par Docker. J0 (« build vérifiable ») n'a de sens que dans cet
+environnement reproductible.
+
+| Ordre | Tâche | Réf. | Statut |
+|---|---|---|---|
+| D.1 | Créer `docker/` (image, compose, scripts) | B-130 | ☑ |
+| D.2 | Documenter `.ai/DEV_ENVIRONMENT.md` | B-131 | ☑ |
+| D.3 | Intégrer aux checklists et règles | B-132 | ☑ |
+| D.4 | **Première exécution `make image && make verify`** | B-133 | □ **responsable** |
+| D.5 | `make validate` + archivage des rapports | B-134 | □ |
+
+**Critère de sortie** : `make verify` conclut « Environnement validé ».
+⚠️ `make validate` échouera probablement à la compilation à cause de BUG-003 —
+c'est **attendu**, et ce sera la première preuve objective de ce défaut.
+
+---
+
 ## Vue d'ensemble des dépendances
 
 ```
+JD Environnement Docker  ◄── Phase 6, préalable à tout
+      │
+      ▼
 J0 Build vérifiable
       │  (sans compilation, aucune correction n'est prouvable)
       ▼

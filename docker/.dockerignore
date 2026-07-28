@@ -1,0 +1,5 @@
+# Le contexte de build est le dossier docker/ uniquement : il reste minuscule,
+# et l'image ne dépend donc PAS du code source (pas de reconstruction à chaque
+# modification du projet). Le code est monté en volume à l'exécution.
+*.md
+config/
