@@ -19,7 +19,12 @@ d'exploitation d'un serveur incompatible avec le prix cible.
 - Impossible de gérer plusieurs points de vente d'un même commerçant.
 - La « sync cloud » n'est qu'un partage de fichier `.db` par Intent.
 
-**Voie de sortie** : jalon 6.7 de la roadmap (décision produit en attente).
+**Voie de sortie** : ✅ **D2 tranchée (2026-07-28)** — deux volets en parallèle :
+renommage honnête de l'existant (B-110) et vraie sauvegarde automatique distante
+via Google Drive (B-111/B-112). Voir
+`REPORTS/rapport_analyse_2026-07-28_sauvegarde_distante.md`.
+La limite « pas de synchronisation multi-appareils » reste néanmoins entière :
+une sauvegarde distante n'est pas une synchronisation.
 
 ---
 

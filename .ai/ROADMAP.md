@@ -1,7 +1,25 @@
 # 🗺️ ROADMAP — Plan de complétion
 
-> **Statut : EN ATTENTE DE VALIDATION** par le responsable du projet.
-> Aucune ligne de code de production ne sera modifiée avant accord explicite.
+> **Statut : ✅ VALIDÉE le 2026-07-28** — décisions D1 à D4 reçues.
+> Point de départ retenu : **J0 (build propre + nettoyage technique)**, puis
+> enchaînement direct sur **J1.1 + J1.2** (intégrité des migrations).
+
+## Décisions du responsable (2026-07-28)
+
+| Réf. | Décision | Conséquence |
+|---|---|---|
+| **D1** | Bases < v18 : perte assumée, **avec accord de l'utilisateur** | B-011 = détection + consentement + export de courtoisie + recréation. `fallbackToDestructiveMigration` reste proscrit |
+| **D2** | **Les deux** : renommer l'existant *et* préparer un vrai service distant | B-110 (renommage seul, sans toucher à la logique) + B-111 (analyse Drive/Dropbox) + B-112 (implémentation) |
+| **D3** | Démarrer par **J0**, puis **J1.1 + J1.2** | Ordre confirmé ci-dessous |
+| **D4** | Le responsable dispose d'Android Studio et exécute builds/tests | Chaque livraison s'accompagne des **commandes exactes** à exécuter |
+| **Prod** | **Aucun utilisateur en production** | J1 perd son caractère de sauvetage : c'est un chantier de qualité, pas d'urgence. Latitude pour refondre la chaîne de migrations |
+
+### Correctifs de sécurité antérieurs — impact sur la roadmap
+Vérification faite dans le code : les 5 correctifs annoncés (backdoor, 
+`fallbackToDestructiveMigration`, clé DB + Keystore + rekey, sauvegarde chiffrée,
+PIN PBKDF2) **sont bien présents**. Le **jalon 2 s'en trouve nettement allégé** :
+B-020 et B-021 sont clos, BUG-004 requalifié 🟡. En revanche, un point nouveau
+apparaît : **BUG-017** — `BackupManager` est écrit mais branché nulle part.
 
 Principe directeur : **on ne construit rien sur des fondations qui s'effondrent.**
 L'ordre ci-dessous suit les dépendances techniques réelles, pas l'attrait des
@@ -56,9 +74,8 @@ compile. Sans build reproductible, toute correction est une hypothèse.
 **Critère de sortie** : `./gradlew assembleDebug` et `./gradlew test` réussissent
 sur une machine propre. Résultat consigné dans `REPORTS/`.
 
-⚠️ **Dépendance externe** : l'environnement de travail actuel n'a **ni JDK ni SDK
-Android**. Le jalon 0 exige soit un environnement outillé, soit une exécution du
-build par le responsable qui me transmet les logs.
+✅ **D4** : le responsable exécute les builds depuis Android Studio. Je fournis
+les commandes exactes à chaque étape et j'analyse les logs retournés.
 
 ---
 
@@ -73,7 +90,7 @@ irréparable sans serveur.
 | 1.1 | Activer `exportSchema = true`, générer et versionner `app/schemas/` | B-009 |
 | 1.2 | Écrire le harnais `MigrationTestHelper` (avant de corriger, pour prouver l'échec) | B-012 |
 | 1.3 | Réécrire les 6 migrations divergentes + migration corrective 28→29 | B-010 |
-| 1.4 | Traiter les bases en version < 18 (décision produit requise) | B-011 |
+| 1.4 | Bases < v18 : consentement + export + recréation *(D1 tranchée)* | B-011 |
 | 1.5 | Checkpoint WAL avant toute copie de la base | B-013 |
 | 1.6 | Retirer la contrainte réseau de `BackupWorker` | B-014 |
 | 1.7 | Ajouter les index manquants (`vente_items.venteId`, `audit_items.auditId`) | B-057 |
@@ -81,11 +98,13 @@ irréparable sans serveur.
 **Critère de sortie** : tests de migration verts sur toute la chaîne 18→29 ;
 sauvegarde/restauration validée manuellement sur un appareil réel.
 
-**❓ Décision produit attendue (1.4)** : que faire d'une base en version < 18 ?
-(a) écrire les migrations manquantes, (b) exporter puis recréer avec
-consentement de l'utilisateur, (c) considérer ce cas comme inexistant si aucune
-version publique n'a jamais dépassé la 18. **Votre réponse conditionne le
-chiffrage.**
+**✅ D1 tranchée** : option (b) — détection de la version < 18, écran de
+consentement explicite, export de sauvegarde de courtoisie, puis recréation.
+Aucune destruction silencieuse.
+
+**Note (aucun utilisateur en production)** : la chaîne de migrations peut être
+**refondue intégralement** plutôt que rapiécée. C'est l'option la plus propre et
+elle ne coûte rien aujourd'hui — à arbitrer en J1.3.
 
 ---
 
@@ -97,8 +116,9 @@ base ; il doit s'appuyer sur une couche de migration déjà fiable.
 | Ordre | Tâche | Réf. |
 |---|---|---|
 | 2.1 | Activer R8 + règles keep (préalable à toute obfuscation utile) | B-022 |
-| 2.2 | Renforcer la dérivation de clé (PBKDF2 ≥ 100k + sel) | B-020 |
-| 2.3 | Migration sans perte des bases existantes vers la nouvelle clé | B-021 |
+| ~~2.2~~ | ~~Renforcer la dérivation de clé~~ ✅ **déjà fait** (correctif n°3) | B-020 |
+| ~~2.3~~ | ~~Migration des bases vers la nouvelle clé~~ ✅ **déjà fait** (`performRekeyIfNecessary`/`forceRekey`) | B-021 |
+| 2.2b | **Brancher `BackupManager` sur le parcours réel** *(nouveau — BUG-017)* | B-101 |
 | 2.4 | Sécuriser et centraliser `PRAGMA rekey` | B-025 |
 | 2.5 | Durcir les PIN (itérations + re-hash paresseux) | B-028 |
 | 2.6 | Retirer le générateur de licence de l'APK client | B-023 |
@@ -188,13 +208,16 @@ la nouvelle structure.
 | 6.4 | Externalisation des textes + `values-en/` | B-073, B-074 |
 | 6.5 | Snackbars cohérents | B-076 |
 | 6.6 | Alertes d'anomalie visibles dans l'UI | B-072 |
-| 6.7 | Décision « sync cloud » : assumer ou spécifier | B-075 |
+| 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 |
+| 6.7b | Implémenter la sauvegarde automatique distante retenue | B-112 |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 |
 
-**❓ Décision produit attendue (6.7)** : la « synchronisation cloud » est
-aujourd'hui un simple partage de fichier. Faut-il (a) l'assumer et le renommer
-honnêtement, (b) intégrer un stockage tiers (Drive/Dropbox), ou (c) construire
-un backend ? **Le (c) changerait la nature du projet.**
+**✅ D2 tranchée — les deux volets en parallèle** :
+- **Volet 1 (immédiat, J0/J1)** — B-110 : renommer « Synchronisation cloud » en
+  **« Exporter et partager »** dans l'UI, sans toucher à la logique existante.
+- **Volet 2 (J6)** — B-111 puis B-112 : analyse comparative Google Drive vs
+  Dropbox, puis implémentation d'une vraie sauvegarde automatique distante.
+  Dépend de **B-101** : on ne téléverse que des archives chiffrées `BackupManager`.
 
 ---
 
@@ -227,17 +250,10 @@ un backend ? **Le (c) changerait la nature du projet.**
 
 ---
 
-## Ce que je propose de faire en premier
+## Point de départ validé (D3)
 
-**Jalon 0, tâche 0.1 → 0.7** (chantier « build vérifiable »), car aucune autre
-correction ne peut être **prouvée** tant que le projet ne compile pas de façon
-reproductible.
+**J0 dans son intégralité** (0.1 → 0.7), enrichi de **B-110** (renommage
+« Exporter et partager »), puis enchaînement immédiat sur **J1.1 + J1.2**
+(`exportSchema = true` + harnais `MigrationTestHelper`).
 
-**Alternative** si vous jugez le risque de données prioritaire : commencer
-directement par **J1.1 + J1.2** (export des schémas + harnais de test de
-migration), qui sont analysables statiquement même sans build complet.
-
-👉 **Merci de valider (a) l'ordre des jalons, (b) le point de départ, et de
-répondre aux deux décisions produit (1.4 et 6.7).**
-
-*Document créé le 2026-07-28 — non validé.*
+*Document créé le 2026-07-28, validé le 2026-07-28 (rév. 2).*

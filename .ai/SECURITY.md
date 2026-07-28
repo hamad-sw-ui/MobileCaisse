@@ -1,6 +1,25 @@
 # 🔐 SÉCURITÉ
 
-État au 2026-07-28. Toutes les faiblesses listées sont **ouvertes**.
+État au 2026-07-28, **révision 2** après confirmation des correctifs de
+sécurité antérieurs (audit GitHub Copilot + Gemini Code Assist).
+
+## 0. Correctifs de sécurité déjà en place (vérifiés dans le code)
+
+| # | Correctif | Vérification | Statut |
+|---|---|---|---|
+| 1 | Porte dérobée `MASTER_EMERGENCY_2024` supprimée | 0 occurrence dans tout le dépôt | ✅ |
+| 2 | `fallbackToDestructiveMigration()` retiré | 0 occurrence | ✅ **à ne jamais réintroduire** |
+| 3 | Clé DB dérivée (`phone`+`managerCode`) + AndroidKeyStore + rekey auto/manuel, mode standard SQLCipher | `SecurityUtil`, `AppDatabase` ; 0 occurrence de syntaxe hex brute `x'...'` | ✅ |
+| 4 | Sauvegarde chiffrée par mot de passe (PBKDF2 100k + AES-GCM + checksum) | `BackupManager` complet | ⚠️ **code présent mais non branché** → BUG-017 |
+| 5 | PIN en PBKDF2 + sel unique + migration paresseuse | `SecurityUtil.hashPinPbkdf2`/`verifyPin`, `MainViewModel.checkPin` | ✅ |
+
+Couverts par `SecurityMigrationTest` (2 tests d'instrumentation passants).
+
+**Ces acquis ne doivent pas être régressés.** Toute modification touchant
+`SecurityUtil`, `AppDatabase` ou `BackupManager` doit vérifier explicitement que
+ces cinq points restent satisfaits.
+
+---
 
 ---
 
@@ -30,7 +49,7 @@
 | M5 | Autre application lisant les données | Faible | Stockage interne + chiffrement | 🟡 Correct, sauf miroir externe |
 | M6 | Faux SMS MoMo pour simuler un paiement | Moyen | `isSecure` (expéditeur officiel), déduplication | 🟡 Correct mais heuristique |
 | M7 | Appareil rooté | Moyen | — | 🔴 Aucune protection (assumé) |
-| M8 | Perte de données par migration ratée | **Élevé** | — | 🔴 **BUG-001/002** |
+| M8 | Perte de données par migration ratée | **Élevé** | `fallbackToDestructiveMigration` retiré ✅ | 🔴 **BUG-001/002** — divergences schéma subsistantes |
 | M9 | Sauvegarde exposée en clair | Moyen | Le `.db` reste chiffré | 🟡 Correct, mais partagé sans contrôle |
 
 ---
@@ -45,11 +64,19 @@ Stockage:  clé chiffrée AES/GCM (AndroidKeyStore, alias "db_key_enc_v1")
 Passphrase SQLCipher = hexadécimal de la clé (PBKDF2 appliqué par SQLCipher)
 ```
 
-**Faiblesses** :
-- 🔴 **Une seule itération de SHA-256**, aucun sel aléatoire → attaque par
-  dictionnaire réaliste (le numéro de téléphone est public, le `managerCode` est
-  souvent faible). *(BUG-004 / B-020)*
-- 🔴 Le repli sur `ANDROID_ID` n'est **pas un secret**.
+**Acquis (correctif n°3, vérifié)** :
+- ✅ Plus aucun secret en dur dans la dérivation : la clé dépend du `managerCode`.
+- ✅ Clé protégée par AndroidKeyStore (AES/GCM).
+- ✅ Rekey automatique et manuel opérationnels, testés en instrumentation.
+- ✅ **Mode standard** : SQLCipher applique son PBKDF2 natif sur la passphrase
+  hexadécimale ; aucune manipulation de syntaxe SQL brute `x'...'`.
+
+**Faiblesses résiduelles** :
+- 🟡 **Une seule itération de SHA-256** au niveau applicatif, sans sel aléatoire.
+  Atténué par le PBKDF2 natif de SQLCipher en aval et par l'exigence d'un
+  `managerCode` ≥ 12 caractères. *(BUG-004 — requalifié 🟡, non prioritaire)*
+- 🟡 Le repli sur `ANDROID_ID` n'est pas un secret ; il ne subsiste que comme
+  voie de migration à sens unique, à retirer une fois la migration généralisée.
 - 🟠 `PRAGMA rekey` construit par concaténation de chaîne *(BUG-006 / B-025)*.
 - 🟡 Le Keystore n'exige pas l'authentification utilisateur
   (`setUserAuthenticationRequired(false)` implicite) — choix délibéré : l'app
@@ -64,9 +91,14 @@ Passphrase SQLCipher = hexadécimal de la clé (PBKDF2 appliqué par SQLCipher)
 - Migration paresseuse depuis le SHA-256 legacy sans sel ✅.
 - Verrouillage temporaire après échecs (`PreferencesManager.lock`) ✅.
 
-**Faiblesses** :
+**Acquis (correctif n°5, vérifié)** : passage de SHA-256 nu à PBKDF2 + sel
+unique par utilisateur, avec migration paresseuse au login. ✅
+
+**Faiblesses résiduelles** :
 - 🟠 **5 000 itérations, c'est trop peu** en 2026 (recommandation OWASP :
-  ≥ 600 000 pour PBKDF2-HMAC-SHA256). *(B-028)*
+  ≥ 600 000 pour PBKDF2-HMAC-SHA256). À noter : `BackupManager` utilise déjà
+  **100 000** itérations — l'incohérence entre les deux modules est en soi un
+  signal. *(B-028)*
 - 🟠 PIN à 4 chiffres = 10 000 combinaisons → seul le verrouillage protège du
   brute force. Vérifier qu'il n'est pas contournable par redémarrage.
 - 🟡 Le hash SHA-256 legacy (sans sel) subsiste tant que la migration paresseuse
@@ -75,6 +107,10 @@ Passphrase SQLCipher = hexadécimal de la clé (PBKDF2 appliqué par SQLCipher)
 ---
 
 ## 5. Licence
+
+⚠️ **À distinguer du correctif n°1** : la porte dérobée `MASTER_EMERGENCY_2024`
+est bien supprimée ✅. Le problème ci-dessous est **distinct** et non couvert par
+l'audit antérieur — il porte sur le sel du HMAC de licence.
 
 🔴 **Contournable trivialement** :
 - `SECRET_SALT` en clair dans `LicenseUtil` ;
@@ -101,6 +137,12 @@ Obligations :
 ---
 
 ## 7. Sauvegardes
+
+> ⚠️ **BUG-017** : `BackupManager` (PBKDF2 100k + AES-GCM + checksum, correctif
+> n°4) est implémenté mais **n'est appelé par aucun code applicatif**. Les
+> chemins réellement utilisés sont les copies brutes ci-dessous. Le fichier
+> copié reste chiffré par SQLCipher, mais sans mot de passe utilisateur ni
+> contrôle d'intégrité.
 
 - `filesDir/daily_backup.db` — stockage interne ✅
 - `getExternalFilesDir()/caisse_mirror.db` — stockage externe privé à l'app
@@ -148,7 +190,8 @@ avec `userRole` ✅.
 
 | Réf. | Sujet | Priorité |
 |---|---|---|
-| B-020/021 | Dérivation de clé + migration | 🔴 |
+| B-020/021 | Dérivation de clé : sel aléatoire (optionnel) | 🟡 *(requalifié)* |
+| **B-101** | **Brancher `BackupManager` sur le parcours de sauvegarde** | 🟠 *(nouveau)* |
 | B-022 | R8 | 🟠 |
 | B-023/024 | Secret de licence | 🟠 |
 | B-025 | `PRAGMA rekey` | 🟠 |

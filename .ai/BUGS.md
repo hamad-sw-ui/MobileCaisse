@@ -3,8 +3,46 @@
 Statuts : `OUVERT` · `EN COURS` · `CORRIGÉ` · `NON REPRODUCTIBLE` · `ACCEPTÉ`
 Gravités : 🔴 CRITIQUE · 🟠 MAJEUR · 🟡 MINEUR
 
-> Recensés lors de l'audit du **2026-07-28**. Aucun n'est corrigé à ce jour :
-> aucune ligne de code n'a été modifiée depuis la création de ce framework.
+> Recensés lors de l'audit du **2026-07-28**, **révisés le 2026-07-28 (rév. 2)**
+> après information du responsable sur un audit de sécurité antérieur
+> (GitHub Copilot + Gemini Code Assist).
+
+---
+
+## ⚠️ Note de révision — 2026-07-28 (rév. 2)
+
+Le responsable a signalé 5 correctifs de sécurité déjà appliqués et validés par
+tests d'instrumentation. **Vérification faite dans le code : le dépôt ne contient
+qu'un seul commit (`1ca7927`)** — ces correctifs sont donc **déjà intégrés au code
+que j'ai audité**. L'audit initial portait bien sur l'état *après* corrections.
+
+### Confirmations (état vérifié dans le code actuel)
+
+| Correctif annoncé | Vérification | Verdict |
+|---|---|---|
+| 1. Suppression de la porte dérobée `MASTER_EMERGENCY_2024` | `grep -rn "MASTER_EMERGENCY\|EMERGENCY"` → **0 occurrence** | ✅ Confirmé |
+| 1bis. Suppression de `verifyKey()` dans `MainRepository` | `MainRepository` n'a plus de `verifyKey` propre ; il délègue à `LicenseUtil.verifyKey` (HMAC lié au numéro) | ✅ Confirmé — comportement sain |
+| 2. Retrait de `fallbackToDestructiveMigration()` | `grep -rn "fallbackToDestructive"` → **0 occurrence** | ✅ Confirmé |
+| 3. Clé DB dérivée + Keystore + rekey auto/manuel, **mode standard** | `SecurityUtil.deriveNewKey` + `saveMigratedKey`/`getMigratedKey` (AES-GCM Keystore) ; `performRekeyIfNecessary` + `forceRekey` ; `grep -rn "x'"` → **0 occurrence** (pas de syntaxe hex brute) | ✅ Confirmé |
+| 4. Sauvegarde chiffrée par mot de passe (PBKDF2 + AES-GCM) | `BackupManager` : PBKDF2WithHmacSHA256, **100 000 itérations**, sel 32 o, AES/GCM 128 bits, checksum, contrôle de robustesse du mot de passe | ✅ Code présent et de bonne facture |
+| 5. PIN en PBKDF2 + sel unique + migration paresseuse | `SecurityUtil.hashPinPbkdf2` + `verifyPin` (temps constant) ; migration paresseuse dans `MainViewModel.checkPin` | ✅ Confirmé |
+
+### Corrections apportées à ce document
+- **BUG-004** (dérivation de clé) : requalifié 🟠 → 🟡, reformulé — la partie
+  Keystore/rekey est bien en place, seule l'itération unique du SHA-256 reste
+  discutable, et son impact est très réduit sans utilisateurs en production.
+- **BUG-011** (WAL) : **maintenu** — vérifié dans `MainRepository.backupDatabase`,
+  qui fait un `transferFrom` brut sans checkpoint.
+- **Nouveau BUG-017** : `BackupManager` (sauvegarde chiffrée) **n'est branché
+  nulle part** dans l'UI — le code sécurisé existe mais n'est pas utilisé.
+- **BUG-001 / BUG-002** : **maintenus et re-vérifiés ligne à ligne** (voir détail
+  ci-dessous). Le point 2 de l'audit antérieur annonce une « vérification complète
+  de la chaîne v18→v27 » ; or la base est en **v28** et les divergences
+  migration ⇄ entité subsistent dans le code actuel.
+- **Contexte d'urgence révisé** : aucun utilisateur en production → BUG-001 et
+  BUG-002 ne détruisent aucune donnée réelle aujourd'hui. Ils restent 🔴 car ils
+  bloquent tout déploiement, mais la fenêtre pour les corriger proprement est
+  grande ouverte.
 
 ---
 
@@ -26,9 +64,27 @@ au premier lancement suivant une mise à jour.
 | 25→26 `staff` | `permissions`, `createdAt` NOT NULL | `phone`, `pinSalt` |
 | 26→27 `processed_sms` | `type` | absente de l'entité |
 
-**Impact** : crash au démarrage pour tout utilisateur existant ; données
-inaccessibles. Une installation neuve fonctionne (Room crée depuis les entités),
-ce qui masque le bug en test.
+**Impact** : crash au démarrage pour tout utilisateur ayant déjà une base.
+Une installation neuve fonctionne (Room crée depuis les entités), ce qui masque
+le bug en test.
+
+**Contexte (rév. 2)** : aucun utilisateur en production → **aucune donnée réelle
+en jeu aujourd'hui**. Le bug reste 🔴 car il interdit toute mise à jour et donc
+tout déploiement, mais il peut être corrigé sereinement, y compris en
+reconstruisant la chaîne de migrations.
+
+**Re-vérifié le 2026-07-28 (rév. 2)** — les divergences sont toujours présentes :
+```
+AppDatabase.kt:99   ALTER TABLE boutique ADD COLUMN totalQuantityOnReceipt   ≠ showTotalQuantityOnReceipt
+AppDatabase.kt:113  categories(name, description, color, icon)              ≠ (name, type)
+AppDatabase.kt:120  suppliers(name, phoneNumber, address, email, category, notes) ≠ (name, phone, address, totalDebt)
+AppDatabase.kt:127  sessions(staffName, startCash, expectedEndCash, ...)    ≠ (sellerName, openingBalance, ...)
+AppDatabase.kt:71   staff(pinHash, pinSalt NOT NULL, role, permissions, isActive, createdAt) ≠ (pinHash, pinSalt nullable, phone, isActive, role)
+```
+⚠️ À noter : la migration `staff` déclare `pinSalt TEXT NOT NULL` alors que
+l'entité le déclare **nullable** — ce qui entre précisément en conflit avec le
+mécanisme de **migration paresseuse des PIN** (correctif n°5), lequel suppose
+`pinSalt == null` pour les anciens comptes.
 
 **Correction attendue** : activer `exportSchema = true`, générer les schémas de
 référence, réécrire les migrations à partir du SQL généré par Room, ajouter des
@@ -42,12 +98,18 @@ données, couvrir par `MigrationTestHelper`.
 **Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
 
 `version = 28`, migrations fournies de 18 à 28 uniquement, aucun
-`fallbackToDestructiveMigration`. Une base en version 1–17 ne peut pas être
+`fallbackToDestructiveMigration` — dont le retrait est un correctif volontaire
+et validé, **à ne pas annuler**. Une base en version 1–17 ne peut pas être
 migrée → crash irrécupérable.
 
-**Correction attendue** : décider (a) migration 1→18 réelle, ou (b) détection +
-export de sauvegarde + recréation contrôlée avec consentement explicite.
-**Jamais** de destruction silencieuse.
+**✅ DÉCISION D1 du responsable (2026-07-28)** : cas assumé. Si un utilisateur
+possède une base < v18, on lui **demande son accord** puis on repart sur une
+base neuve. Perte de données **assumée** dans ce cas rare.
+
+**Correction retenue** : détection explicite de la version < 18 à l'ouverture →
+écran de consentement → export de sauvegarde de courtoisie → recréation
+contrôlée. `fallbackToDestructiveMigration()` reste proscrit : le mécanisme doit
+être explicite et déclenché par l'utilisateur, jamais silencieux.
 
 ---
 
@@ -67,18 +129,37 @@ dépendance AppCompat.
 
 ---
 
-## 🟠 BUG-004 — Dérivation de clé SQLCipher faible + repli sur `ANDROID_ID`
+## 🟡 BUG-004 — Dérivation de clé SQLCipher : une seule itération SHA-256
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR · **Fichier** : `utils/SecurityUtil.kt`
+**Statut** : OUVERT · **Gravité** : 🟡 MINEUR *(requalifié de 🟠 en rév. 2)*
+**Fichier** : `utils/SecurityUtil.kt`
 
-`deriveNewKey` = **un seul** SHA-256 sur `phone|managerCode|CIPHER_SECRET_V1`
-(pas de KDF itératif, pas de sel aléatoire). Le repli `getDatabaseKeyCompat`
-dérive la clé de `Settings.Secure.ANDROID_ID`, qui n'est pas un secret et est
-lisible par d'autres applications sur les anciennes versions d'Android.
+### ✅ Ce qui est déjà en place et vérifié (correctif antérieur n°3)
+- Clé dérivée de `phone + managerCode` (et non plus d'un secret en dur).
+- Clé chiffrée **AES/GCM via AndroidKeyStore** (`saveMigratedKey`/`getMigratedKey`).
+- **Rekey automatique** (`performRekeyIfNecessary`) et **manuel** (`forceRekey`).
+- **Mode standard SQLCipher** : la passphrase hexadécimale est confiée à
+  SQLCipher qui applique son PBKDF2 natif — `grep -rn "x'"` → 0 occurrence,
+  aucune manipulation de syntaxe SQL brute. ✅
+- Couvert par `SecurityMigrationTest` (2 tests d'instrumentation).
 
-**Correction attendue** : PBKDF2 (≥ 100 000 itérations) ou Argon2 avec sel
-aléatoire persisté ; conserver l'ancien chemin uniquement comme voie de
-migration à sens unique.
+### Ce qui reste discutable
+`deriveNewKey` applique **un seul** SHA-256 sur
+`phone|managerCode|CIPHER_SECRET_V1`, sans sel aléatoire. Le numéro de téléphone
+étant public, la robustesse repose entièrement sur l'entropie du `managerCode`
+(≥ 12 caractères alphanumériques imposés — c'est ce qui rend l'attaque coûteuse).
+
+**Atténuation forte** : SQLCipher applique ensuite son propre PBKDF2 sur la
+passphrase, ce qui ajoute le coût itératif manquant au niveau applicatif.
+
+**Repli legacy** : `getDatabaseKeyCompat` (`ANDROID_ID`) subsiste comme voie de
+migration à sens unique. Correct sur le principe, mais à retirer une fois la
+migration généralisée.
+
+**Correction éventuelle** : ajouter un sel aléatoire persisté au Keystore lors
+de la dérivation. ⚠️ Impose un nouveau cycle de rekey — à ne faire **que** si le
+bénéfice est jugé supérieur au risque, d'autant qu'aucune donnée réelle n'est
+en jeu aujourd'hui. **Non prioritaire.**
 
 ---
 
@@ -90,6 +171,13 @@ migration à sens unique.
 `SECRET_SALT = "M0M0_C41SS3_V1_PRO_S3CR3T_2024_K3Y"` en clair, et
 `generateActivationKey()` (outil admin) est **embarqué dans l'APK de production**.
 Avec `isMinifyEnabled = false`, n'importe qui peut décompiler et générer des clés.
+
+**Re-vérifié le 2026-07-28 (rév. 2)** : toujours présent. À distinguer du
+correctif n°1 (porte dérobée `MASTER_EMERGENCY_2024`), qui est bien supprimé —
+il s'agit ici d'un problème **distinct** portant sur le sel du HMAC de licence,
+non couvert par l'audit antérieur. `MainRepository.activateSubscription`
+délègue correctement à `LicenseUtil.verifyKey(boutique.phoneNumber, key)` :
+la logique est saine, seul le secret est exposé.
 
 **Correction attendue** : activer R8, retirer le générateur de l'APK client,
 déplacer le secret (NDK/obfuscation/dérivation), accepter que le modèle
@@ -163,6 +251,44 @@ implémenté : l'app ignore les refus.
 
 ---
 
+## 🟠 BUG-017 — La sauvegarde chiffrée `BackupManager` n'est branchée nulle part
+
+**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 2)*
+**Fichiers** : `utils/BackupManager.kt`, `ui/screens/SettingsScreen.kt`, `data/repository/MainRepository.kt`
+
+Le correctif n°4 (sauvegarde chiffrée par mot de passe) est **réellement
+implémenté et de bonne facture** : PBKDF2WithHmacSHA256 à **100 000 itérations**,
+sel aléatoire de 32 octets, AES/GCM 128 bits, checksum d'intégrité, contrôle de
+robustesse du mot de passe, format ZIP avec métadonnées.
+
+**Mais il n'est appelé par aucun code applicatif** :
+
+```bash
+grep -rn "BackupManager\|exportBackupWithPassword\|importBackup" app/src/main \
+  | grep -v "utils/BackupManager.kt"
+# → aucun résultat
+```
+
+Les chemins réellement utilisés par l'application restent les **copies brutes**
+de `MainRepository` :
+- `backupDatabase()` / `restoreDatabase()` — `transferFrom` de fichier à fichier ;
+- `syncToCloud()` — copie dans `cacheDir` puis `ACTION_SEND` ;
+- `BackupWorker` — appelle `repository.backupDatabase`.
+
+**Nuance importante** : ces copies ne sont pas « en clair » — le fichier `.db`
+reste chiffré par SQLCipher. Mais elles ne bénéficient ni du mot de passe
+utilisateur, ni du checksum, ni des métadonnées de `BackupManager`.
+
+**Impact** : le travail de sécurisation existe mais reste sans effet pour
+l'utilisateur. Deux systèmes de sauvegarde coexistent, dont le meilleur est
+inactif.
+
+**Correction attendue** : brancher `BackupManager` sur le parcours de sauvegarde
+et de restauration (écran Paramètres + `BackupWorker`), puis retirer ou
+requalifier les copies brutes. À traiter avec **BUG-011** et la décision **D2**.
+
+---
+
 ## 🟡 BUG-011 — Sauvegarde du fichier `.db` sans checkpoint WAL
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR
@@ -172,8 +298,20 @@ Le fichier `caisse_database` est copié alors que le mode `WRITE_AHEAD_LOGGING`
 est actif : les fichiers `-wal` et `-shm` ne sont pas copiés → sauvegarde
 potentiellement incomplète ou incohérente.
 
+**Re-vérifié le 2026-07-28 (rév. 2)** — toujours présent :
+```kotlin
+// MainRepository.backupDatabase
+val src = FileInputStream(dbFile).channel
+val dst = FileOutputStream(backupFile).channel
+dst.transferFrom(src, 0, src.size())   // aucun checkpoint préalable
+```
+Le commentaire du code le reconnaît lui-même : *« we must ensure it's not
+mid-write or we use Room's checkpoint »* — l'intention est notée, la mise en
+œuvre absente.
+
 **Correction attendue** : `PRAGMA wal_checkpoint(FULL)` avant copie, ou copier
 les trois fichiers, ou utiliser l'API de sauvegarde SQLCipher.
+À traiter conjointement avec **BUG-017**.
 
 ---
 

@@ -38,3 +38,4 @@ AAAA-MM-JJ_session-2.md   # si plusieurs sessions le même jour
 | Date | Fichier | Objet |
 |---|---|---|
 | 2026-07-28 | `2026-07-28_session.md` | Audit initial + création du framework `.ai/` |
+| 2026-07-28 | `2026-07-28_session-2.md` | Vérification des correctifs de sécurité + décisions D1–D4 |

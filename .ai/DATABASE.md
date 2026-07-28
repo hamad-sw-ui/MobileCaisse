@@ -9,7 +9,20 @@
 | Journal mode | `WRITE_AHEAD_LOGGING` |
 | TypeConverters | `Converters` : `Date` ⇄ `Long` |
 | Migrations fournies | 18→19 … 27→28 (10 migrations) |
-| Stratégie de repli | ⚠️ **aucune** (`fallbackToDestructiveMigration` absent) |
+| Stratégie de repli | ✅ `fallbackToDestructiveMigration` **volontairement absent** (correctif de sécurité validé — ne pas réintroduire) |
+
+---
+
+## 0. Acquis de sécurité à ne pas régresser (vérifié 2026-07-28)
+
+- ✅ `fallbackToDestructiveMigration()` **retiré volontairement** — ne jamais le
+  réintroduire, même « temporairement » pour faire taire un crash de migration.
+- ✅ Clé dérivée de `phone + managerCode`, protégée par AndroidKeyStore.
+- ✅ Rekey automatique (`performRekeyIfNecessary`) et manuel (`forceRekey`),
+  couverts par `SecurityMigrationTest` (2 tests d'instrumentation passants).
+- ✅ **Mode standard SQLCipher** : passphrase hexadécimale confiée à SQLCipher
+  qui applique son PBKDF2 natif. Aucune syntaxe brute `x'...'` dans le code
+  applicatif — **ne pas y revenir**.
 
 ---
 
@@ -113,6 +126,23 @@ dangereux (données réelles).
 ### Trous de migration
 Aucune migration en dessous de 18. Une base en version 1–17 ne peut pas migrer
 et **crashe sans issue** (BUG-002).
+
+**✅ Décision D1 (2026-07-28)** : cas assumé. Détection de la version < 18 →
+écran de consentement → export de courtoisie → recréation. Perte de données
+assumée dans ce cas rare, mais **jamais silencieuse**.
+
+### 🔎 Point d'attention : conflit `staff.pinSalt`
+La migration 25→26 crée `pinSalt TEXT NOT NULL`, alors que `StaffEntity` le
+déclare **nullable**. Or le mécanisme de **migration paresseuse des PIN**
+(`MainViewModel.checkPin`) repose précisément sur `pinSalt == null` pour
+détecter un hash legacy à re-hacher. La correction de BUG-001 doit préserver
+cette nullabilité.
+
+### 💡 Contexte favorable (aucun utilisateur en production)
+Aucune base réelle n'existe aujourd'hui. La chaîne de migrations peut donc être
+**refondue intégralement** — par exemple en repartant d'une v1 propre générée
+par Room — plutôt que rapiécée migration par migration. Option à arbitrer en
+J1.3 ; c'est la plus propre et elle ne coûte rien maintenant.
 
 ### Procédure obligatoire pour toute modification de schéma
 

@@ -8,6 +8,12 @@ par `ROADMAP.md`.
 
 Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
+> **Rév. 2 — 2026-07-28** : intégration des décisions D1–D4 du responsable et
+> révision après vérification des correctifs de sécurité antérieurs
+> (voir `BUGS.md` § Note de révision).
+> Contexte clé : **aucun utilisateur en production** → les priorités sont
+> réordonnées en faveur d'un socle propre plutôt que d'un sauvetage de données.
+
 ---
 
 ## P0 — Sauver le build et les données (bloquant)
@@ -22,22 +28,23 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-008** Nettoyer le dépôt : dé-versionner `.idea/`, `.kotlin/`, déplacer `app/logo.png`, compléter `.gitignore`
 - □ **B-009** Activer `exportSchema = true` et versionner `app/schemas/` en Git
 - □ **B-010** 🔴 Réécrire les 6 migrations divergentes + migration corrective 28→29 *(BUG-001)*
-- □ **B-011** 🔴 Décider et implémenter la stratégie pour les bases en version < 18 *(BUG-002)*
+- □ **B-011** 🔴 Bases < v18 : détection + écran de consentement + export de courtoisie + recréation *(BUG-002 — **décision D1 : perte assumée avec accord de l'utilisateur**)*
 - □ **B-012** Écrire les tests `MigrationTestHelper` pour toute la chaîne 18→29
 - □ **B-013** Corriger la sauvegarde : checkpoint WAL avant copie du `.db` *(BUG-011)*
+- □ **B-101** 🟠 Brancher `BackupManager` (PBKDF2 100k + AES-GCM) sur le parcours réel de sauvegarde/restauration *(BUG-017 — code sécurisé écrit mais inutilisé)*
 - □ **B-014** Retirer la contrainte `NetworkType.CONNECTED` de `BackupWorker` *(BUG-015)*
 
 ## P1 — Sécurité
 
-- □ **B-020** Renforcer la dérivation de clé SQLCipher : PBKDF2 ≥ 100k itérations + sel aléatoire *(BUG-004)*
-- □ **B-021** Planifier la migration des bases existantes vers la nouvelle dérivation (sans perte)
+- ☑ **B-020** ~~Renforcer la dérivation de clé SQLCipher~~ — **déjà traité** (correctif n°3 : dérivation `phone`+`managerCode`, AndroidKeyStore, rekey auto/manuel, mode standard SQLCipher). Reste optionnel : ajouter un sel aléatoire *(BUG-004 requalifié 🟡, non prioritaire)*
+- ☑ **B-021** ~~Migration des bases existantes vers la nouvelle dérivation~~ — **déjà implémentée** (`performRekeyIfNecessary` + `forceRekey`, couvertes par `SecurityMigrationTest`)
 - □ **B-022** Activer R8 en release (`isMinifyEnabled`, `isShrinkResources`) + règles keep (Room, SQLCipher, serialization, ML Kit)
 - □ **B-023** Retirer `LicenseUtil.generateActivationKey` de l'APK client *(BUG-005)*
 - □ **B-024** Sortir `SECRET_SALT` du code source clair *(BUG-005)*
 - □ **B-025** Sécuriser et centraliser `PRAGMA rekey` (validation stricte de l'entrée) *(BUG-006)*
 - □ **B-026** Réserver `DataSeeder.seedSampleData()` à `BuildConfig.DEBUG` *(BUG-014)*
 - □ **B-027** Porter le rôle requis dans `Screen` au lieu de la liste codée en dur *(BUG-013)*
-- □ **B-028** Augmenter `PBKDF2_ITERATIONS` pour les PIN (5 000 → ≥ 100 000) avec re-hash paresseux
+- □ **B-028** Augmenter `PBKDF2_ITERATIONS` pour les PIN (5 000 → ≥ 100 000) — le mécanisme de re-hash paresseux existe déjà ✅, il suffit de relever la constante *(incohérence : `BackupManager` utilise déjà 100 000)*
 - □ **B-029** Corriger la détection d'anomalie de date SMS *(BUG-008)*
 
 ## P2 — Architecture : Hilt & assainissement
@@ -70,12 +77,17 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 ## P4 — Fonctionnalités manquantes / incomplètes
 
+### Décision D2 — sauvegarde distante (deux volets en parallèle)
+- □ **B-110** Volet 1 : renommer honnêtement l'existant — « Exporter et partager » au lieu de « Synchronisation cloud » (libellés UI + `logAction`), **sans toucher à la logique**
+- □ **B-111** Volet 2a : rapport d'analyse comparatif Google Drive vs Dropbox (`REPORTS/`)
+- □ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (dépend de B-101 : on n'envoie que des archives `BackupManager`)
+
 - □ **B-070** Écran de gestion du personnel (CRUD `staff`) — entité et DAO existent, aucune UI
 - □ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement)
 - □ **B-072** Enrichir `AnomalyEngine` et exposer les alertes dans l'UI
 - □ **B-073** Externaliser tous les textes vers `strings.xml` (aujourd'hui 9 usages de `R.string`)
 - □ **B-074** Ajouter la traduction `values-en/`
-- □ **B-075** Décider du sort de la « sync cloud » : soit assumer le partage manuel, soit spécifier une vraie synchronisation
+- ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
 - □ **B-076** Remplacer `Toast`/messages bruts par des `Snackbar` Material 3 cohérents
 - □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)
 - □ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)*
@@ -100,12 +112,12 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 | Priorité | Total | Terminées |
 |---|---|---|
-| P0 — Build & données | 14 | 0 |
-| P1 — Sécurité | 10 | 0 |
+| P0 — Build & données | 15 | 0 |
+| P1 — Sécurité | 10 | 2 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
-| P4 — Fonctionnalités | 9 | 0 |
+| P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 0 |
-| **TOTAL** | **66** | **0** |
+| **TOTAL** | **70** | **3** |
 
-*Dernière mise à jour : 2026-07-28*
+*Dernière mise à jour : 2026-07-28 (rév. 2 — décisions D1–D4 intégrées)*

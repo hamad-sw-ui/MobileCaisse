@@ -6,6 +6,74 @@
 
 ---
 
+## 2026-07-28 — Session 2 : décisions D1–D4 et révision de l'audit
+
+**Date** : 2026-07-28
+**Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **Vérification du code actuel** contre les 5 correctifs de sécurité annoncés
+  par le responsable (audit antérieur Copilot + Gemini). Constat déterminant :
+  **le dépôt ne contient qu'un seul commit** — le code audité en session 1
+  *était déjà* le code post-correctifs.
+  - ✅ Confirmés : suppression de `MASTER_EMERGENCY_2024` (0 occurrence),
+    retrait de `fallbackToDestructiveMigration` (0 occurrence), clé DB dérivée
+    + Keystore + rekey auto/manuel en mode standard (0 occurrence de `x'...'`),
+    PIN PBKDF2 + sel + migration paresseuse.
+  - ⚠️ Nuance importante : `BackupManager` (PBKDF2 100k + AES-GCM + checksum)
+    est bien écrit, mais **n'est appelé par aucun code applicatif**
+    → nouveau **BUG-017**.
+- **Révision de `BUGS.md`** (rév. 2) : tableau de confirmation des correctifs,
+  BUG-004 requalifié 🟠 → 🟡, BUG-001/002/011 re-vérifiés ligne à ligne et
+  maintenus, BUG-005 clarifié (distinct de la porte dérobée), BUG-017 ajouté.
+- **Découverte** : la migration 25→26 crée `staff.pinSalt TEXT NOT NULL` alors
+  que l'entité le déclare nullable — en conflit direct avec le mécanisme de
+  migration paresseuse des PIN (correctif n°5).
+- **Intégration des décisions D1–D4** dans `ROADMAP.md` (désormais **validée**),
+  `BACKLOG.md`, `DATABASE.md`, `SECURITY.md`, `CURRENT_TASK.md`.
+- **Rapport d'analyse D2** rédigé : comparatif Google Drive vs Dropbox vs SAF,
+  architecture `RemoteBackupStorage`, plan en 7 étapes.
+
+### Fichiers modifiés
+Aucun fichier de code de production. Documentation `.ai/` uniquement :
+```
+.ai/BUGS.md            rév. 2 — confirmations, requalifications, BUG-017
+.ai/SECURITY.md        § 0 « correctifs déjà en place », faiblesses requalifiées
+.ai/DATABASE.md        § 0 « acquis à ne pas régresser », D1, conflit pinSalt
+.ai/BACKLOG.md         B-020/B-021/B-075 clos ; B-101, B-110/111/112 ajoutés
+.ai/ROADMAP.md         statut VALIDÉE, décisions D1–D4, J2 allégé
+.ai/CURRENT_TASK.md    J0 + B-110
+.ai/PROGRESS.md        cette entrée
+.ai/REPORTS/rapport_analyse_2026-07-28_sauvegarde_distante.md   (nouveau)
+```
+
+### Tests exécutés
+Aucun — environnement toujours sans JDK ni SDK Android. Vérifications
+**statiques** par `grep` ciblé sur chacun des 5 correctifs annoncés.
+Conformément à **D4**, l'exécution des builds et tests revient au responsable ;
+je fournis les commandes exactes.
+
+### Problèmes rencontrés
+1. **Écart entre l'audit annoncé et l'état du code** : l'audit antérieur
+   mentionne une « vérification complète de la chaîne v18→v27 », or la base est
+   en **v28** et les 6 divergences migration ⇄ entité subsistent. BUG-001 est
+   maintenu, preuves à l'appui (numéros de ligne).
+2. **Sécurité écrite mais non branchée** : `BackupManager` est le meilleur code
+   de sécurité du dépôt et il est inutilisé. C'est le type de défaut qu'un audit
+   par analyse de fichier isolé ne détecte pas.
+3. **Incohérence d'itérations PBKDF2** : 5 000 pour les PIN
+   (`SecurityUtil`) contre 100 000 pour les sauvegardes (`BackupManager`).
+
+### Étape suivante
+**Jalon 0** (décision D3) : build propre + nettoyage technique + B-110
+(renommage « Exporter et partager »). Deux arbitrages attendus avant exécution :
+- **B-003** : déclarer AppCompat, ou migrer vers `ComponentActivity` + Material3 ?
+- **B-110** : renommer les libellés seuls, ou aussi les identifiants Kotlin ?
+
+Puis **J1.1 + J1.2** : `exportSchema = true` et harnais `MigrationTestHelper`.
+
+---
+
 ## 2026-07-28 — Session 1 : Audit et mise en place du framework `.ai/`
 
 **Date** : 2026-07-28
