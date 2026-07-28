@@ -22,6 +22,30 @@ Documentation : [`DEV_ENVIRONMENT.md`](DEV_ENVIRONMENT.md).
 
 ---
 
+## 🔀 Workflow des évolutions importantes (Phase 7)
+
+```
+Audit → .ai/ → Code réel → Analyse d'impact §14 → Conception §15.1
+  → Débat multi-rôles §15.2 → Décision → Développement
+  → Compilation → Tests → Validation §13 → Impact post-correction
+  → Documentation → Clôture → Rétrospective §17
+```
+
+**Proportionnalité** (`CODING_RULES.md` §15.0) — la profondeur suit l'impact,
+jamais la taille du diff :
+
+| Niveau | Exemple | Impact | Conception | Débat | Opportunités |
+|---|---|---|---|---|---|
+| **T** Trivial | typo, commentaire | ⬜ | ⬜ | ⬜ | ⬜ |
+| **L** Local | refactor interne, ajout de test | allégée | ⬜ | ⬜ | ⬜ |
+| **S** Structurant | signature publique, écran | ✅ | ✅ | si désaccord | ✅ |
+| **C** Critique | sécurité, Room, migration, finance | ✅ | ✅ | ✅ | ✅ |
+
+**Honnêteté technique** (§16) — toute affirmation est classée :
+🔍 observé · 🔨 compilé · 🧪 testé · ▶️ exécuté · 🧠 déduit · ❓ hypothèse.
+
+---
+
 ## 🚦 Procédure obligatoire à chaque session
 
 0. **Valider l'environnement Docker** (`make verify`).
@@ -58,6 +82,7 @@ Prompt de démarrage prêt à copier : [`PROMPTS/session_start.md`](PROMPTS/sess
 | `DEPENDENCIES.md` | Dépendances, versions, risques | À chaque `libs.versions.toml` modifié |
 | `SECURITY.md` | Modèle de menace et posture sécurité | À chaque changement crypto/permission |
 | `TEST_PLAN.md` | Stratégie et couverture de tests | À chaque nouveau test |
+| `PROCESS_IMPROVEMENTS.md` | Rétrospectives et évolutions du framework (§17) | Après chaque tâche |
 | `DEV_ENVIRONMENT.md` | **Environnement Docker obligatoire** (Phase 6) | À chaque changement d'outillage |
 | `PROMPTS/` | Prompts réutilisables (démarrage, revue, rôles) | Rare |
 | `CHECKLISTS/` | Contrôles avant commit / avant PR / avant release | Rare |

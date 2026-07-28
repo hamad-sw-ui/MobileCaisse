@@ -1,45 +1,58 @@
 # 🎯 TÂCHE EN COURS
 
 **Tâche :**
-Nouvelle règle §14 (analyse d'impact) intégrée au framework **et appliquée** au
-branchement de `BackupManager`.
+Phase 7 intégrée au framework **et appliquée** au branchement de `BackupManager`
+(niveau **C**). Le workflow complet a été déroulé : impact → conception → débat
+→ opportunités.
 
-⏸️ **Développement de l'étape 5 suspendu** : l'analyse d'impact conclut
-« développement : NON », étapes 3–4 non terminées.
+⏸️ **Développement toujours suspendu** — trois prérequis non satisfaits.
 
-## État du nouvel ordre d'exécution
+## Où en est le nouvel ordre d'exécution
 
 | # | Étape | Statut |
 |---|---|---|
-| 1 | Réparer `BackupManager` | ✅ écrit — ⏳ `CORRIGÉ (INSPECTION)` |
-| 2 | Tests prouvant son fonctionnement | ✅ 26 écrits — ⏳ non exécutés |
+| 1 | Réparer `BackupManager` | ✅ écrit — `CORRIGÉ (INSPECTION)` |
+| 2 | Tests | ✅ 26 écrits — non exécutés |
 | 3 | Vérifier export → restauration | ⏳ **attend vos résultats** |
-| 4 | Corriger jusqu'à fiabilité | ⏳ selon résultats |
-| 5 | Brancher sur A, B, C | 📋 **analyse d'impact faite** — code suspendu |
-| 6 | Supprimer l'ancien mécanisme | ⛔ + **prérequis B-013 découvert** |
-| 7 | Corriger `staff.pinSalt` | ⛔ |
-| 8 | Reprendre J0 | ⛔ |
+| 4 | Corriger jusqu'à fiabilité | ⏳ |
+| 5 | Brancher A, B, C | 📋 impact + conception + débat faits — **code suspendu** |
+| 6 | Supprimer l'ancien mécanisme | ⛔ |
+| 7 | `staff.pinSalt` | ⛔ |
+| 8 | J0 | ⛔ |
 
-## Ce que l'analyse d'impact a révélé (avant d'écrire une ligne)
+## Prérequis bloquants avant l'étape 5
 
-Rapport : `REPORTS/analyse_impact_2026-07-28_branchement_backupmanager.md`
+| # | Prérequis | Origine |
+|---|---|---|
+| 1 | 26 tests `BackupManager` verts | étapes 3–4 |
+| 2 | **B-013** — checkpoint WAL avant copie | ❌ bloquant Expert Room |
+| 3 | **B-157** — protocole de vérification manuelle des 5 chemins | ❌ bloquant Expert QA |
 
-| Découverte | Conséquence |
+## Ce que la Phase 7 a produit
+
+📄 4 rapports : `analyse_impact` · `analyse_conception` · `debat_technique` ·
+`opportunites` (tous datés du 2026-07-28, sujet `branchement_backupmanager` /
+`sauvegarde`).
+
+**Découvertes, avant toute ligne de code :**
+
+| Source | Découverte |
 |---|---|
-| 🔴 **R8** — BUG-011 (checkpoint WAL) non corrigé | **B-013 devient prérequis de l'étape 6** : supprimer l'ancien mécanisme laisserait un unique chemin potentiellement incohérent |
-| 🔴 **R2** — `restoreDatabase` fait `db.close()` **avant** la copie | Un échec rend l'application inutilisable → restaurer en fichier temporaire (**B-140**) |
-| 🔴 **R1** — aucune distinction `.zip` / `.db` | Confusion possible → détection par magie de fichier (**B-141**) |
-| ❌ **QA** — aucun test ne couvre les 5 chemins actuels | Vérification manuelle obligatoire avant l'étape 6 |
-| 🔴 Chemins **D et E** structurellement inéligibles | `SetupScreen` et `BackupWorker` s'exécutent **sans interface** : aucun mot de passe saisissable. Deux formats coexisteront (**B-144**) |
-| ⚠️ `MainViewModel` unique, partagé par ~30 écrans | Interdiction de modifier une signature existante à l'étape 5 |
+| Conception | Solution A (tout migrer) **violerait D2-C** — clé recalculable depuis le `managerCode`. Écartée. |
+| Conception | Solution C retenue : corriger les fondations d'abord, brancher ensuite |
+| Débat (Room) | 🟠 **BUG-024** — fenêtre de concurrence pendant la restauration |
+| Débat (QA) | ❌ aucun état de référence : « aucune régression » serait invérifiable |
+| Débat (Sécurité) | fenêtre où deux exports coexistent, dont un non protégé → masquer dès l'étape 7 |
+| Opportunités | 13 améliorations, dont 5 duplications de `ACTION_SEND` et 2 exports CSV concurrents |
 
-**5 nouvelles tâches** (B-140 → B-144) issues de cette analyse, toutes
-identifiées **avant** toute modification de code.
+**14 nouvelles tâches** (B-145 → B-158). Aucune implémentée : proposées.
 
-**Contraintes :**
-- `CODING_RULES.md` §14 : aucune modification sans analyse d'impact préalable.
-- `CODING_RULES.md` §13 : aucun correctif terminé sans compilation + tests.
-- ⛔ Aucun branchement avant les 26 tests verts.
+⚠️ **Une objection du débat s'est révélée fausse** à la vérification (« le
+singleton `AppDatabase` n'est pas invalidé » — il l'est bien, `AppDatabase.kt:138-142`).
+Corrigée, trace conservée. → règle ajoutée à §15.2.
+
+**Objectif :**
+Obtenir 26/26 tests verts, puis traiter B-013 et B-157, puis brancher.
 
 ---
 
@@ -49,14 +62,19 @@ identifiées **avant** toute modification de code.
 cd MobileCaisse
 make verify
 ./docker/scripts/test.sh "*BackupManager*"    # attendu : 26 tests, 0 échec
-make validate                                  # détection de régressions
+make validate
 ```
 
-⚠️ `make validate` échouera probablement sur **BUG-003** (`androidx.appcompat`) :
-défaut **préexistant**, sans rapport avec `BackupManager`.
+⚠️ `make validate` échouera probablement sur **BUG-003** (`androidx.appcompat`),
+préexistant et sans rapport.
 
-À réception, j'applique `PROMPTS/analyse_resultats_build.md`.
+## ❓ Arbitrage demandé
+
+Le rapport d'opportunités propose **B-155 — double saisie du mot de passe à
+l'export**. Coût très faible, et cela supprime le mode d'échec le plus probable
+de tout le système : une faute de frappe rend l'archive **définitivement**
+illisible. → **L'intégrer à l'étape 5, ou le laisser au backlog ?**
 
 ---
 
-*Mis à jour le 2026-07-28 (rév. 7 — règle §14 appliquée).*
+*Mis à jour le 2026-07-28 (rév. 8 — Phase 7).*

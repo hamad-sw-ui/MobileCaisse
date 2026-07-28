@@ -482,6 +482,36 @@ première, `MainViewModel` et `SubscriptionWorker` la seconde. Confusion garanti
 
 ---
 
+## 🟠 BUG-024 — Fenêtre de concurrence pendant la restauration de la base
+
+**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(découvert par le débat multi-rôles, rév. 8)*
+**Fichier** : `data/repository/MainRepository.kt:801-814`
+
+```kotlin
+fun restoreDatabase(context: Context, backupFile: File): Boolean {
+    db.close()                       // base fermée
+    ... transferFrom(src, 0, ...)    // fichier réécrit, sans verrou
+}
+```
+
+🔍 *Observé* : aucun verrou ne protège l'intervalle entre la fermeture et la fin
+de la copie. 🧠 *Déduit* : toute coroutine appelant `AppDatabase.getDatabase()`
+pendant ce laps de temps rouvrirait un fichier **en cours de réécriture**.
+
+**Ce qui fonctionne déjà** — 🔍 *observé*, contrairement à l'hypothèse initiale du
+débat : `getDatabase()` (`AppDatabase.kt:138-142`) teste `isOpen` et remet
+`INSTANCE = null` si la base est fermée. Le singleton se ré-ouvre donc
+correctement. **L'objection « le singleton n'est pas invalidé » était fausse** —
+vérification faite avant inscription.
+
+**Correction attendue** : B-140 (restaurer dans un fichier temporaire, remplacer
+ensuite) réduit la fenêtre au minimum ; y ajouter un verrou pendant le
+remplacement.
+
+**Traçabilité** : `debat_technique_2026-07-28_branchement_backupmanager.md`
+
+---
+
 ## 🟠 BUG-022 — Contradiction `staff.pinSalt` : NOT NULL en migration vs nullable en logique
 
 **Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(analysé — rév. 3)*

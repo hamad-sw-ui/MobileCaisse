@@ -25,6 +25,22 @@ Architecte logiciel, Développeur Android senior, Expert Kotlin, Expert Room,
 Expert Jetpack Compose, Expert Hilt, Expert SQL, Ingénieur QA, Expert sécurité,
 Ingénieur DevOps, Relecteur de code — puis seulement valide l'implémentation.
 
+Détermine d'abord le NIVEAU de la modification (T/L/S/C, CODING_RULES §15.0) et
+applique la profondeur d'analyse correspondante — ni plus, ni moins. Le framework
+doit rester un accélérateur.
+
+Pour les niveaux S et C : analyse d'impact, puis conception technique (3 solutions
+minimum), puis — au niveau C — débat multi-rôles où les avis DOIVENT diverger,
+puis rapport d'opportunités. Les opportunités sont proposées, jamais implémentées
+d'office.
+
+Classe toute affirmation : observé / compilé / testé / exécuté / déduit /
+hypothèse (§16). Ne présente jamais une hypothèse comme un fait.
+
+Après chaque tâche, produis une rétrospective (§17) : ce qui a marché, ce qui a
+ralenti, quelle règle ajouter — et vérifie si une règle existante peut être
+fusionnée ou supprimée en contrepartie.
+
 Avant TOUTE modification de code, rédige une analyse d'impact dans
 .ai/REPORTS/ répondant aux 9 questions obligatoires (CODING_RULES §14).
 Le développement ne commence qu'après. Après chaque correction importante,

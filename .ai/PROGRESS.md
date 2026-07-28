@@ -6,6 +6,86 @@
 
 ---
 
+## 2026-07-28 — Session 7 : Phase 7 (conception, débat, opportunités)
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **`CODING_RULES.md` §15** — workflow des évolutions importantes, avec en tête
+  la **grille de proportionnalité T/L/S/C** : la profondeur d'analyse suit
+  l'impact, jamais la taille du diff. Une correction de typo ne déclenche rien ;
+  un correctif d'une ligne sur la crypto déclenche tout.
+- **§15.1 conception** (3 solutions minimum, réellement différentes),
+  **§15.2 débat** (10 rôles, désaccords attendus), **§15.3 opportunités**
+  (proposées, jamais implémentées d'office).
+- **§16 honnêteté technique** — 6 catégories d'affirmation :
+  🔍 observé · 🔨 compilé · 🧪 testé · ▶️ exécuté · 🧠 déduit · ❓ hypothèse.
+- **§17 amélioration permanente** + `PROCESS_IMPROVEMENTS.md`, avec un
+  **contrepoids anti-inflation** : toute règle ajoutée oblige à chercher laquelle
+  peut être fusionnée ou supprimée.
+- **3 modèles** : conception, débat, opportunités.
+- **Application intégrale au cas réel** (branchement `BackupManager`, niveau C) :
+  4 rapports produits.
+
+### Ce que la Phase 7 a produit concrètement
+- **Conception** : 4 solutions comparées. La solution A (tout migrer) aurait
+  **violé la décision D2-C** en dérivant la clé du `managerCode` — exactement le
+  défaut corrigé sur SQLCipher. Écartée sur cet argument.
+- **Débat** : 3 pour, 5 réservés, **2 contre bloquants** (Room, QA). Deux
+  exigences intégrées comme prérequis plutôt qu'écartées.
+- **BUG-024 découvert** : fenêtre de concurrence pendant la restauration.
+- **Opportunités** : 13 améliorations, dont 5 duplications de `ACTION_SEND` et
+  deux implémentations concurrentes de l'export CSV.
+- **14 tâches ajoutées** (B-145 → B-158), aucune implémentée.
+
+### Fichiers modifiés
+```
+M .ai/CODING_RULES.md      §15, §16, §17
+A .ai/PROCESS_IMPROVEMENTS.md
+A .ai/REPORTS/MODELE_analyse_conception.md
+A .ai/REPORTS/MODELE_debat_technique.md
+A .ai/REPORTS/MODELE_opportunites.md
+A .ai/REPORTS/analyse_conception_2026-07-28_branchement_backupmanager.md
+A .ai/REPORTS/debat_technique_2026-07-28_branchement_backupmanager.md
+A .ai/REPORTS/opportunites_2026-07-28_sauvegarde.md
+M .ai/BUGS.md (BUG-024), BACKLOG.md (B-145→B-158), README.md,
+  REPORTS/README.md, PROMPTS/session_start.md, CURRENT_TASK.md
+```
+Aucun code de production modifié.
+
+### Tests exécutés
+Aucun nouveau. 🔍 logique du format démontrée (16/16) · 🔨 compilation **non
+prouvée** · 🧪 26 tests **non exécutés**.
+
+### Problèmes rencontrés
+1. 🔴 **J'ai inscrit une objection fausse dans le débat** : « le singleton
+   `AppDatabase` n'est pas invalidé après restauration ». Vérification faite :
+   `getDatabase()` gère le cas (`AppDatabase.kt:138-142`). Corrigé, **trace
+   conservée**. Le vrai défaut est ailleurs (concurrence) → BUG-024.
+   La règle §16 a fonctionné exactement comme prévu.
+2. **Coût du processus** : zéro ligne de code produite cette session. Justifié
+   au niveau C, intenable en dessous — d'où la grille §15.0, écrite en même
+   temps que la règle qu'elle tempère.
+
+### Rétrospective *(§17)*
+Consignée dans `PROCESS_IMPROVEMENTS.md`.
+- **A bien fonctionné** : le débat a produit un défaut réel invisible en trois
+  lectures ; l'obligation de trois solutions a corrigé mon biais initial
+  (je voulais brancher directement).
+- **A ralenti** : ~40 min pour dix rôles argumentés. Rentable au niveau C seulement.
+- **Erreur évitable** : l'objection non vérifiée → **règle R1** ajoutée à §15.2
+  (toute objection conduisant à une entrée `BUGS.md` doit être vérifiée,
+  commande à l'appui). Insérée comme une phrase, pas comme une section
+  supplémentaire — application du contrepoids anti-inflation.
+- **Contrepoids proposé (R2)** : clarifier le recouvrement entre
+  `MODELE_rapport_analyse` (exploratoire) et `MODELE_analyse_conception`
+  (décision d'implémentation).
+
+### Étape suivante
+Résultats de `make verify` et `./docker/scripts/test.sh "*BackupManager*"`.
+Puis prérequis B-013 et B-157 avant l'étape 5.
+Arbitrage demandé sur **B-155** (double saisie du mot de passe).
+
 ## 2026-07-28 — Session 6 : règle d'analyse d'impact (§14) et première application
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

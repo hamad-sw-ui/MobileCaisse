@@ -321,3 +321,153 @@ la qualité de l'analyse. **Le dissimuler, en revanche, en est un.**
 
 En cas de doute : faire l'analyse complète. Elle coûte quelques minutes ; une
 régression sur des données financières coûte bien davantage.
+
+---
+
+## 15. Workflow obligatoire des évolutions importantes
+
+```
+Audit → Lecture de .ai/ → Analyse du code réel → Analyse d'impact (§14)
+  → Conception technique (§15.1) → Débat multi-rôles (§15.2)
+  → Décision argumentée → Développement → Compilation → Tests → Validation (§13)
+  → Analyse d'impact post-correction → Mise à jour de la documentation → Clôture
+```
+
+### 15.0 Proportionnalité — quelle profondeur pour quelle modification ?
+
+> Le framework doit rester un **accélérateur**, pas un frein.
+> Le niveau d'analyse est déterminé par l'**impact**, jamais par la taille du diff.
+
+| Niveau | Nature de la modification | Impact (§14) | Conception (§15.1) | Débat (§15.2) | Opportunités (§15.3) |
+|---|---|---|---|---|---|
+| **T — Trivial** | typo, commentaire, documentation, renommage local privé | ⬜ | ⬜ | ⬜ | ⬜ |
+| **L — Local** | refactor interne sans changement de signature, ajout de test | ✅ allégée (Q1, Q6, Q8) | ⬜ | ⬜ | ⬜ facultatif |
+| **S — Structurant** | signature publique, nouvel écran, nouvelle dépendance | ✅ complète | ✅ | ⬜ sauf désaccord | ✅ |
+| **C — Critique** | sécurité, chiffrement, schéma Room, migration, format persisté, logique financière, architecture | ✅ complète | ✅ | ✅ **obligatoire** | ✅ |
+
+**Règles d'arbitrage**
+- En cas de doute entre deux niveaux : **choisir le plus élevé**.
+- Un correctif d'une ligne touchant la crypto ou une migration est **C**, pas T.
+- Le niveau retenu est **écrit en tête** de l'analyse d'impact et justifié.
+- Un niveau **T** ou **L** n'exempte jamais de §13 (compilation + tests).
+
+### 15.1 Conception technique *(niveaux S et C)*
+
+Document `REPORTS/analyse_conception_<AAAA-MM-JJ>_<sujet>.md`, produit **après**
+l'analyse d'impact et **avant** toute écriture de code. Huit sections :
+
+1. **Objectif** — pourquoi cette modification est nécessaire
+2. **Problème actuel** — fonctionnement présent, limites, contraintes
+3. **Solutions possibles** — **au minimum trois**, chacune évaluée sur :
+   avantages · inconvénients · complexité · performances · sécurité ·
+   maintenabilité · impact sur l'architecture
+4. **Solution retenue** — argumentée par rapport aux autres
+5. **Risques** — classés `Faible` · `Moyen` · `Élevé` · `Critique`
+6. **Compatibilité** — rétrocompatibilité, migrations, impacts utilisateurs,
+   données, performances
+7. **Plan de développement** — petites étapes **validables individuellement**
+8. **Plan de retour arrière** — comment revenir précisément à l'état antérieur
+
+> Les trois solutions doivent être **réellement différentes** et sincèrement
+> évaluées. Deux variantes cosmétiques d'une même approche ne comptent que pour
+> une. Inclure « ne rien faire » quand c'est défendable.
+
+Modèle : [`REPORTS/MODELE_analyse_conception.md`](REPORTS/MODELE_analyse_conception.md)
+
+### 15.2 Débat technique multi-rôles *(niveau C, ou S en cas de désaccord)*
+
+Document `REPORTS/debat_technique_<AAAA-MM-JJ>_<sujet>.md`.
+
+Dix rôles minimum : Architecte · Dev Android senior · Expert Kotlin ·
+Expert Compose · Expert Room · Expert Sécurité · Expert QA ·
+Expert Performance · Expert DevOps · Relecteur.
+
+Chacun fournit : **recommandations · objections · risques · alternatives**.
+
+> ⚠️ **Les avis ne doivent jamais être artificiellement identiques.**
+> Un débat où tout le monde approuve n'est pas un débat : c'est une signature
+> collective sans valeur. Les rôles ont des intérêts structurellement
+> divergents — la sécurité veut des contrôles, la performance veut de la
+> vitesse, la QA veut de la testabilité, l'architecte veut de la pureté, le
+> développeur veut livrer. **Les désaccords sont le produit attendu.**
+
+Puis **synthèse**, puis **décision finale** expliquant :
+- quels avis ont été **retenus**, et pourquoi ;
+- quels avis ont été **écartés**, et pourquoi ;
+- quels risques résiduels sont **acceptés**, et par qui.
+
+> ⚠️ **Une objection émise en débat est une hypothèse, pas un fait.** Toute
+> objection conduisant à créer une entrée dans `BUGS.md` doit d'abord être
+> **vérifiée dans le code, commande à l'appui**. *(Règle issue de la
+> rétrospective du 2026-07-28 : une objection sur le singleton `AppDatabase`
+> s'était révélée fausse à la vérification.)*
+
+Modèle : [`REPORTS/MODELE_debat_technique.md`](REPORTS/MODELE_debat_technique.md)
+
+### 15.3 Recherche d'opportunités *(niveaux S et C)*
+
+Toute analyse d'impact cherche aussi les **améliorations**, pas seulement les
+défauts. Document `REPORTS/opportunites_<AAAA-MM-JJ>_<composant>.md`.
+
+Onze axes à examiner systématiquement : simplification · réduction du volume de
+code · performances · mémoire · batterie · lisibilité · testabilité · sécurité ·
+maintenabilité · expérience utilisateur · architecture.
+
+Chaque opportunité est chiffrée : **gain estimé · coût · priorité · risque**.
+
+> 🚫 **Les opportunités ne sont jamais implémentées automatiquement.**
+> Elles sont **proposées**, versées au backlog, et attendent un arbitrage.
+> Les mêler à la tâche en cours diluerait le périmètre et rendrait toute
+> régression impossible à attribuer.
+
+Modèle : [`REPORTS/MODELE_opportunites.md`](REPORTS/MODELE_opportunites.md)
+
+---
+
+## 16. Honnêteté technique — classification des affirmations
+
+Le framework ne masque jamais ses incertitudes. **Toute affirmation technique
+est classée** dans l'une de ces six catégories :
+
+| Marqueur | Catégorie | Force | Exemple |
+|---|---|---|---|
+| 🔍 | **Observé dans le code** | fait vérifiable | « `MainViewModel:463` appelle `syncToCloud` » |
+| 🔨 | **Démontré par compilation** | fait | « le module compile sous JDK 21 » |
+| 🧪 | **Démontré par tests** | fait | « 26/26 tests verts » |
+| ▶️ | **Démontré par exécution** | fait | « l'export fonctionne sur un appareil API 24 » |
+| 🧠 | **Déduit par raisonnement** | probable | « `NOT NULL` empêchera la migration paresseuse » |
+| ❓ | **Hypothèse à vérifier** | incertain | « le build échouera sans doute sur AppCompat » |
+
+**Règles**
+- Une **hypothèse n'est jamais présentée comme un fait**.
+- Une déduction, si solide soit-elle, ne devient un fait que par exécution.
+- Dans un rapport, la catégorie est indiquée dès qu'un doute est possible.
+- Sur les composants critiques, le tableau « démontré / non démontré » est
+  explicite (voir `CURRENT_TASK.md`).
+
+**Précédent** : `BackupManager` avait été livré comme fonctionnel après un audit
+de sécurité. 🔍 Observation : il contenait `Result<Result<Unit>>`. 🧠 Déduction :
+il ne compilait pas. Aucune de ces deux affirmations ne relevait du 🔨 — d'où la
+requalification en `CORRIGÉ (INSPECTION)`.
+
+---
+
+## 17. Amélioration permanente du framework
+
+Après **chaque tâche terminée**, analyser le processus lui-même et répondre par
+écrit dans `PROGRESS.md` (section « Rétrospective ») :
+
+1. Qu'est-ce qui a **bien fonctionné** ?
+2. Qu'est-ce qui a **ralenti** le développement ?
+3. Quelles **erreurs auraient pu être évitées** ?
+4. Quelle **nouvelle règle** améliorerait le framework ?
+5. Cette règle doit-elle devenir **permanente** ?
+
+Si une amélioration est pertinente, la **proposer avant de passer à la tâche
+suivante** — jamais l'imposer.
+
+> ⚖️ **Contrepoids obligatoire** : cette règle ne doit pas produire une
+> inflation de règles. À chaque proposition d'ajout, se demander si une règle
+> existante peut être **fusionnée, simplifiée ou supprimée**. Un framework qui
+> grossit sans cesse finit par être contourné — et un framework contourné ne
+> protège plus rien.

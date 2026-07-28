@@ -42,6 +42,24 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-142** Composant `BackupPasswordDialog` réutilisable par les 3 écrans *(éviter la triplication)*
 - □ **B-143** Avertissement UI non contournable : mot de passe perdu = sauvegarde perdue *(risque R3)*
 - □ **B-144** Documenter dans l'UI la coexistence des deux formats de sauvegarde
+- □ **B-156** 🟠 Protéger la restauration contre les accès concurrents *(BUG-024)*
+
+### Issus du débat technique (2026-07-28)
+- □ **B-145** Extraire un `BackupRepository` — *avis Architecte, reporté à J5*
+- □ **B-146** Mesurer la durée d'export sur une base de 50 Mo avant d'optimiser
+- □ **B-157** Protocole de vérification manuelle des 5 chemins **avant** modification *(exigence QA, bloquante)*
+- □ **B-158** Masquer l'ancien bouton d'export dès l'étape 7 *(exigence Sécurité)*
+
+### Opportunités identifiées (rapport `opportunites_2026-07-28_sauvegarde.md`) — **non planifiées**
+- □ **B-155** 🔴 Double saisie du mot de passe à l'export *(supprime le mode d'échec le plus probable)*
+- □ **B-147** Factoriser le partage de fichier — 5 duplications de `ACTION_SEND`
+- □ **B-148** Fusionner les deux implémentations d'export CSV
+- □ **B-149** Extraire les utilitaires Base64 dans `utils/Base64Compat.kt`
+- □ **B-150** Restauration en flux plutôt qu'en mémoire *(pic mémoire ÷ 2)*
+- □ **B-151** `BackupWorker` : éviter les sauvegardes identiques
+- □ **B-152** Journaliser export et restauration dans `action_logs`
+- □ **B-153** Purger les fichiers de cache après partage
+- □ **B-154** Afficher la date de la dernière sauvegarde
 - ☑ **B-138** Corriger l'erreur de compilation de `BackupManager` *(BUG-023, découvert en réparant)*
 - □ **B-125** 🟠 Corriger `MIGRATION_25_26` : `staff.pinSalt` en nullable *(BUG-022)* — intégré à la refonte J1.3
 - □ **B-014** Retirer la contrainte `NetworkType.CONNECTED` de `BackupWorker` *(BUG-015)*
@@ -135,13 +153,16 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 | Priorité | Total | Terminées |
 |---|---|---|
-| P0 — Build & données | 27 | 6 |
+| P0 — Build & données | 28 | 6 |
 | P1 — Sécurité | 10 | 2 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 0 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **90** | **12** |
+| **TOTAL** | **104** | **12** |
+
+> 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
+> ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
 *Dernière mise à jour : 2026-07-28 (rév. 4 — Phase 6 : environnement Docker)*
