@@ -783,33 +783,119 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun deleteRecipeComponent(recipe: RecipeEntity) = db.recipeDao().delete(recipe)
     suspend fun deleteRecipeForProduct(parentId: Long) = db.recipeDao().deleteRecipeForProduct(parentId)
 
-    fun backupDatabase(context: Context, backupFile: File): Boolean {
+    /**
+     * Force l'écriture du journal WAL dans le fichier principal de la base.
+     *
+     * Sans ce point de contrôle, une copie du seul fichier `caisse_database`
+     * omet les transactions encore présentes dans `-wal` : la sauvegarde est
+     * silencieusement incomplète (BUG-011). Room ouvre la base en
+     * `WRITE_AHEAD_LOGGING`, ce cas est donc la règle, pas l'exception.
+     *
+     * @return true si le checkpoint a réussi ; false en cas d'échec, auquel cas
+     *         la sauvegarde ne doit PAS être considérée comme fiable.
+     */
+    private fun checkpointWal(): Boolean {
         return try {
-            // No need to close the DB if using copy, but we must ensure it's not mid-write
-            // or we use Room's checkpoint.
-            val dbFile = context.getDatabasePath("caisse_database")
-            if (dbFile.exists()) {
-                val src = FileInputStream(dbFile).channel
-                val dst = FileOutputStream(backupFile).channel
-                dst.transferFrom(src, 0, src.size())
-                src.close() ; dst.close()
-                true
-            } else false
-        } catch (e: Exception) { e.printStackTrace() ; false }
+            db.query("PRAGMA wal_checkpoint(FULL)", emptyArray()).use { cursor ->
+                // La colonne 0 vaut 0 si le checkpoint a abouti, 1 s'il a été bloqué
+                // par une transaction concurrente.
+                if (cursor.moveToFirst()) cursor.getInt(0) == 0 else true
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("MainRepository", "Échec du checkpoint WAL", e)
+            false
+        }
     }
 
-    fun restoreDatabase(context: Context, backupFile: File): Boolean {
+    /**
+     * Copie le fichier de base vers [backupFile], après point de contrôle WAL.
+     *
+     * La copie passe par un fichier temporaire renommé en fin d'opération : une
+     * interruption ne laisse jamais une sauvegarde partielle à la place d'une
+     * sauvegarde valide.
+     */
+    fun backupDatabase(context: Context, backupFile: File): Boolean {
         return try {
-            db.close()
             val dbFile = context.getDatabasePath("caisse_database")
-            val src = FileInputStream(backupFile).channel
-            val dst = FileOutputStream(dbFile).channel
-            dst.transferFrom(src, 0, src.size())
-            src.close() ; dst.close()
+            if (!dbFile.exists()) return false
+
+            if (!checkpointWal()) {
+                android.util.Log.w(
+                    "MainRepository",
+                    "Checkpoint WAL non abouti : sauvegarde potentiellement incomplète"
+                )
+                return false
+            }
+
+            val tmp = File(backupFile.parentFile, "${backupFile.name}.tmp")
+            FileInputStream(dbFile).channel.use { src ->
+                FileOutputStream(tmp).channel.use { dst ->
+                    dst.transferFrom(src, 0, src.size())
+                    dst.force(true)
+                }
+            }
+            if (backupFile.exists()) backupFile.delete()
+            val renamed = tmp.renameTo(backupFile)
+            if (!renamed) tmp.delete()
+            renamed
+        } catch (e: Exception) {
+            android.util.Log.e("MainRepository", "Échec de la sauvegarde", e)
+            false
+        }
+    }
+
+    /**
+     * Remplace la base courante par le contenu de [backupFile].
+     *
+     * La copie est d'abord écrite dans un fichier temporaire ; la base n'est
+     * fermée qu'une fois cette copie **intégralement réussie** (B-140).
+     * L'ancienne implémentation appelait `db.close()` en premier : un échec de
+     * copie laissait alors l'application sans base exploitable.
+     *
+     * Les fichiers `-wal` et `-shm` résiduels sont supprimés : conservés, ils
+     * appartiendraient à l'ancienne base et corrompraient celle qui est restaurée.
+     *
+     * ⚠️ L'appelant doit relancer l'application (navigation vers `Splash`) après
+     * un retour `true` : les instances de DAO déjà obtenues pointent vers
+     * l'ancien fichier.
+     */
+    fun restoreDatabase(context: Context, backupFile: File): Boolean {
+        val dbFile = context.getDatabasePath("caisse_database")
+        val staging = File(context.cacheDir, "restore_staging.db")
+        return try {
+            if (!backupFile.exists() || backupFile.length() == 0L) return false
+
+            // 1. Copier d'abord : aucune destruction tant que ceci n'a pas abouti.
+            FileInputStream(backupFile).channel.use { src ->
+                FileOutputStream(staging).channel.use { dst ->
+                    dst.transferFrom(src, 0, src.size())
+                    dst.force(true)
+                }
+            }
+            if (staging.length() != backupFile.length()) {
+                staging.delete()
+                return false
+            }
+
+            // 2. Seulement maintenant : fermer et remplacer.
+            db.close()
+            FileInputStream(staging).channel.use { src ->
+                FileOutputStream(dbFile).channel.use { dst ->
+                    dst.transferFrom(src, 0, src.size())
+                    dst.force(true)
+                }
+            }
+
+            // 3. Purger les journaux de l'ancienne base.
+            File(dbFile.parentFile, "${dbFile.name}-wal").delete()
+            File(dbFile.parentFile, "${dbFile.name}-shm").delete()
+
+            staging.delete()
             true
-        } catch (e: Exception) { 
-            e.printStackTrace()
-            false 
+        } catch (e: Exception) {
+            android.util.Log.e("MainRepository", "Échec de la restauration", e)
+            staging.delete()
+            false
         }
     }
 

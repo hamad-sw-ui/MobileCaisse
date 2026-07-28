@@ -6,6 +6,59 @@
 
 ---
 
+## 2026-07-28 — Session 10 : gel du framework (§20) + B-013/B-140
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Framework gelé
+- **§20** : toute nouvelle règle doit démontrer son retour sur investissement
+  (7 questions). Si le bénéfice n'excède pas clairement le coût, **pas d'ajout**.
+  §20.2 privilégie **l'outil sur la règle** ; §20.3 interdit les règles par
+  anticipation ; §20.4 impose de chercher ce qui peut être supprimé.
+- **§20 s'est appliquée à elle-même** : les 7 questions sont renseignées dans le
+  document. Verdict : bénéfice supérieur au coût, adoptée.
+- **Contrepoids** : §17 (rétrospective) est **subordonnée à §20** — une
+  rétrospective ne peut plus engendrer de règle sans passer le test.
+- **Indicateur retenu** : 4 394 lignes de `.ai/` pour 12 594 de code (35 %).
+  Seuil de vigilance inscrit dans la règle.
+
+### Code livré
+- **B-013 / BUG-011** — `checkpointWal()` : `PRAGMA wal_checkpoint(FULL)` avant
+  copie, **échec explicite** si le checkpoint est bloqué. Copie via `.tmp`
+  renommé : une interruption ne remplace jamais une sauvegarde valide par une
+  sauvegarde partielle.
+- **B-140 / B-156 / BUG-024** — restauration : copie intégrale vers
+  `cacheDir/restore_staging.db` + vérification de taille **avant** `db.close()`.
+  Purge des `-wal`/`-shm` de l'ancienne base, qui corrompraient la restaurée.
+- **Conséquence** : l'objection ❌ bloquante de l'Expert Room (débat du
+  2026-07-28) est **levée**. Reste B-157 (protocole QA) avant branchement.
+
+### Fichiers modifiés
+```
+M app/src/main/java/.../data/repository/MainRepository.kt   (+80 lignes)
+M .ai/CODING_RULES.md §20 · BUGS.md · BACKLOG.md · CURRENT_TASK.md
+A .ai/REPORTS/analyse_erreurs_2026-07-28_b013.md
+```
+
+### Tests exécutés
+Aucun build. **Passe pré-compilation (§19.7)** sur le nouveau code : 4 points
+vérifiés (`RoomDatabase.query`, `Cursor.use`, `FileChannel.use`, interpolation),
+**0 cause racine anticipée**. Précédent confirmé : `SmsSyncManager:30` utilise
+déjà `cursor?.use {}`.
+
+### Problèmes rencontrés
+Aucun. Le code s'appuie sur des motifs déjà présents dans le projet.
+
+### Rétrospective *(§17, subordonnée à §20)*
+- **A bien fonctionné** : la passe §19.7 est devenue un réflexe peu coûteux
+  (~5 min) et a confirmé l'absence de risque avant de solliciter un build.
+- **A ralenti** : rien.
+- **Nouvelle règle ?** ❌ **Non** — et c'est désormais la réponse attendue par
+  défaut. §20 a été ajoutée sur demande explicite, non par anticipation.
+
+### Étape suivante
+`make validate`. Puis B-157, puis branchement de `BackupManager`.
+
 ## 2026-07-28 — Session 9 : traitement des erreurs par cause racine (§19)
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

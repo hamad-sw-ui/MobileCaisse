@@ -466,6 +466,11 @@ Après **chaque tâche terminée**, analyser le processus lui-même et répondre
 Si une amélioration est pertinente, la **proposer avant de passer à la tâche
 suivante** — jamais l'imposer.
 
+⚠️ **Subordonné à §20** : depuis le gel du framework (2026-07-28), une
+rétrospective ne peut plus déboucher sur une nouvelle règle sans avoir répondu
+aux sept questions de rentabilité. Dans la plupart des cas, la bonne réponse est
+**« aucune nouvelle règle »**.
+
 > ⚖️ **Contrepoids obligatoire** : cette règle ne doit pas produire une
 > inflation de règles. À chaque proposition d'ajout, se demander si une règle
 > existante peut être **fusionnée, simplifiée ou supprimée**. Un framework qui
@@ -563,3 +568,73 @@ API interdites. Chaque cause trouvée à ce stade économise un cycle complet.
 
 *Règle issue de la session du 2026-07-28 : cette passe a identifié 2 causes
 racines et écarté 3 faux positifs avant la première compilation.*
+
+---
+
+## 20. Retour sur investissement des règles — le framework est STABLE
+
+> **Statut au 2026-07-28 : framework GELÉ.**
+> Le framework n'est plus un objectif. C'est un **moyen au service du
+> développement**. L'objectif est désormais : livrer des fonctionnalités,
+> corriger des bugs, améliorer l'application.
+
+### 20.1 Toute nouvelle règle doit démontrer son rentabilité
+
+Sept questions, à renseigner **avant** tout ajout :
+
+| # | Question |
+|---|---|
+| 1 | Quel **incident réel** a révélé ce besoin ? |
+| 2 | La règle est-elle **générale** ou spécifique à un seul cas ? |
+| 3 | Combien de **défauts similaires** évitera-t-elle ? |
+| 4 | Quel est son **coût** en temps de développement ? |
+| 5 | Quel est son **bénéfice** estimé ? |
+| 6 | Peut-elle être remplacée par l'**amélioration d'un outil existant** ? |
+| 7 | Doit-elle être **permanente ou temporaire** ? |
+
+**Si le bénéfice n'est pas clairement supérieur au coût, la règle n'est pas
+ajoutée.** En cas d'égalité ou de doute : **ne pas ajouter**.
+
+### 20.2 Priorité à l'outil sur la règle
+
+Une règle repose sur la discipline humaine ; un outil s'applique tout seul.
+Avant d'écrire une règle, se demander si un **script**, un **test** ou une
+**vérification automatisée** ferait le même travail.
+
+*Exemple : plutôt qu'une règle « ne pas utiliser d'API supérieure à 24 », le
+test `aucune API superieure a l API 24 n est utilisee` analyse le source et
+échoue automatiquement. Une seule fois écrit, il protège pour toujours.*
+
+### 20.3 Aucune règle par anticipation
+Une règle n'est ajoutée que si **un incident survenu pendant le développement**
+en démontre la nécessité. Pas de règle « au cas où ».
+
+### 20.4 Contrepoids : le framework peut aussi maigrir
+Toute proposition d'ajout s'accompagne de la question : **quelle règle existante
+peut être fusionnée, simplifiée ou supprimée ?** Un framework qui ne cesse de
+grossir finit contourné — et un framework contourné ne protège plus rien.
+
+Indicateur de vigilance au 2026-07-28 : **4 394 lignes de `.ai/` pour 12 594
+lignes de code** (ratio 35 %). Au-delà, la documentation devient un coût net.
+
+---
+
+### Application de §20 à elle-même
+
+| # | Question | Réponse |
+|---|---|---|
+| 1 | Incident réel | 19 règles ajoutées en 9 sessions, dont plusieurs par anticipation. Ratio doc/code de 35 %. Une session entière (§7) sans une ligne de code produite. |
+| 2 | Générale ? | ✅ Générale — elle gouverne toutes les règles futures. |
+| 3 | Défauts évités | Toutes les futures règles non rentables. Sur le rythme constaté, plusieurs par mois. |
+| 4 | Coût | ~10 min par proposition de règle. Nul s'il n'y a pas de proposition. |
+| 5 | Bénéfice | Préserve la vélocité de développement, qui est désormais l'objectif principal. |
+| 6 | Remplaçable par un outil ? | ❌ Non — c'est une règle de gouvernance, non automatisable. |
+| 7 | Permanente ? | ✅ Permanente. |
+
+**Verdict : bénéfice nettement supérieur au coût → règle adoptée.**
+
+**Contrepoids appliqué (§20.4)** : §17 (amélioration permanente) faisait
+double emploi avec §20. §17 est **conservée pour la rétrospective** — utile pour
+apprendre — mais son volet « proposer une nouvelle règle » est désormais
+**subordonné à §20**. Aucune règle nouvelle ne peut naître d'une rétrospective
+sans passer les sept questions.

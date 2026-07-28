@@ -454,7 +454,13 @@ requalifier les copies brutes. À traiter avec **BUG-011** et la décision **D2*
 
 ## 🟡 BUG-011 — Sauvegarde du fichier `.db` sans checkpoint WAL
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**⏳ En attente de validation par compilation réelle.**
+**Correctif** : `checkpointWal()` exécute `PRAGMA wal_checkpoint(FULL)` avant
+toute copie et **échoue explicitement** si le checkpoint est bloqué — une
+sauvegarde incomplète est pire qu'une absence de sauvegarde. La copie transite
+désormais par un fichier `.tmp` renommé en fin d'opération : une interruption ne
+remplace jamais une sauvegarde valide par une sauvegarde partielle.
 **Fichiers** : `data/repository/MainRepository.kt` (`backupDatabase`, `syncToCloud`), `BackupWorker`
 
 Le fichier `caisse_database` est copié alors que le mode `WRITE_AHEAD_LOGGING`
@@ -491,7 +497,14 @@ première, `MainViewModel` et `SubscriptionWorker` la seconde. Confusion garanti
 
 ## 🟠 BUG-024 — Fenêtre de concurrence pendant la restauration de la base
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(découvert par le débat multi-rôles, rév. 8)*
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**⏳ En attente de validation par compilation réelle.**
+**Correctif (B-140)** : la copie est intégralement écrite dans un fichier de
+transit (`cacheDir/restore_staging.db`) et sa taille vérifiée **avant** que
+`db.close()` ne soit appelé. La fenêtre où la base est fermée se limite
+désormais à une copie locale déjà validée. Les fichiers `-wal` et `-shm`
+résiduels sont supprimés : conservés, ils appartiendraient à l'ancienne base et
+corrompraient celle qui vient d'être restaurée.
 **Fichier** : `data/repository/MainRepository.kt:801-814`
 
 ```kotlin

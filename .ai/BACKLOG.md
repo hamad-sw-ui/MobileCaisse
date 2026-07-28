@@ -30,19 +30,19 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-010** 🔴 Réécrire les 6 migrations divergentes + migration corrective 28→29 *(BUG-001)*
 - □ **B-011** 🔴 Bases < v18 : détection + écran de consentement + export de courtoisie + recréation *(BUG-002 — **décision D1 : perte assumée avec accord de l'utilisateur**)*
 - □ **B-012** Écrire les tests `MigrationTestHelper` pour toute la chaîne 18→29
-- □ **B-013** 🔴 Checkpoint WAL avant copie du `.db` *(BUG-011)* — **prérequis de l'étape 6** (risque R8 de l'analyse d'impact)
+- ☑ **B-013** Checkpoint WAL + copie via fichier temporaire *(BUG-011)*
 - ☑ **B-120** Corriger le chiffrement AES-GCM *(BUG-018)* — tag géré par `doFinal`, format v2
 - ☑ **B-121** Chiffrer réellement la base dans l'archive *(BUG-019)* — chiffrement en flux
 - ☑ **B-122** Remplacer `java.time.Instant` et `readAllBytes()` *(BUG-020)* — API 24 garantie par test
 - ☑ **B-123** `databaseVersion` fourni par l'appelant *(BUG-021)*
 - ☑ **B-124** 26 tests unitaires `BackupManager` + harnais Python indépendant (16/16)
 - □ **B-101** 🟠 Brancher `BackupManager` sur les chemins A, B, C *(BUG-017)* — ⏳ **attend la validation des tests dans Docker**
-- □ **B-140** Restaurer dans un **fichier temporaire** puis remplacer après validation *(risque R2 : `db.close()` suivi d'un échec rend l'app inutilisable)*
+- ☑ **B-140** Restauration via fichier de transit validé avant `db.close()` *(BUG-024, risque R2)*
 - □ **B-141** Détecter le format `.zip` vs `.db` legacy par magie de fichier *(risque R1 : confusion → base corrompue)*
 - □ **B-142** Composant `BackupPasswordDialog` réutilisable par les 3 écrans *(éviter la triplication)*
 - □ **B-143** Avertissement UI non contournable : mot de passe perdu = sauvegarde perdue *(risque R3)*
 - □ **B-144** Documenter dans l'UI la coexistence des deux formats de sauvegarde
-- □ **B-156** 🟠 Protéger la restauration contre les accès concurrents *(BUG-024)*
+- ☑ **B-156** Fenêtre de concurrence réduite au minimum *(BUG-024)*
 
 ### Issus du débat technique (2026-07-28)
 - □ **B-145** Extraire un `BackupRepository` — *avis Architecte, reporté à J5*
@@ -160,7 +160,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **104** | **23** |
+| **TOTAL** | **104** | **26** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
