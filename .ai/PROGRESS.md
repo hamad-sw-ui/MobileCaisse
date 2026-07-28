@@ -6,6 +6,64 @@
 
 ---
 
+## 2026-07-28 — Session 4 : réparation de BackupManager (étapes 1–2 du nouvel ordre)
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **BUG-023 découvert avant tout le reste** : `BackupManager` **ne compilait pas**.
+  `exportBackupWithPassword` déclarait `Result<Unit>` alors que
+  `runCatching { … ; Result.success(Unit) }` produit `Result<Result<Unit>>`.
+  Preuve définitive que ce fichier n'a jamais été compilé.
+- **Réécriture complète du module** (format d'archive **v2**) :
+  - BUG-018 — suppression de la gestion manuelle du tag GCM ;
+  - BUG-019 — base chiffrée par la clé du mot de passe, **en flux** (8 Ko) ;
+  - BUG-020 — `Instant.now()` **et** `readAllBytes()` (API 33, non repéré à
+    l'audit) remplacés par des API disponibles depuis l'API 1 ;
+  - BUG-021 — `databaseVersion` fourni par l'appelant.
+- **Renforcements** : manifeste authentifié via l'**AAD** (une altération du
+  nombre d'itérations PBKDF2 invalide l'archive), checksum SHA-256 vérifié après
+  déchiffrement, suppression des fichiers partiels en cas d'échec,
+  `peekMetadata()`, écart d'identité signalé sans blocage.
+- **26 tests unitaires** couvrant les 5 garanties demandées.
+- **Harnais de validation indépendant** `tools/verification/verify_backup_format.py` :
+  réimplémentation Python du format — **16/16 contrôles réussis**.
+
+### Fichiers modifiés
+```
+M app/src/main/java/com/reconsiliation/caisse/utils/BackupManager.kt   (réécrit)
+A app/src/test/java/com/reconsiliation/caisse/utils/BackupManagerTest.kt  (26 tests)
+A tools/verification/verify_backup_format.py + README.md
+M app/build.gradle.kts        (commentaire seul — aucune dépendance ajoutée)
+M .ai/BUGS.md, BACKLOG.md, CURRENT_TASK.md, PROGRESS.md
+```
+Aucun écran ni ViewModel modifié : le branchement viendra après validation.
+
+### Tests exécutés
+- ✅ **Harnais Python : 16/16** — aller-retour, mauvais mot de passe, base non
+  lisible en clair, altérations base/métadonnées/manifeste détectées, nonce
+  unique, `databaseVersion = 28`, **BUG-018 reproduit puis corrigé**.
+- ✅ Contrôles structurels Kotlin : délimiteurs équilibrés, 26 `@Test`.
+- ❌ **Tests Kotlin non exécutés** : ni Docker ni JDK dans l'environnement de
+  l'agent. **Exécution par le responsable requise.**
+
+### Problèmes rencontrés
+1. **Le module ne compilait pas** (BUG-023) — invalide l'hypothèse selon
+   laquelle `BackupManager` était « écrit mais seulement pas branché » : il était
+   aussi syntaxiquement invalide.
+2. **Second défaut de compatibilité non repéré à l'audit** : `readAllBytes()`
+   exige l'API 33. Le test d'analyse du source empêche désormais sa réapparition.
+3. **Impossible d'exécuter les tests Kotlin** → contourné par une seconde
+   implémentation indépendante en Python, qui valide la logique du format mais
+   **ne remplace pas** l'exécution réelle.
+4. `javax.xml.bind` utilisé initialement comme oracle Base64 : supprimé du JDK
+   depuis la version 11. Remplacé par les vecteurs de la RFC 4648.
+
+### Étape suivante
+`./docker/scripts/test.sh "*BackupManager*"` — attendu 26/26.
+Puis étape 5 : branchement sur les chemins A, B et C.
+Aucun branchement avant tests verts (consigne explicite).
+
 ## 2026-07-28 — Session 3 : Phase 6, environnement Docker
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

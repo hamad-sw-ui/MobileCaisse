@@ -31,12 +31,13 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-011** 🔴 Bases < v18 : détection + écran de consentement + export de courtoisie + recréation *(BUG-002 — **décision D1 : perte assumée avec accord de l'utilisateur**)*
 - □ **B-012** Écrire les tests `MigrationTestHelper` pour toute la chaîne 18→29
 - □ **B-013** Corriger la sauvegarde : checkpoint WAL avant copie du `.db` *(BUG-011)*
-- □ **B-120** 🔴 **Corriger le chiffrement AES-GCM de `BackupManager`** (tag concaténé deux fois → tout import échoue) *(BUG-018)*
-- □ **B-121** 🟠 **Chiffrer réellement la base** dans l'archive (aujourd'hui seules les métadonnées le sont) *(BUG-019)*
-- □ **B-122** 🟠 Remplacer `java.time.Instant` (API 26) — incompatible minSdk 24 sans desugaring *(BUG-020)*
-- □ **B-123** 🟡 Lire la version réelle du schéma au lieu de `databaseVersion = 27` en dur *(BUG-021)*
-- □ **B-124** 🟠 Tests unitaires `BackupManager` : aller-retour export→import, mauvais mot de passe, archive corrompue
-- □ **B-101** 🟠 Brancher `BackupManager` sur le parcours réel de sauvegarde/restauration *(BUG-017)* — **dépend de B-120 à B-124**
+- ☑ **B-120** Corriger le chiffrement AES-GCM *(BUG-018)* — tag géré par `doFinal`, format v2
+- ☑ **B-121** Chiffrer réellement la base dans l'archive *(BUG-019)* — chiffrement en flux
+- ☑ **B-122** Remplacer `java.time.Instant` et `readAllBytes()` *(BUG-020)* — API 24 garantie par test
+- ☑ **B-123** `databaseVersion` fourni par l'appelant *(BUG-021)*
+- ☑ **B-124** 26 tests unitaires `BackupManager` + harnais Python indépendant (16/16)
+- □ **B-101** 🟠 Brancher `BackupManager` sur les chemins A, B, C *(BUG-017)* — ⏳ **attend la validation des tests dans Docker**
+- ☑ **B-138** Corriger l'erreur de compilation de `BackupManager` *(BUG-023, découvert en réparant)*
 - □ **B-125** 🟠 Corriger `MIGRATION_25_26` : `staff.pinSalt` en nullable *(BUG-022)* — intégré à la refonte J1.3
 - □ **B-014** Retirer la contrainte `NetworkType.CONNECTED` de `BackupWorker` *(BUG-015)*
 
@@ -129,13 +130,13 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 | Priorité | Total | Terminées |
 |---|---|---|
-| P0 — Build & données | 21 | 0 |
+| P0 — Build & données | 22 | 6 |
 | P1 — Sécurité | 10 | 2 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 0 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **84** | **6** |
+| **TOTAL** | **85** | **12** |
 
 *Dernière mise à jour : 2026-07-28 (rév. 4 — Phase 6 : environnement Docker)*

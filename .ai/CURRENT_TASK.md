@@ -1,56 +1,75 @@
 # 🎯 TÂCHE EN COURS
 
 **Tâche :**
-**Jalon D — Environnement Docker (Phase 6)** : livré, **en attente de première
-exécution par le responsable**.
+**Étape 1–4 du nouvel ordre : réparer `BackupManager` et prouver son
+fonctionnement.** Code livré, tests écrits, logique validée par un harnais
+indépendant. ⏳ **En attente d'exécution des tests dans Docker.**
 
-⛔ **BLOCAGE — action requise de votre part.**
-L'environnement de l'agent n'a **ni Docker, ni JDK, ni SDK Android**
-(`docker: command not found`, `java: command not found`). L'environnement est
-écrit et vérifié syntaxiquement, mais **jamais exécuté**.
+## Nouvel ordre d'exécution (validé le 2026-07-28)
+
+| # | Étape | Statut |
+|---|---|---|
+| 1 | Réparer complètement `BackupManager` | ✅ **fait** — BUG-018/019/020/021 + BUG-023 |
+| 2 | Ajouter les tests prouvant son fonctionnement | ✅ **fait** — 26 tests Kotlin |
+| 3 | Vérifier export → restauration | ⏳ **attend `make test`** |
+| 4 | Corriger jusqu'à fiabilité complète | ⏳ selon résultats |
+| 5 | Brancher sur A, B, C | ⛔ bloqué par 3 |
+| 6 | Supprimer l'ancien mécanisme | ⛔ bloqué par 5 |
+| 7 | Corriger `staff.pinSalt` | ⛔ après 6 |
+| 8 | Reprendre J0 | ⛔ après 7 |
+
+## Ce qui a été corrigé
+
+| Bug | Correctif |
+|---|---|
+| **BUG-023** 🔴 *(nouveau)* | Le fichier **ne compilait pas** : `Result<Unit>` déclaré, `Result<Result<Unit>>` produit. Preuve qu'il n'a jamais été compilé |
+| **BUG-018** 🔴 | Tag GCM concaténé deux fois → tout import échouait. Format v2 : `IV \|\| AES-GCM(payload)` |
+| **BUG-019** 🟠 | La base est désormais chiffrée par la clé du mot de passe, **en flux** (8 Ko) |
+| **BUG-020** 🟠 | `Instant.now()` (API 26) **et** `readAllBytes()` (API 33, non repéré à l'audit) remplacés |
+| **BUG-021** 🟡 | `databaseVersion` fourni par l'appelant |
+
+**Renforcements ajoutés** : manifeste en clair mais **authentifié via l'AAD** ;
+checksum SHA-256 vérifié après déchiffrement ; nettoyage des fichiers partiels
+en cas d'échec ; `peekMetadata()` pour un aperçu avant restauration ; écart
+d'identité **signalé** et non bloquant (la décision revient à l'UI).
+
+## Preuves disponibles
+
+1. **26 tests unitaires** — `app/src/test/.../BackupManagerTest.kt`, JVM pur,
+   exécutables dans Docker sans appareil.
+2. **Harnais indépendant** — `tools/verification/verify_backup_format.py` :
+   réimplémente le format en Python, **16/16 contrôles réussis**, BUG-018
+   reproduit puis corrigé. Exécuté avec succès.
+
+**Objectif :**
+Obtenir 26/26 tests verts dans Docker avant tout branchement.
+
+**Contraintes :**
+- ⛔ **Ne pas brancher** tant que les tests Kotlin ne sont pas verts (votre consigne).
+- Aucune dépendance ajoutée au projet (vérifié : `git diff` sur `libs.versions.toml` vide).
+- Ne pas régresser les 5 correctifs de sécurité (`SECURITY.md` §0).
+- L'agent n'a ni Docker ni JDK : exécution par le responsable (D4).
+
+---
+
+## ▶️ Commandes à exécuter
 
 ```bash
 cd MobileCaisse
-make image     # ~5-10 min la première fois
-make verify    # doit conclure « Environnement validé »
+make image                              # si pas déjà fait
+make verify
+./docker/scripts/test.sh "*BackupManager*"
 ```
 
-Puis me transmettre la sortie.
+Attendu : **26 tests, 0 échec**. Transmettez-moi la sortie — y compris en cas
+d'échec, ce qui est possible : le code n'a jamais été compilé.
 
-**Objectif :**
-Disposer d'un environnement de build reproductible et **prouvé fonctionnel**,
-préalable obligatoire à toute modification de code (Phase 6).
-
-**Contraintes :**
-- Aucune modification de code de production tant que `make verify` n'a pas réussi.
-- ⚠️ `make validate` échouera **probablement** à la compilation à cause de
-  **BUG-003** (`androidx.appcompat` utilisé mais non déclaré). C'est **attendu**
-  et utile : première preuve objective d'un défaut jusqu'ici établi par lecture
-  seule. Sa correction est **B-003**, première tâche de J0.
-- Ne pas régresser les 5 correctifs de sécurité vérifiés (voir `SECURITY.md` §0).
+Validation croisée facultative, sans Docker :
+```bash
+pip install cryptography
+python3 tools/verification/verify_backup_format.py   # attendu : 16/16
+```
 
 ---
 
-## File d'attente validée (après déblocage de l'environnement)
-
-| # | Tâche | Réf. | Décision |
-|---|---|---|---|
-| 1 | Réparer `BackupManager` : AES-GCM, chiffrement de la base, `Instant`, version | B-120→B-123 | ⏳ arbitrage en attente |
-| 2 | Tests unitaires `BackupManager` | B-124 | |
-| 3 | Brancher `BackupManager` sur les chemins A, B, C | B-101 | demandé |
-| 4 | Corriger `staff.pinSalt` (la **migration** a tort) | B-125 | verdict rendu |
-| 5 | **J0** — build propre, nettoyage, `ComponentActivity` + Material3, B-110 | B-001→B-008, B-100 | D3, B-003, B-110 |
-| 6 | **J1.1 + J1.2** — `exportSchema` + harnais `MigrationTestHelper` | B-009, B-012 | D3 |
-| 7 | **J1.3** — refonte complète de la chaîne de migrations | B-010 | J1.3 |
-
-### Arbitrages toujours en attente
-1. **`BackupManager` cassé** — je répare (B-120→B-124) avant de brancher, ou je
-   branche d'abord ? *(recommandation : réparer d'abord — brancher un module
-   cassé produirait des sauvegardes irrécupérables)*
-2. **BUG-019** — chiffrer la base avec le mot de passe (archive protégée en
-   propre, mémoire ×2 pendant l'opération), ou s'en tenir à SQLCipher et
-   corriger seulement le libellé ?
-
----
-
-*Mis à jour le 2026-07-28 (rév. 4 — Phase 6).*
+*Mis à jour le 2026-07-28 (rév. 5).*

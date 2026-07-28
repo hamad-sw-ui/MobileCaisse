@@ -253,9 +253,17 @@ implémenté : l'app ignore les refus.
 
 ---
 
-## 🔴 BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
+## ✅ BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
 
-**Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE *(nouveau — rév. 3)*
+**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : `Cipher.doFinal()` en mode GCM retourne déjà `ciphertext || tag` ;
+le code extrayait le tag *sans le retirer*, puis le reconcaténait au déchiffrement
+(`CT || TAG || TAG`) → `AEADBadTagException` systématique.
+**Correctif** : suppression totale de la gestion manuelle du tag. Format v2 :
+`IV(12) || AES-GCM(payload)`, `doFinal` gère le tag.
+**Preuve** : bug reproduit puis corrigé dans
+`tools/verification/verify_backup_format.py` (contrôle 6/16) + tests Kotlin
+`une sauvegarde exportee peut etre restauree a l identique`.
 **Fichier** : `utils/BackupManager.kt:233-270`
 
 `Cipher.doFinal()` en mode GCM retourne **déjà** `ciphertext || tag` concaténés.
@@ -287,9 +295,16 @@ gestion manuelle du tag, `doFinal` s'en charge.
 
 ---
 
-## 🟠 BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
+## ✅ BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 3)*
+**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Cause racine** : `zip.write(dbBytes)` écrivait les octets bruts ; seules les
+métadonnées étaient chiffrées.
+**Correctif** : la base est chiffrée en flux par la clé dérivée du mot de passe
+(entrée `database.enc`). Traitement par blocs de 8 Ko : le fichier n'est jamais
+chargé entièrement en mémoire.
+**Preuve** : test `la base n est pas stockee en clair dans l archive` (vérifie
+l'absence de l'en-tête `SQLite format 3`) + contrôles 4/16 du harnais Python.
 **Fichier** : `utils/BackupManager.kt:114-118`
 
 ```kotlin
@@ -310,9 +325,16 @@ déchiffrer symétriquement à l'import. À traiter avec BUG-018.
 
 ---
 
-## 🟠 BUG-020 — `java.time.Instant` incompatible avec minSdk 24
+## ✅ BUG-020 — `java.time.Instant` incompatible avec minSdk 24
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 3)*
+**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Correctif** : `SimpleDateFormat` en UTC (API 1), cohérent avec `java.util.Date`
+utilisé partout ailleurs. Aucun desugaring requis.
+**Bonus** : `InputStream.readAllBytes()` (API 33) également remplacé —
+il aurait provoqué le même crash, non détecté par l'audit initial.
+**Preuve** : test `aucune API superieure a l API 24 n est utilisee`, qui **analyse
+le code source** et échouera si `java.time.`, `java.util.Base64`,
+`readAllBytes()` ou `java.nio.file.Files` réapparaissent. Garde-fou permanent.
 **Fichiers** : `utils/BackupManager.kt:13,77`, `app/build.gradle.kts`
 
 `Instant.now()` requiert **API 26**. Le projet déclare `minSdk = 24` et
@@ -327,15 +349,37 @@ projet, qui utilise `java.util.Date` partout).
 
 ---
 
-## 🟡 BUG-021 — `BackupMetadata.databaseVersion` figé à 27
+## ✅ BUG-021 — `BackupMetadata.databaseVersion` figé à 27
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR *(nouveau — rév. 3)*
+**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Correctif** : `databaseVersion` devient un paramètre obligatoire de
+`exportBackupWithPassword`, fourni par l'appelant depuis `AppDatabase`.
+**Preuve** : test `la version du schema est celle transmise et non une valeur figee`.
 **Fichier** : `utils/BackupManager.kt:28,81`
 
 `databaseVersion: Int = 27` en dur, alors que le schéma est en **v28**. La
 métadonnée censée permettre de refuser une sauvegarde incompatible est fausse.
 
 **Correction** : lire la version réelle depuis `AppDatabase`.
+
+---
+
+## ✅ BUG-023 — `BackupManager` ne compilait pas
+
+**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🔴 CRITIQUE *(découvert rév. 5)*
+
+`exportBackupWithPassword` déclarait `Result<Unit>` mais son corps était
+`runCatching { … ; Result.success(Unit) }`, ce qui produit un
+**`Result<Result<Unit>>`** → erreur de type, refus du compilateur Kotlin.
+
+**Portée** : preuve définitive que ce fichier n'a **jamais été compilé** depuis
+son écriture. Il ne pouvait donc pas être couvert par les « 2 tests
+d'instrumentation qui passent » mentionnés lors de l'audit antérieur — ceux-ci
+concernent `SecurityMigrationTest`, qui ne touche pas `BackupManager`.
+
+**Correctif** : réécriture complète du module. Signatures désormais cohérentes
+(`Result<File>`, `Result<BackupImportResult>`), paramètre `context` inutilisé
+supprimé, import `Mac` mort supprimé.
 
 ---
 

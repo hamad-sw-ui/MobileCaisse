@@ -68,6 +68,8 @@ dependencies {
     implementation("net.zetetic:android-database-sqlcipher:4.5.4")
     implementation("androidx.sqlite:sqlite-ktx:2.4.0")
 
+    // BackupManager est du Kotlin/JVM pur (aucune dépendance au framework Android) :
+    // ses tests s'exécutent en JVM, donc dans Docker, sans appareil ni Robolectric.
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
