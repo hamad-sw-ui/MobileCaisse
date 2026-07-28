@@ -7,6 +7,8 @@ Procédure obligatoire :
 1. Lire .ai/ (CURRENT_TASK, ARCHITECTURE, CODING_RULES, ANDROID_RULES + le fichier
    du domaine concerné).
 2. Vérifier que la fonctionnalité n'existe pas déjà, même partiellement (grep).
+2bis. RÉDIGER L'ANALYSE D'IMPACT dans .ai/REPORTS/ (CODING_RULES §14) —
+      le développement ne commence qu'après.
 3. Concevoir AVANT de coder : entités, DAO, repository, ViewModel, écran, navigation.
 4. Passer la conception à la grille des 11 rôles (.ai/PROMPTS/roles.md).
 5. Implémenter de bas en haut : données → repository → ViewModel → UI.

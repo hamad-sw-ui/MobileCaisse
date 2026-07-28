@@ -38,6 +38,13 @@ grep -rn "AppDatabase\.\|getDatabasePath" app/src/main/java/com/reconsiliation/c
 git diff main --name-only -- '*.kt' | xargs wc -l | sort -n | tail
 ```
 
+## 1bis. ☐ Analyses d'impact jointes
+
+- [ ] Analyse d'impact **préalable** présente dans `.ai/REPORTS/`
+- [ ] Analyse d'impact **post-correction** présente
+- [ ] Les écarts prévu/constaté sont expliqués, pas dissimulés
+- [ ] Tous les points de la liste de revérification sont traités
+
 ## 2. ☐ Documentation mise à jour
 
 - [ ] `.ai/PROGRESS.md` — une entrée par session de la branche

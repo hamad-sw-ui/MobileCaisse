@@ -1,45 +1,45 @@
 # 🎯 TÂCHE EN COURS
 
 **Tâche :**
-**Étapes 1–2 du nouvel ordre livrées. ⏳ En attente de validation par
-compilation réelle.**
+Nouvelle règle §14 (analyse d'impact) intégrée au framework **et appliquée** au
+branchement de `BackupManager`.
 
-> **État officiel : « Corrigé par inspection statique, en attente de validation
-> par compilation réelle. »**
-> Aucun des bugs BUG-018 à BUG-023 n'est considéré comme résolu.
+⏸️ **Développement de l'étape 5 suspendu** : l'analyse d'impact conclut
+« développement : NON », étapes 3–4 non terminées.
 
-## Nouvel ordre d'exécution
+## État du nouvel ordre d'exécution
 
 | # | Étape | Statut |
 |---|---|---|
-| 1 | Réparer `BackupManager` | ✅ écrit — ⏳ non compilé |
-| 2 | Tests prouvant son fonctionnement | ✅ 26 tests écrits — ⏳ non exécutés |
+| 1 | Réparer `BackupManager` | ✅ écrit — ⏳ `CORRIGÉ (INSPECTION)` |
+| 2 | Tests prouvant son fonctionnement | ✅ 26 écrits — ⏳ non exécutés |
 | 3 | Vérifier export → restauration | ⏳ **attend vos résultats** |
-| 4 | Corriger jusqu'à fiabilité complète | ⏳ selon résultats |
-| 5 | Brancher sur A, B, C | ⛔ bloqué par 3–4 |
-| 6 | Supprimer l'ancien mécanisme | ⛔ bloqué par 5 |
-| 7 | Corriger `staff.pinSalt` | ⛔ après 6 |
-| 8 | Reprendre J0 | ⛔ après 7 |
+| 4 | Corriger jusqu'à fiabilité | ⏳ selon résultats |
+| 5 | Brancher sur A, B, C | 📋 **analyse d'impact faite** — code suspendu |
+| 6 | Supprimer l'ancien mécanisme | ⛔ + **prérequis B-013 découvert** |
+| 7 | Corriger `staff.pinSalt` | ⛔ |
+| 8 | Reprendre J0 | ⛔ |
 
-## Ce qui est démontré, ce qui ne l'est pas
+## Ce que l'analyse d'impact a révélé (avant d'écrire une ligne)
 
-| Élément | Statut | Preuve |
-|---|---|---|
-| Logique cryptographique du format v2 | ✅ **démontrée** | `verify_backup_format.py` — 16/16, exécuté |
-| BUG-018 reproduit puis corrigé *dans le format* | ✅ **démontré** | contrôle 6/16 |
-| **Compilation du module Kotlin** | ❌ **non prouvée** | aucun JDK dans l'environnement |
-| **Exécution des 26 tests Kotlin** | ❌ **non prouvée** | aucun Docker dans l'environnement |
-| Compatibilité **réelle** API 24 | ❌ **non prouvée** | exige un appareil API 24 |
-| Absence de régression | ❌ **non prouvée** | aucun build de référence |
+Rapport : `REPORTS/analyse_impact_2026-07-28_branchement_backupmanager.md`
 
-**Objectif :**
-Convertir `CORRIGÉ (INSPECTION)` en `CORRIGÉ (VALIDÉ)` pour BUG-018/019/021/023.
-BUG-020 restera partiellement validé sans appareil API 24.
+| Découverte | Conséquence |
+|---|---|
+| 🔴 **R8** — BUG-011 (checkpoint WAL) non corrigé | **B-013 devient prérequis de l'étape 6** : supprimer l'ancien mécanisme laisserait un unique chemin potentiellement incohérent |
+| 🔴 **R2** — `restoreDatabase` fait `db.close()` **avant** la copie | Un échec rend l'application inutilisable → restaurer en fichier temporaire (**B-140**) |
+| 🔴 **R1** — aucune distinction `.zip` / `.db` | Confusion possible → détection par magie de fichier (**B-141**) |
+| ❌ **QA** — aucun test ne couvre les 5 chemins actuels | Vérification manuelle obligatoire avant l'étape 6 |
+| 🔴 Chemins **D et E** structurellement inéligibles | `SetupScreen` et `BackupWorker` s'exécutent **sans interface** : aucun mot de passe saisissable. Deux formats coexisteront (**B-144**) |
+| ⚠️ `MainViewModel` unique, partagé par ~30 écrans | Interdiction de modifier une signature existante à l'étape 5 |
+
+**5 nouvelles tâches** (B-140 → B-144) issues de cette analyse, toutes
+identifiées **avant** toute modification de code.
 
 **Contraintes :**
-- `CODING_RULES.md` §13 : compilation réelle + tests + aucune régression.
-- ⛔ Aucun branchement avant tests verts.
-- Ne pas régresser les 5 correctifs de sécurité (`SECURITY.md` §0).
+- `CODING_RULES.md` §14 : aucune modification sans analyse d'impact préalable.
+- `CODING_RULES.md` §13 : aucun correctif terminé sans compilation + tests.
+- ⛔ Aucun branchement avant les 26 tests verts.
 
 ---
 
@@ -48,29 +48,15 @@ BUG-020 restera partiellement validé sans appareil API 24.
 ```bash
 cd MobileCaisse
 make verify
-./docker/scripts/test.sh "*BackupManager*"     # attendu : 26 tests, 0 échec
+./docker/scripts/test.sh "*BackupManager*"    # attendu : 26 tests, 0 échec
+make validate                                  # détection de régressions
 ```
 
-Puis, pour détecter les régressions ailleurs :
-```bash
-make validate
-```
+⚠️ `make validate` échouera probablement sur **BUG-003** (`androidx.appcompat`) :
+défaut **préexistant**, sans rapport avec `BackupManager`.
 
-Transmettez-moi les sorties **complètes**, y compris en cas d'échec.
-⚠️ `make validate` échouera probablement sur **BUG-003** (`androidx.appcompat`),
-défaut **préexistant et sans rapport** avec `BackupManager` — attendu, à ne pas
-confondre avec un échec du correctif.
-
-À réception, j'applique `PROMPTS/analyse_resultats_build.md` :
-analyser → corriger → relancer toute la chaîne → ne déclarer résolu qu'après
-réussite complète.
-
-Validation croisée facultative, sans Docker :
-```bash
-pip install cryptography
-python3 tools/verification/verify_backup_format.py    # attendu : 16/16
-```
+À réception, j'applique `PROMPTS/analyse_resultats_build.md`.
 
 ---
 
-*Mis à jour le 2026-07-28 (rév. 6 — terminologie de validation corrigée).*
+*Mis à jour le 2026-07-28 (rév. 7 — règle §14 appliquée).*

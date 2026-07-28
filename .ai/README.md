@@ -77,6 +77,8 @@ Relecteur). Grille détaillée : [`PROMPTS/roles.md`](PROMPTS/roles.md).
 
 ## ✅ Règles d'or
 
+- **Analyse d'impact avant toute modification** (`CODING_RULES.md` §14) :
+  9 questions, enregistrée dans `REPORTS/`, antérieure au code.
 - **Un correctif non exécuté est une hypothèse.** Compilation réelle + tests
   passés + aucune régression = seule définition de « terminé » (`CODING_RULES.md` §13).
 - **Double validation** pour les composants critiques : implémentation de

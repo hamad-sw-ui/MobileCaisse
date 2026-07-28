@@ -236,3 +236,88 @@ format d'archive v2 en Python et a **reproduit BUG-018** (`CT||TAG||TAG` →
 
 Les harnais indépendants vivent dans `tools/verification/` et sont **conservés**
 après usage : ils servent d'oracle anti-régression lors des évolutions.
+
+---
+
+## 14. Analyse d'impact obligatoire avant toute modification
+
+> **Aucune modification de code ne commence avant qu'une analyse d'impact ait
+> été rédigée et enregistrée dans `.ai/REPORTS/`.**
+
+Objectif : qu'aucune modification ne soit réalisée sans comprendre précisément
+**toutes les dépendances et tous les effets secondaires possibles**.
+
+### 14.1 Les neuf questions obligatoires
+
+Modèle : [`REPORTS/MODELE_analyse_impact.md`](REPORTS/MODELE_analyse_impact.md)
+
+1. Quels fichiers utilisent **directement** le composant concerné ?
+2. Quels composants l'utilisent **indirectement** ?
+3. Quels **ViewModel** seront impactés ?
+4. Quels **écrans** seront impactés ?
+5. Quels **Workers ou Services** seront impactés ?
+6. Quels **tests existants** couvrent déjà cette fonctionnalité ?
+7. Quels **nouveaux tests** devront être créés ?
+8. Quels **risques de régression** existent ?
+9. Quels composants devront être **revérifiés** après la modification ?
+
+Nom du fichier : `analyse_impact_<AAAA-MM-JJ>_<sujet>.md`.
+
+### 14.2 L'analyse repose sur des faits, pas sur la mémoire
+
+Chaque réponse doit s'appuyer sur une **commande exécutée**, citée dans le
+rapport :
+
+```bash
+grep -rn "<Composant>" app/src --include=*.kt          # appelants directs
+grep -rln "<Composant>" app/src/test app/src/androidTest   # tests existants
+```
+
+Répondre « aucun impact » sans l'avoir vérifié est une faute. Sur ce projet,
+`MainRepository` (992 lignes) et `MainViewModel` (586 lignes) sont appelés par
+une trentaine d'écrans : l'intuition y est systématiquement prise en défaut.
+
+### 14.3 Points de contrôle propres à MobileCaisse
+
+À passer en revue à chaque analyse, même si la réponse semble évidente :
+
+| Point | Pourquoi |
+|---|---|
+| `MainViewModel` est **unique et partagé** | toute signature modifiée touche ~30 écrans |
+| `BackupWorker`, `SubscriptionWorker`, `SmsReceiver` | s'exécutent **sans interface** : aucune saisie utilisateur possible |
+| `SetupScreen` restaure le miroir au **premier lancement** | avant toute configuration : ni mot de passe, ni boutique |
+| Format persisté modifié ? | les archives et bases **déjà produites** doivent rester lisibles |
+| Correctifs de sécurité de `SECURITY.md` §0 | ne jamais les régresser |
+| Fonctionnement **hors ligne** | ne jamais introduire de dépendance réseau implicite |
+
+### 14.4 Après la correction — analyse d'impact post-correction
+
+Après chaque **correction importante**, produire un rapport
+**« Analyse d'impact post-correction »** qui confronte les conséquences réelles
+aux conséquences prévues.
+
+Modèle : [`REPORTS/MODELE_analyse_impact_post_correction.md`](REPORTS/MODELE_analyse_impact_post_correction.md)
+Nom : `analyse_impact_post_<AAAA-MM-JJ>_<sujet>.md`
+
+Il doit répondre à :
+- les effets constatés correspondent-ils aux effets prévus ?
+- quels fichiers ont été modifiés **hors** de ce qui était prévu, et pourquoi ?
+- quels risques anticipés se sont matérialisés ?
+- **quels effets n'avaient pas été anticipés ?** ← section la plus instructive
+- la liste de revérification (§9) est-elle intégralement traitée ?
+
+Un écart entre prévu et constaté n'est pas un échec : c'est une information sur
+la qualité de l'analyse. **Le dissimuler, en revanche, en est un.**
+
+### 14.5 Proportionnalité
+
+| Nature de la modification | Analyse exigée |
+|---|---|
+| Correction de faute de frappe, commentaire, documentation | ⬜ aucune |
+| Modification interne sans changement de signature | ✅ analyse allégée (questions 1, 6, 8) |
+| Changement de signature publique, de format, de schéma | ✅ **analyse complète** |
+| Suppression d'un composant | ✅ **analyse complète** + inventaire exhaustif des appelants |
+| Correctif de sécurité ou de base de données | ✅ **analyse complète** + analyse post-correction |
+
+En cas de doute : faire l'analyse complète. Elle coûte quelques minutes ; une
+régression sur des données financières coûte bien davantage.

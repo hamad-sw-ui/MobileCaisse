@@ -16,6 +16,16 @@ make verify
 
 ⛔ Si l'environnement est invalide : **ne pas modifier le code**.
 
+## 0bis. ☐ Analyse d'impact réalisée  *(CODING_RULES §14)*
+
+- [ ] `.ai/REPORTS/analyse_impact_<date>_<sujet>.md` existe **et est antérieur au code**
+- [ ] Les 9 questions obligatoires sont renseignées, commandes à l'appui
+- [ ] Les Workers/Services ont été explicitement examinés
+- [ ] La liste de revérification (§9) est établie
+- [ ] Correction importante → `analyse_impact_post_<date>_<sujet>.md` produit
+
+⬜ Exemption : faute de frappe, commentaire, documentation seule (§14.5).
+
 ## 1. ☐ Compile  *(dans Docker)*
 
 ```bash

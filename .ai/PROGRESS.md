@@ -6,6 +6,77 @@
 
 ---
 
+## 2026-07-28 — Session 6 : règle d'analyse d'impact (§14) et première application
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **`CODING_RULES.md` §14 — Analyse d'impact obligatoire** : les 9 questions
+  imposées, exigence de réponses **fondées sur des commandes exécutées** (pas
+  sur la mémoire), points de contrôle propres au projet, analyse post-correction,
+  et grille de proportionnalité (§14.5) pour ne pas alourdir les modifications
+  triviales.
+- **Deux modèles** : `MODELE_analyse_impact.md` et
+  `MODELE_analyse_impact_post_correction.md`.
+- **Propagation** : `avant_commit.md` (§0bis), `avant_pull_request.md` (§1bis),
+  `PROMPTS/correction_bug.md` (étape 0), `PROMPTS/nouvelle_fonctionnalite.md`
+  (étape 2bis), `session_start.md`, `README.md`, `REPORTS/README.md`.
+- **Première application réelle** : analyse d'impact complète du branchement de
+  `BackupManager` (B-101), rédigée **avant** toute modification.
+
+### La règle a immédiatement produit de la valeur
+L'analyse a mis au jour **six éléments qui auraient été découverts trop tard** :
+
+1. 🔴 **R8** — BUG-011 (checkpoint WAL) non corrigé rend l'étape 6 dangereuse :
+   supprimer l'ancien mécanisme laisserait un unique chemin de sauvegarde
+   potentiellement incohérent. **B-013 reclassé en prérequis.**
+2. 🔴 **R2** — `MainRepository.restoreDatabase` appelle `db.close()` **avant** la
+   copie : un échec laisse l'application sans base. → restauration en fichier
+   temporaire (B-140).
+3. 🔴 **R1** — rien ne distingue une archive `.zip` d'un `.db` legacy → risque de
+   corruption (B-141).
+4. ❌ **QA** — aucun test ne couvre les 5 chemins de sauvegarde actuels : le
+   branchement se ferait sans filet côté intégration.
+5. 🔴 Les chemins **D** (`SetupScreen`) et **E** (`BackupWorker`) sont
+   **structurellement inéligibles** : exécution sans interface, donc sans mot de
+   passe. Deux formats coexisteront nécessairement (B-144).
+6. ⚠️ `MainViewModel` étant unique et partagé par ~30 écrans, aucune signature
+   existante ne peut être modifiée à l'étape 5.
+
+**Conclusion de l'analyse : « développement : NON »** — étapes 3–4 non terminées.
+La règle a donc aussi joué son rôle de garde-fou sur moi-même.
+
+### Fichiers modifiés
+```
+M .ai/CODING_RULES.md          §14
+A .ai/REPORTS/MODELE_analyse_impact.md
+A .ai/REPORTS/MODELE_analyse_impact_post_correction.md
+A .ai/REPORTS/analyse_impact_2026-07-28_branchement_backupmanager.md
+M .ai/CHECKLISTS/avant_commit.md, avant_pull_request.md
+M .ai/PROMPTS/correction_bug.md, nouvelle_fonctionnalite.md, session_start.md
+M .ai/README.md, REPORTS/README.md, BACKLOG.md (B-140→B-144), CURRENT_TASK.md
+```
+Aucun code de production modifié.
+
+### Tests exécutés
+Aucun nouveau. État inchangé : logique du format démontrée (16/16), compilation
+et tests Kotlin **toujours non prouvés**.
+
+### Problèmes rencontrés
+1. **Le risque R2 était invisible sans analyse systématique.** `db.close()` suivi
+   d'une copie qui échoue laisse l'application sans base : j'avais lu ce code
+   deux fois lors de l'audit sans en mesurer la portée. C'est la question 8
+   (« risques de régression ») qui l'a fait apparaître.
+2. **Chemins D et E** : j'avais déjà noté qu'ils ne pouvaient pas recevoir de mot
+   de passe, mais la question 5 (Workers/Services) a transformé cette remarque en
+   contrainte de conception assumée et documentée.
+
+### Étape suivante
+Réception des résultats de `make verify` et
+`./docker/scripts/test.sh "*BackupManager*"`, puis application de
+`PROMPTS/analyse_resultats_build.md`. Le développement de l'étape 5 ne
+commencera qu'après validation, et devra intégrer B-013, B-140 et B-141.
+
 ## 2026-07-28 — Session 5 : distinction démontré / hypothèse
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

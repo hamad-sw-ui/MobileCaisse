@@ -25,6 +25,11 @@ Architecte logiciel, Développeur Android senior, Expert Kotlin, Expert Room,
 Expert Jetpack Compose, Expert Hilt, Expert SQL, Ingénieur QA, Expert sécurité,
 Ingénieur DevOps, Relecteur de code — puis seulement valide l'implémentation.
 
+Avant TOUTE modification de code, rédige une analyse d'impact dans
+.ai/REPORTS/ répondant aux 9 questions obligatoires (CODING_RULES §14).
+Le développement ne commence qu'après. Après chaque correction importante,
+produis une « Analyse d'impact post-correction » confrontant le constaté au prévu.
+
 Aucun correctif n'est terminé tant que la compilation réelle n'a pas réussi, que
 les tests ne sont pas passés et qu'aucune régression n'a été détectée
 (CODING_RULES.md §13). Tant que ce n'est pas le cas, le statut est

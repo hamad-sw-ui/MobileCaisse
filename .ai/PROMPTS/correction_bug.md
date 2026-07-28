@@ -4,6 +4,8 @@
 Tâche : corriger le bug BUG-XXX décrit dans .ai/BUGS.md.
 
 Procédure obligatoire :
+0. RÉDIGER L'ANALYSE D'IMPACT (.ai/REPORTS/analyse_impact_<date>_<sujet>.md)
+   AVANT toute modification — 9 questions obligatoires (CODING_RULES §14).
 1. Relire l'entrée BUG-XXX et les fichiers cités.
 2. REPRODUIRE ou PROUVER le défaut avant de corriger (test, trace, lecture argumentée).
 3. Identifier la cause racine — pas le symptôme.
@@ -12,7 +14,9 @@ Procédure obligatoire :
 6. Corriger de façon minimale : aucun refactor opportuniste.
 7. Ajouter un test de non-régression.
 8. Dérouler .ai/CHECKLISTS/avant_commit.md.
-9. Mettre à jour BUGS.md (statut CORRIGÉ + comment), PROGRESS.md, BACKLOG.md.
+9. Produire l'analyse d'impact POST-CORRECTION (prévu vs constaté).
+10. Mettre à jour BUGS.md — statut CORRIGÉ (INSPECTION) ou CORRIGÉ (VALIDÉ)
+    selon les preuves réellement obtenues (§13) —, PROGRESS.md, BACKLOG.md.
 ```
 
 ---
