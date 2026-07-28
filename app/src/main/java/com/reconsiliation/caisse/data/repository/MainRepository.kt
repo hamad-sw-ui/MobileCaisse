@@ -23,6 +23,14 @@ import java.util.Calendar
 import kotlin.math.abs
 
 class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDatabase, private val context: android.content.Context) {
+
+    companion object {
+        /**
+         * Version du schéma Room, inscrite dans les métadonnées de sauvegarde
+         * (BUG-021). Doit rester alignée sur `@Database(version = …)`.
+         */
+        const val DATABASE_VERSION = 28
+    }
     val boutique: Flow<BoutiqueEntity?> = db.boutiqueDao().getBoutique()
     val allVentes: Flow<List<VenteEntity>> = db.venteDao().getAllVentes()
     val allStock: Flow<List<StockEntity>> = db.stockDao().getAllStock()
@@ -782,6 +790,149 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun addRecipeComponent(recipe: RecipeEntity) = db.recipeDao().insert(recipe)
     suspend fun deleteRecipeComponent(recipe: RecipeEntity) = db.recipeDao().delete(recipe)
     suspend fun deleteRecipeForProduct(parentId: Long) = db.recipeDao().deleteRecipeForProduct(parentId)
+
+    // ==================== Sauvegarde chiffrée (BackupManager) ====================
+
+    /**
+     * Exporte la base dans une archive chiffrée par [password].
+     *
+     * Le mot de passe est saisi par l'utilisateur à chaque export et n'est
+     * jamais conservé (décision D2-C). Un checkpoint WAL est effectué au
+     * préalable : sans lui, les dernières transactions seraient absentes de
+     * l'archive (BUG-011).
+     *
+     * @return le fichier produit, prêt à être partagé.
+     */
+    suspend fun exportEncryptedBackup(
+        context: Context,
+        password: String,
+        role: String? = null
+    ): Result<File> = runCatching {
+        val boutique = db.boutiqueDao().getBoutique().first()
+            ?: throw com.reconsiliation.caisse.utils.BackupException("Boutique non configurée")
+
+        if (!checkpointWal()) {
+            throw com.reconsiliation.caisse.utils.BackupException(
+                "Impossible de finaliser la base avant l'export. Réessayez dans un instant."
+            )
+        }
+
+        val dbFile = context.getDatabasePath("caisse_database")
+        val out = File(context.cacheDir, "caisse_backup_${System.currentTimeMillis()}.zip")
+
+        val result = com.reconsiliation.caisse.utils.BackupManager.exportBackupWithPassword(
+            dbFile = dbFile,
+            outputFile = out,
+            password = password,
+            boutiquePhone = boutique.phoneNumber,
+            boutiqueManagerCode = boutique.managerCode,
+            databaseVersion = DATABASE_VERSION
+        )
+        val file = result.getOrThrow()
+        logAction("BACKUP_EXPORT", "Sauvegarde chiffrée créée (${file.length() / 1024} Ko)", role)
+        file
+    }
+
+    /**
+     * Restaure une sauvegarde, chiffrée ou brute.
+     *
+     * Le format est déterminé par la **signature binaire** du fichier et non par
+     * son extension (risque R1) : une archive renommée en `.db` reste détectée
+     * comme chiffrée.
+     *
+     * @param password requis pour une archive chiffrée ; ignoré pour un `.db` brut.
+     * @return `true` si la base a été remplacée. L'appelant doit alors relancer
+     *         l'application (navigation vers `Splash`).
+     */
+    suspend fun importEncryptedBackup(
+        context: Context,
+        backupFile: File,
+        password: String?,
+        role: String? = null
+    ): Result<Boolean> = runCatching {
+        when (val format = com.reconsiliation.caisse.utils.BackupFormat.detect(backupFile)) {
+            is com.reconsiliation.caisse.utils.BackupFormat.Encrypted -> {
+                val pwd = password?.takeIf { it.isNotBlank() }
+                    ?: throw com.reconsiliation.caisse.utils.BackupException(
+                        "Cette sauvegarde est protégée : saisissez son mot de passe."
+                    )
+                val boutique = db.boutiqueDao().getBoutique().first()
+                val staged = File(context.cacheDir, "restore_decrypted.db")
+
+                val imported = com.reconsiliation.caisse.utils.BackupManager
+                    .importBackupWithPassword(
+                        backupFile = backupFile,
+                        destFile = staged,
+                        password = pwd,
+                        expectedPhone = boutique?.phoneNumber,
+                        expectedManagerCode = boutique?.managerCode
+                    ).getOrThrow()
+
+                // Un écart d'identité est signalé, pas bloquant : restaurer la
+                // sauvegarde d'une autre boutique est un cas légitime (changement
+                // d'appareil). La couche UI avertit l'utilisateur.
+                if (!imported.identityMatches) {
+                    logAction(
+                        "BACKUP_IMPORT",
+                        "Restauration d'une sauvegarde d'origine différente " +
+                            "(${imported.metadata.boutiquePhone})",
+                        role,
+                        severity = "WARNING"
+                    )
+                }
+
+                val ok = restoreDatabase(context, staged)
+                staged.delete()
+                if (ok) logAction("BACKUP_IMPORT", "Sauvegarde chiffrée restaurée", role)
+                ok
+            }
+
+            is com.reconsiliation.caisse.utils.BackupFormat.LegacyRaw -> {
+                val ok = restoreDatabase(context, backupFile)
+                if (ok) logAction("BACKUP_IMPORT", "Sauvegarde non chiffrée restaurée", role)
+                ok
+            }
+
+            is com.reconsiliation.caisse.utils.BackupFormat.Unknown ->
+                throw com.reconsiliation.caisse.utils.BackupException(
+                    "Fichier non reconnu : ${format.reason}"
+                )
+        }
+    }
+
+    /** Lit les métadonnées d'une archive sans restaurer quoi que ce soit. */
+    suspend fun peekBackupMetadata(
+        backupFile: File,
+        password: String
+    ): Result<com.reconsiliation.caisse.utils.BackupMetadata> =
+        com.reconsiliation.caisse.utils.BackupManager.peekMetadata(backupFile, password)
+
+    /**
+     * Propose le partage d'un fichier de sauvegarde via le sélecteur système.
+     *
+     * L'autorité `FileProvider` doit correspondre exactement à celle déclarée
+     * au manifeste : une divergence provoque une `IllegalArgumentException`
+     * (BUG-025).
+     */
+    fun shareBackupFile(context: Context, file: File) {
+        val uri = androidx.core.content.FileProvider.getUriForFile(
+            context, "${context.packageName}.fileprovider", file
+        )
+        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
+            type = "application/zip"
+            putExtra(android.content.Intent.EXTRA_STREAM, uri)
+            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        context.startActivity(
+            android.content.Intent.createChooser(intent, "Exporter et partager")
+                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+        )
+    }
+
+    /** Format d'un fichier de sauvegarde, pour adapter l'interface. */
+    fun detectBackupFormat(file: File): com.reconsiliation.caisse.utils.BackupFormat =
+        com.reconsiliation.caisse.utils.BackupFormat.detect(file)
 
     /**
      * Force l'écriture du journal WAL dans le fichier principal de la base.

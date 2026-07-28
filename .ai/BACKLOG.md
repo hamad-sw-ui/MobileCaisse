@@ -36,11 +36,11 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - ☑ **B-122** Remplacer `java.time.Instant` et `readAllBytes()` *(BUG-020)* — API 24 garantie par test
 - ☑ **B-123** `databaseVersion` fourni par l'appelant *(BUG-021)*
 - ☑ **B-124** 26 tests unitaires `BackupManager` + harnais Python indépendant (16/16)
-- □ **B-101** 🟠 Brancher `BackupManager` sur les chemins A, B, C *(BUG-017)* — ⏳ **attend la validation des tests dans Docker**
+- ☑ **B-101** `BackupManager` branché sur A, B, C *(BUG-017)*
 - ☑ **B-140** Restauration via fichier de transit validé avant `db.close()` *(BUG-024, risque R2)*
 - ☑ **B-141** `BackupFormat.detect()` — détection par signature binaire + 9 tests *(risque R1)*
-- □ **B-142** Composant `BackupPasswordDialog` réutilisable par les 3 écrans *(éviter la triplication)*
-- □ **B-143** Avertissement UI non contournable : mot de passe perdu = sauvegarde perdue *(risque R3)*
+- ☑ **B-142** `BackupPasswordDialog` partagé par les 3 écrans
+- ☑ **B-143** Avertissement non contournable dans le dialogue d'export
 - □ **B-144** Documenter dans l'UI la coexistence des deux formats de sauvegarde
 - ☑ **B-156** Fenêtre de concurrence réduite au minimum *(BUG-024)*
 
@@ -48,11 +48,11 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-145** Extraire un `BackupRepository` — *avis Architecte, reporté à J5*
 - □ **B-146** Mesurer la durée d'export sur une base de 50 Mo avant d'optimiser
 - ☑ **B-157** `CHECKLISTS/verification_sauvegarde.md` — protocole avant/après, 6 chemins *(exigence QA levée)*
-- □ **B-158** Masquer l'ancien bouton d'export dès l'étape 7 *(exigence Sécurité)*
+- ☑ **B-158** L'ancien export non protégé n'est plus atteignable depuis l'UI
 
 ### Opportunités identifiées (rapport `opportunites_2026-07-28_sauvegarde.md`) — **non planifiées**
 - □ **B-155** 🔴 Double saisie du mot de passe à l'export *(supprime le mode d'échec le plus probable)*
-- □ **B-147** Factoriser le partage de fichier — 5 duplications de `ACTION_SEND`
+- ☑ **B-147** `shareBackupFile()` centralise le partage *(partiel : CSV/PDF restent)*
 - □ **B-148** Fusionner les deux implémentations d'export CSV
 - □ **B-149** Extraire les utilitaires Base64 dans `utils/Base64Compat.kt`
 - □ **B-150** Restauration en flux plutôt qu'en mémoire *(pic mémoire ÷ 2)*
@@ -160,7 +160,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **105** | **29** |
+| **TOTAL** | **105** | **34** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

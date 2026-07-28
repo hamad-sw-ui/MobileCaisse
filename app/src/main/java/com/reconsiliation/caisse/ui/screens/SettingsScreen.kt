@@ -37,8 +37,12 @@ fun SettingsScreen(navController: NavController) {
     val operatorName = boutique?.operator ?: "MoMo"
     
     var showResetDialog by remember { mutableStateOf(false) }
+    var showBackupPasswordDialog by remember { mutableStateOf(false) }
+    val backupState by viewModel.backupState.collectAsState()
+    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
 
     Scaffold(
+        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
         topBar = { 
             TopAppBar(
                 title = { Text("Paramètres") },
@@ -116,14 +120,25 @@ fun SettingsScreen(navController: NavController) {
             Text("Sauvegarde & Export", style = MaterialTheme.typography.titleMedium, color = Primary)
             val contextForSync = androidx.compose.ui.platform.LocalContext.current
             Button(
-                onClick = { viewModel.syncToCloud(contextForSync) },
+                onClick = { showBackupPasswordDialog = true },
                 modifier = Modifier.fillMaxWidth(),
+                enabled = backupState !is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working,
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Icon(Icons.Default.Backup, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Exporter et partager la base")
+                Text(
+                    if (backupState is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working) {
+                        "Sauvegarde en cours…"
+                    } else {
+                        "Exporter et partager la base"
+                    }
+                )
             }
+            Text(
+                "La sauvegarde est chiffrée par un mot de passe que vous choisissez.",
+                style = MaterialTheme.typography.bodySmall
+            )
 
             val scope = androidx.compose.runtime.rememberCoroutineScope()
             if (allStock.isEmpty() && allVentes.isEmpty()) {
@@ -185,6 +200,33 @@ fun SettingsScreen(navController: NavController) {
             Spacer(modifier = Modifier.weight(1f))
             
             Text("Mobile Caisse v1.0.0", modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = androidx.compose.ui.graphics.Color.Gray)
+        }
+
+        if (showBackupPasswordDialog) {
+            com.reconsiliation.caisse.ui.components.BackupPasswordDialog(
+                isExport = true,
+                onConfirm = { password ->
+                    showBackupPasswordDialog = false
+                    viewModel.exportEncryptedBackup(contextForSync, password)
+                },
+                onDismiss = { showBackupPasswordDialog = false }
+            )
+        }
+
+        // Retour utilisateur : succès et erreurs passent par le Snackbar du
+        // Scaffold plutôt que par un Toast (ANDROID_RULES §10).
+        androidx.compose.runtime.LaunchedEffect(backupState) {
+            when (val state = backupState) {
+                is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Success -> {
+                    snackbarHostState.showSnackbar(state.message)
+                    viewModel.clearBackupState()
+                }
+                is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Error -> {
+                    snackbarHostState.showSnackbar(state.message)
+                    viewModel.clearBackupState()
+                }
+                else -> Unit
+            }
         }
     }
 }

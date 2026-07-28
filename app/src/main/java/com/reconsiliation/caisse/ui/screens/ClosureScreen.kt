@@ -43,6 +43,7 @@ import java.util.*
 fun ClosureScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: MainViewModel = viewModel()
+    var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.allVentes.collectAsState()
@@ -141,7 +142,7 @@ fun ClosureScreen(navController: NavController) {
                 }
 
                 Button(
-                    onClick = { backupDatabase(context) },
+                    onClick = { showBackupPasswordDialog = true },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
@@ -182,6 +183,19 @@ fun ClosureScreen(navController: NavController) {
                 }
             }
         }
+
+        if (showBackupPasswordDialog) {
+            com.reconsiliation.caisse.ui.components.BackupPasswordDialog(
+                isExport = true,
+                subtitle = "Sauvegarde complète de la base après clôture. " +
+                    "Choisissez un mot de passe pour la protéger.",
+                onConfirm = { password ->
+                    showBackupPasswordDialog = false
+                    viewModel.exportEncryptedBackup(context, password)
+                },
+                onDismiss = { showBackupPasswordDialog = false }
+            )
+        }
     }
 }
 
@@ -195,25 +209,9 @@ fun ClosureCard(label: String, amount: Double) {
     }
 }
 
-fun backupDatabase(context: android.content.Context) {
-    try {
-        val dbFile = context.getDatabasePath("caisse_database")
-        if (dbFile.exists()) {
-            val backupFile = File(context.cacheDir, "caisse_backup_${System.currentTimeMillis()}.db")
-            dbFile.copyTo(backupFile, overwrite = true)
-            
-            val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", backupFile)
-            val intent = Intent(Intent.ACTION_SEND).apply {
-                type = "application/octet-stream"
-                putExtra(Intent.EXTRA_STREAM, uri)
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-            context.startActivity(Intent.createChooser(intent, "Sauvegarder la base de données"))
-        }
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}
+// La fonction locale backupDatabase() a été supprimée : elle accédait au système
+// de fichiers depuis un Composable (violation MVVM) et produisait un export non
+// chiffré. L'export passe désormais par MainViewModel.exportEncryptedBackup.
 
 fun exportToCsv(context: android.content.Context, ventes: List<com.reconsiliation.caisse.data.local.entity.VenteEntity>) {
     val fileName = "ventes_${System.currentTimeMillis()}.csv"

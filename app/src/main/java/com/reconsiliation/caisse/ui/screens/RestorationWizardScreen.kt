@@ -31,13 +31,25 @@ fun RestorationWizardScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: MainViewModel = viewModel()
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
-    var step by remember { mutableStateOf(1) } // 1: Pick File, 2: Confirmation
+    var step by remember { mutableStateOf(1) } // 1: choix du fichier, 2: confirmation
+    var stagedFile by remember { mutableStateOf<File?>(null) }
+    var isEncrypted by remember { mutableStateOf(false) }
+    var showPasswordDialog by remember { mutableStateOf(false) }
+    val backupState by viewModel.backupState.collectAsState()
     
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri ->
         if (uri != null) {
             selectedUri = uri
+            // Le fichier est copié immédiatement : l'URI d'un ContentProvider
+            // peut expirer, et la détection de format exige un accès local.
+            val tmp = File(context.cacheDir, "temp_restore.bin")
+            context.contentResolver.openInputStream(uri)?.use { input ->
+                FileOutputStream(tmp).use { output -> input.copyTo(output) }
+            }
+            stagedFile = tmp
+            isEncrypted = viewModel.isBackupEncrypted(tmp)
             step = 2
         }
     }
@@ -99,33 +111,69 @@ fun RestorationWizardScreen(navController: NavController) {
                     }
                 }
                 
+                // Le format est indiqué : l'utilisateur sait s'il devra fournir
+                // un mot de passe avant de confirmer l'écrasement.
+                Text(
+                    text = if (isEncrypted) {
+                        "🔒 Sauvegarde chiffrée : le mot de passe sera demandé."
+                    } else {
+                        "Sauvegarde non chiffrée (format ancien)."
+                    },
+                    style = MaterialTheme.typography.bodySmall
+                )
+
                 Button(
                     onClick = {
-                        selectedUri?.let { uri ->
-                            val inputStream = context.contentResolver.openInputStream(uri)
-                            val tempFile = File(context.cacheDir, "temp_restore.db")
-                            inputStream?.use { input ->
-                                FileOutputStream(tempFile).use { output ->
-                                    input.copyTo(output)
-                                }
-                            }
-                            if (viewModel.restoreDatabase(tempFile)) {
-                                // Rediriger vers Splash pour recharger l'app
-                                navController.navigate("splash") {
-                                    popUpTo(0)
-                                }
+                        val file = stagedFile ?: return@Button
+                        if (isEncrypted) {
+                            showPasswordDialog = true
+                        } else {
+                            viewModel.importEncryptedBackup(context, file, null) {
+                                navController.navigate("splash") { popUpTo(0) }
                             }
                         }
                     },
+                    enabled = stagedFile != null &&
+                        backupState !is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working,
                     colors = ButtonDefaults.buttonColors(containerColor = RedError),
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text("Confirmer la restauration")
+                    Text(
+                        if (backupState is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working) {
+                            "Restauration en cours…"
+                        } else {
+                            "Confirmer la restauration"
+                        }
+                    )
+                }
+
+                (backupState as? com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Error)?.let {
+                    Text(it.message, color = RedError, style = MaterialTheme.typography.bodySmall)
                 }
                 
-                TextButton(onClick = { step = 1; selectedUri = null }) {
+                TextButton(onClick = {
+                    step = 1
+                    selectedUri = null
+                    stagedFile = null
+                    viewModel.clearBackupState()
+                }) {
                     Text("Choisir un autre fichier")
                 }
+            }
+
+            if (showPasswordDialog) {
+                com.reconsiliation.caisse.ui.components.BackupPasswordDialog(
+                    isExport = false,
+                    onConfirm = { password ->
+                        showPasswordDialog = false
+                        stagedFile?.let { file ->
+                            viewModel.importEncryptedBackup(context, file, password) {
+                                navController.navigate("splash") { popUpTo(0) }
+                            }
+                        }
+                    },
+                    onDismiss = { showPasswordDialog = false }
+                )
             }
         }
     }

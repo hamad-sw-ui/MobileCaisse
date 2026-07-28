@@ -27,6 +27,15 @@ data class CartItem(
 
 data class CategoryTotal(val category: String, val total: Double)
 
+/** État des opérations de sauvegarde et de restauration. */
+sealed interface BackupUiState {
+    data object Idle : BackupUiState
+    /** Opération en cours : l'UI désactive les boutons et affiche [message]. */
+    data class Working(val message: String) : BackupUiState
+    data class Success(val message: String) : BackupUiState
+    data class Error(val message: String) : BackupUiState
+}
+
 class MainViewModel(application: Application, private val savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
     private val repository: MainRepository
     private val db: AppDatabase = AppDatabase.getDatabase(application)
@@ -431,6 +440,71 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     
     fun backupDatabase(file: File) = repository.backupDatabase(getApplication(), file)
     fun restoreDatabase(file: File) = repository.restoreDatabase(getApplication(), file)
+
+    // ---------- Sauvegarde chiffrée par mot de passe ----------
+
+    private val _backupState = MutableStateFlow<BackupUiState>(BackupUiState.Idle)
+    val backupState: StateFlow<BackupUiState> = _backupState.asStateFlow()
+
+    /** Remet l'état à [BackupUiState.Idle] une fois le message consommé par l'UI. */
+    fun clearBackupState() { _backupState.value = BackupUiState.Idle }
+
+    /**
+     * Exporte la base chiffrée par [password], puis propose le partage.
+     *
+     * Le mot de passe n'est ni conservé ni journalisé (décision D2-C).
+     */
+    fun exportEncryptedBackup(context: android.content.Context, password: String) =
+        viewModelScope.launch {
+            _backupState.value = BackupUiState.Working("Chiffrement de la sauvegarde…")
+            val result = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                repository.exportEncryptedBackup(context, password, userRole.value)
+            }
+            _backupState.value = result.fold(
+                onSuccess = { file ->
+                    repository.shareBackupFile(context, file)
+                    BackupUiState.Success(
+                        "Sauvegarde créée (${file.length() / 1024} Ko). " +
+                            "Conservez précieusement votre mot de passe : il est indispensable " +
+                            "pour la restaurer."
+                    )
+                },
+                onFailure = { BackupUiState.Error(it.message ?: "Échec de l'export") }
+            )
+        }
+
+    /**
+     * Restaure [file]. Le format (chiffré ou brut) est détecté automatiquement.
+     *
+     * @param onRestored appelé si la base a été remplacée : l'appelant doit
+     *        relancer l'application, les DAO déjà obtenus étant obsolètes.
+     */
+    fun importEncryptedBackup(
+        context: android.content.Context,
+        file: File,
+        password: String?,
+        onRestored: () -> Unit
+    ) = viewModelScope.launch {
+        _backupState.value = BackupUiState.Working("Restauration en cours…")
+        val result = kotlinx.coroutines.withContext(Dispatchers.IO) {
+            repository.importEncryptedBackup(context, file, password, userRole.value)
+        }
+        result.fold(
+            onSuccess = { ok ->
+                if (ok) {
+                    _backupState.value = BackupUiState.Success("Données restaurées.")
+                    onRestored()
+                } else {
+                    _backupState.value = BackupUiState.Error("La restauration a échoué.")
+                }
+            },
+            onFailure = { _backupState.value = BackupUiState.Error(it.message ?: "Échec de la restauration") }
+        )
+    }
+
+    /** Indique si [file] exige un mot de passe, pour adapter l'interface. */
+    fun isBackupEncrypted(file: File): Boolean =
+        repository.detectBackupFormat(file) is com.reconsiliation.caisse.utils.BackupFormat.Encrypted
     
     fun activateSubscription(key: String) = viewModelScope.launch { try { repository.activateSubscription(getApplication(), key) } catch (e: Exception) { _uiError.value = e.message } }
     fun getPaymentUssd(operator: String, amount: Int): String = repository.getPaymentUssd(operator, amount)
