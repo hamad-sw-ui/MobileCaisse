@@ -25,6 +25,15 @@ Architecte logiciel, Développeur Android senior, Expert Kotlin, Expert Room,
 Expert Jetpack Compose, Expert Hilt, Expert SQL, Ingénieur QA, Expert sécurité,
 Ingénieur DevOps, Relecteur de code — puis seulement valide l'implémentation.
 
+Aucun correctif n'est terminé tant que la compilation réelle n'a pas réussi, que
+les tests ne sont pas passés et qu'aucune régression n'a été détectée
+(CODING_RULES.md §13). Tant que ce n'est pas le cas, le statut est
+CORRIGÉ (INSPECTION), jamais CORRIGÉ (VALIDÉ). Ne jamais affirmer « ça compile »
+sans l'avoir exécuté.
+
+Pour les composants critiques, applique la double validation : implémentation de
+référence indépendante (tools/verification/) ET tests Kotlin réels.
+
 Ne me propose pas un nouveau système de travail : celui-ci existe déjà et fait foi.
 ```
 

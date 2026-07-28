@@ -77,6 +77,10 @@ Relecteur). Grille détaillée : [`PROMPTS/roles.md`](PROMPTS/roles.md).
 
 ## ✅ Règles d'or
 
+- **Un correctif non exécuté est une hypothèse.** Compilation réelle + tests
+  passés + aucune régression = seule définition de « terminé » (`CODING_RULES.md` §13).
+- **Double validation** pour les composants critiques : implémentation de
+  référence indépendante **et** tests Kotlin réels.
 - **Comprendre avant de modifier.**
 - **Aucune régression** : une fonctionnalité qui marche ne doit jamais casser.
 - **Une tâche à la fois**, celle de `CURRENT_TASK.md`.

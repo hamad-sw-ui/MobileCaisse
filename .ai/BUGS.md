@@ -1,6 +1,20 @@
 # 🐞 BUGS
 
-Statuts : `OUVERT` · `EN COURS` · `CORRIGÉ` · `NON REPRODUCTIBLE` · `ACCEPTÉ`
+## Échelle de statuts
+
+| Statut | Signification | Preuve exigée |
+|---|---|---|
+| `OUVERT` | Défaut constaté, non traité | — |
+| `EN COURS` | Traitement démarré | — |
+| **`CORRIGÉ (INSPECTION)`** | **Correctif écrit et raisonné, mais *non exécuté*. Reste une hypothèse.** | lecture, analyse statique, éventuelle validation algorithmique indépendante |
+| **`CORRIGÉ (VALIDÉ)`** | **Correctif prouvé.** Seul statut autorisant la clôture | compilation réelle ✅ · tests automatisés ✅ · aucune régression ✅ |
+| `NON REPRODUCTIBLE` | Introuvable après enquête | — |
+| `ACCEPTÉ` | Défaut assumé, documenté dans `KNOWN_LIMITATIONS.md` | décision écrite |
+
+> ⚠️ **Un bug ne passe jamais directement de `OUVERT` à `CORRIGÉ (VALIDÉ)`.**
+> `CORRIGÉ (INSPECTION)` n'est **pas** un état terminal : c'est une dette de
+> vérification. Voir `CODING_RULES.md` §13.
+
 Gravités : 🔴 CRITIQUE · 🟠 MAJEUR · 🟡 MINEUR
 
 > Recensés lors de l'audit du **2026-07-28**, **révisés le 2026-07-28 (rév. 2)**
@@ -253,9 +267,10 @@ implémenté : l'app ignore les refus.
 
 ---
 
-## ✅ BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
+## 🟠 BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
 
-**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🔴 CRITIQUE
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🔴 CRITIQUE
+**⏳ En attente de validation par compilation réelle.**
 **Cause racine** : `Cipher.doFinal()` en mode GCM retourne déjà `ciphertext || tag` ;
 le code extrayait le tag *sans le retirer*, puis le reconcaténait au déchiffrement
 (`CT || TAG || TAG`) → `AEADBadTagException` systématique.
@@ -295,9 +310,10 @@ gestion manuelle du tag, `doFinal` s'en charge.
 
 ---
 
-## ✅ BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
+## 🟠 BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
 
-**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**⏳ En attente de validation par compilation réelle.**
 **Cause racine** : `zip.write(dbBytes)` écrivait les octets bruts ; seules les
 métadonnées étaient chiffrées.
 **Correctif** : la base est chiffrée en flux par la clé dérivée du mot de passe
@@ -325,9 +341,11 @@ déchiffrer symétriquement à l'import. À traiter avec BUG-018.
 
 ---
 
-## ✅ BUG-020 — `java.time.Instant` incompatible avec minSdk 24
+## 🟠 BUG-020 — `java.time.Instant` incompatible avec minSdk 24
 
-**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**⏳ En attente de validation par compilation réelle.**
+⚠️ Validation complète = exécution **sur un appareil API 24**, hors Docker.
 **Correctif** : `SimpleDateFormat` en UTC (API 1), cohérent avec `java.util.Date`
 utilisé partout ailleurs. Aucun desugaring requis.
 **Bonus** : `InputStream.readAllBytes()` (API 33) également remplacé —
@@ -349,9 +367,10 @@ projet, qui utilise `java.util.Date` partout).
 
 ---
 
-## ✅ BUG-021 — `BackupMetadata.databaseVersion` figé à 27
+## 🟡 BUG-021 — `BackupMetadata.databaseVersion` figé à 27
 
-**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**⏳ En attente de validation par compilation réelle.**
 **Correctif** : `databaseVersion` devient un paramètre obligatoire de
 `exportBackupWithPassword`, fourni par l'appelant depuis `AppDatabase`.
 **Preuve** : test `la version du schema est celle transmise et non une valeur figee`.
@@ -364,9 +383,14 @@ métadonnée censée permettre de refuser une sauvegarde incompatible est fausse
 
 ---
 
-## ✅ BUG-023 — `BackupManager` ne compilait pas
+## 🔴 BUG-023 — `BackupManager` ne compilait pas
 
-**Statut** : **CORRIGÉ le 2026-07-28** · **Gravité** : 🔴 CRITIQUE *(découvert rév. 5)*
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🔴 CRITIQUE *(découvert rév. 5)*
+**⏳ En attente de validation par compilation réelle.**
+
+> 🎯 **Bug le plus exposé à l'auto-illusion.** Un défaut de compilation ne peut,
+> par définition, être clos que par une compilation réussie. Toute affirmation
+> sur son état sans build est une conjecture — y compris la mienne.
 
 `exportBackupWithPassword` déclarait `Result<Unit>` mais son corps était
 `runCatching { … ; Result.success(Unit) }`, ce qui produit un

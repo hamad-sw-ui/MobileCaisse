@@ -50,8 +50,15 @@ Material 3, permissions runtime, WorkManager.
 
 ### 6. Exécuter des vérifications avant chaque livraison
 Dérouler `CHECKLISTS/avant_commit.md` puis `CHECKLISTS/avant_pull_request.md`.
-Si l'environnement ne permet pas de compiler (pas de JDK/SDK Android), **le
-dire explicitement** dans `PROGRESS.md` plutôt que d'affirmer que ça compile.
+
+**Règle de clôture (`CODING_RULES.md` §13)** — aucun correctif n'est terminé
+tant que : la compilation réelle a réussi · les tests automatisés sont passés ·
+aucune régression n'a été détectée.
+
+Tant que ces trois conditions ne sont pas réunies, le statut est
+`CORRIGÉ (INSPECTION)`, jamais `CORRIGÉ (VALIDÉ)`. Si l'environnement ne permet
+pas de compiler, **le dire explicitement** dans `PROGRESS.md` et dans la réponse
+au responsable, plutôt que de laisser croire que le correctif est acquis.
 
 ### 7. Documenter chaque changement
 Une session se termine par la mise à jour de `PROGRESS.md`, `BACKLOG.md` et,

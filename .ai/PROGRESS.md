@@ -6,6 +6,65 @@
 
 ---
 
+## 2026-07-28 — Session 5 : distinction démontré / hypothèse
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Fonctionnalités terminées
+- **Correction de ma propre terminologie.** J'avais marqué BUG-018 à BUG-023
+  « CORRIGÉ », alors que ni la compilation ni les tests Kotlin n'avaient été
+  exécutés. Requalifiés en **`CORRIGÉ (INSPECTION)`**.
+- **Nouvelle échelle de statuts** dans `BUGS.md` : `CORRIGÉ (INSPECTION)`
+  (correctif écrit, non exécuté — dette de vérification) vs
+  `CORRIGÉ (VALIDÉ)` (compilation + tests + aucune régression).
+  Un bug ne peut plus passer directement de `OUVERT` à `VALIDÉ`.
+- **`CODING_RULES.md` §13 — Définition de « terminé »** : règle de validation
+  obligatoire, tableau des formulations interdites/exigées, conduite à tenir en
+  cas d'échec, et **§13.6 double validation** des composants critiques avec
+  tableau de suivi (crypto, SmsParser, FeeCalculator, SecurityUtil, migrations,
+  LicenseUtil).
+- **Propagation** : `MISSION.md` §6, `CHECKLISTS/avant_commit.md` (§8ter),
+  `README.md` (règles d'or), `PROMPTS/session_start.md`.
+- **`PROMPTS/analyse_resultats_build.md`** : procédure en 4 étapes pour traiter
+  les résultats de build, avec les points de vigilance déjà identifiés sur
+  `BackupManager` (7 risques localisés) et la règle « un test qui échoue est une
+  information » — interdiction explicite d'affaiblir une assertion pour obtenir
+  du vert.
+
+### Fichiers modifiés
+```
+M .ai/BUGS.md                  échelle de statuts + 5 bugs requalifiés
+M .ai/CODING_RULES.md          §13 (dont §13.6 double validation)
+M .ai/MISSION.md               §6
+M .ai/CHECKLISTS/avant_commit.md   §8ter
+M .ai/README.md                règles d'or
+M .ai/PROMPTS/session_start.md
+A .ai/PROMPTS/analyse_resultats_build.md
+M .ai/CURRENT_TASK.md
+```
+Aucun code de production modifié.
+
+### Tests exécutés
+Aucun nouveau. État inchangé et assumé :
+- ✅ `verify_backup_format.py` — 16/16 (logique du format, **démontrée**)
+- ❌ compilation Kotlin — **non prouvée**
+- ❌ 26 tests Kotlin — **non exécutés**
+- ❌ compatibilité API 24 réelle — **non prouvée**
+
+### Problèmes rencontrés
+1. **Mon propre biais de complétude.** Avoir écrit un correctif argumenté et
+   validé sa logique par un harnais indépendant m'a conduit à écrire
+   « CORRIGÉ ». C'est précisément l'erreur qui a produit `BackupManager` : un
+   module livré comme fonctionnel, jamais compilé. La règle §13 existe pour
+   rendre cette confusion structurellement impossible.
+2. **Limite de la validation indépendante** : le harnais Python valide le
+   *format*, pas le *code Kotlin livré*. Les deux peuvent diverger — d'où
+   l'exigence des deux validations, explicitée en §13.6.
+
+### Étape suivante
+Réception des sorties de `make verify` et `./docker/scripts/test.sh
+"*BackupManager*"`, puis application de `PROMPTS/analyse_resultats_build.md`.
+
 ## 2026-07-28 — Session 4 : réparation de BackupManager (étapes 1–2 du nouvel ordre)
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

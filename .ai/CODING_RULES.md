@@ -136,3 +136,103 @@ le code technique, français pour le texte affiché.
 - Les montants sont des `Double` (existant) — ne jamais comparer par `==` ;
   utiliser une tolérance. *(Migration vers `BigDecimal`/`Long` centimes : backlog P4.)*
 - Fichier > 400 lignes = signal de découpage à consigner dans le backlog.
+
+
+---
+
+## 13. Définition de « terminé » — validation obligatoire
+
+> **Aucun correctif ne peut être considéré comme terminé tant que :**
+> - **la compilation réelle a réussi ;**
+> - **les tests automatisés sont passés ;**
+> - **aucune régression n'a été détectée.**
+
+Cette règle est **non négociable** et prévaut sur toute impression de complétude.
+
+### 13.1 Écrire du code n'est pas corriger un bug
+
+Un correctif non exécuté est une **hypothèse**, aussi solide soit le
+raisonnement qui l'a produit. Le vocabulaire doit refléter cette différence :
+
+| Formulation interdite ❌ | Formulation exigée ✅ |
+|---|---|
+| « BUG-018 est corrigé » | « BUG-018 : corrigé par inspection statique, en attente de compilation réelle » |
+| « ça compile » | « non compilé — l'environnement ne le permet pas » |
+| « les tests passent » | « 26 tests écrits, non exécutés » |
+| « c'est terminé » | « livré, en attente de validation » |
+
+**Précédent qui fonde cette règle** : `BackupManager` contenait quatre défauts
+de sécurité *et* une erreur de type (`Result<Result<Unit>>`, BUG-023) qui le
+rendait non compilable. Il avait pourtant été livré comme fonctionnel à l'issue
+d'un audit de sécurité. **Un compilateur l'aurait détecté en une seconde ;
+aucune relecture ne l'avait vu.**
+
+### 13.2 Statuts autorisés
+
+Voir l'échelle de `BUGS.md`. En résumé :
+
+- `CORRIGÉ (INSPECTION)` — correctif écrit, **non exécuté**. État transitoire,
+  jamais terminal. C'est une **dette de vérification**.
+- `CORRIGÉ (VALIDÉ)` — compilation ✅ + tests ✅ + aucune régression ✅.
+  **Seul statut autorisant la clôture.**
+
+### 13.3 Chaîne de validation
+
+```bash
+make verify      # environnement Docker opérationnel
+make validate    # compilation → analyses statiques → tests unitaires
+make instrumented   # si le diff touche SQLCipher, Keystore, migrations ou UI
+```
+
+Un bug ne passe en `CORRIGÉ (VALIDÉ)` **qu'après** production des rapports
+correspondants dans `.ai/REPORTS/`.
+
+### 13.4 En cas d'échec
+
+1. **Arrêter** l'intégration ;
+2. **analyser** l'erreur — sans supposer qu'elle est bénigne ;
+3. **corriger** ;
+4. **relancer la chaîne complète**, pas seulement l'étape échouée ;
+5. ne déclarer résolu qu'après réussite intégrale.
+
+### 13.5 Quand l'environnement ne permet pas de valider
+
+Si la compilation est impossible (absence de JDK, de SDK ou de Docker) :
+
+- **le dire explicitement**, dans `PROGRESS.md` **et** dans la réponse au
+  responsable ;
+- marquer les bugs concernés `CORRIGÉ (INSPECTION)` ;
+- fournir les **commandes exactes** permettant à un tiers de valider ;
+- **ne jamais** présenter une inspection comme une preuve d'exécution.
+
+### 13.6 Double validation des composants critiques
+
+Pour tout composant critique — cryptographie, migrations de base, calculs
+financiers, parsing SMS — **deux validations complémentaires sont exigées** :
+
+| # | Validation | Ce qu'elle prouve | Ce qu'elle ne prouve pas |
+|---|---|---|---|
+| 1 | **Algorithmique indépendante** — implémentation de référence dans un autre langage (Python, table de vecteurs, oracle externe) | la **logique** et le **format** sont corrects | que le code Kotlin livré est correct |
+| 2 | **Réelle en Kotlin** — tests exécutés dans Docker sur le code du projet | le **code livré** fonctionne | que la logique est juste, si les deux partagent le même malentendu |
+
+Les deux sont **complémentaires, jamais interchangeables**. Une divergence entre
+elles est un signal fort : l'une des deux implémentations est fausse.
+
+**Précédent** : `tools/verification/verify_backup_format.py` réimplémente le
+format d'archive v2 en Python et a **reproduit BUG-018** (`CT||TAG||TAG` →
+`InvalidTag`) avant de valider le correctif. Cette validation a été possible
+**sans JDK** — mais elle ne dispense pas d'exécuter `BackupManagerTest.kt`.
+
+**Composants soumis à la double validation** :
+
+| Composant | Validation indépendante | Validation Kotlin |
+|---|---|---|
+| `BackupManager` (crypto) | ✅ `verify_backup_format.py` — 16/16 | ⏳ 26 tests écrits, non exécutés |
+| `SmsParser` | ⬜ jeu de SMS de référence à constituer | ⬜ B-090 |
+| `FeeCalculator` | ⬜ barèmes officiels MTN/Orange | ⬜ B-091 |
+| `SecurityUtil` (PBKDF2) | ⬜ vecteurs RFC 6070 | ⚠️ partiel |
+| Migrations Room | ⬜ schémas JSON de référence (B-009) | ⬜ B-012 |
+| `LicenseUtil` (HMAC) | ⬜ vecteurs HMAC-SHA256 | ⬜ B-092 |
+
+Les harnais indépendants vivent dans `tools/verification/` et sont **conservés**
+après usage : ils servent d'oracle anti-régression lors des évolutions.

@@ -138,6 +138,15 @@ make validate
 
 ⛔ **Aucun code n'est « terminé » sans ce verdict.**
 
+## 8ter. ☐ Statut des bugs conforme à la réalité  *(CODING_RULES §13)*
+
+- [ ] Aucun bug marqué `CORRIGÉ (VALIDÉ)` sans compilation **et** tests réussis
+- [ ] Les correctifs non exécutés sont marqués `CORRIGÉ (INSPECTION)`
+- [ ] `PROGRESS.md` distingue « écrit » de « exécuté »
+- [ ] Aucune formulation du type « ça compile » / « les tests passent » sans preuve
+- [ ] Composant critique → **double validation** présente
+      (harnais indépendant dans `tools/verification/` + tests Kotlin)
+
 ## 9. ☐ Branche
 
 - [ ] Je suis bien sur `arena/019fa5ec-mobilecaisse`
