@@ -1,58 +1,40 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :**
-Phase 7 intégrée au framework **et appliquée** au branchement de `BackupManager`
-(niveau **C**). Le workflow complet a été déroulé : impact → conception → débat
-→ opportunités.
+**Tâche :** ⏳ **Validation par compilation réelle** — action requise de votre part.
 
-⏸️ **Développement toujours suspendu** — trois prérequis non satisfaits.
+Mode **développement prioritaire** (décision du 2026-07-28). J0 et `pinSalt`
+livrés dans cette session ; le framework n'évolue plus que sur incident réel.
 
-## Où en est le nouvel ordre d'exécution
+## Chemin critique
 
 | # | Étape | Statut |
 |---|---|---|
-| 1 | Réparer `BackupManager` | ✅ écrit — `CORRIGÉ (INSPECTION)` |
-| 2 | Tests | ✅ 26 écrits — non exécutés |
-| 3 | Vérifier export → restauration | ⏳ **attend vos résultats** |
-| 4 | Corriger jusqu'à fiabilité | ⏳ |
-| 5 | Brancher A, B, C | 📋 impact + conception + débat faits — **code suspendu** |
-| 6 | Supprimer l'ancien mécanisme | ⛔ |
-| 7 | `staff.pinSalt` | ⛔ |
-| 8 | J0 | ⛔ |
+| 0 | **J0 — build propre** | ✅ livré — `CORRIGÉ (INSPECTION)` |
+| 1 | Valider `BackupManager` | ⏳ **attend `make validate`** |
+| 2 | Brancher `BackupManager` | ⛔ prérequis : 1, B-013, B-157 |
+| 3 | Corriger `pinSalt` | ✅ livré — `CORRIGÉ (INSPECTION)` |
+| 4 | Terminer J0 | ✅ livré |
+| 5 | Développements fonctionnels (roadmap) | ⛔ après 2 |
 
-## Prérequis bloquants avant l'étape 5
+> **Pourquoi J0 est passé avant l'étape 1** : 🧠 *déduit* — BUG-003 empêchait la
+> compilation du **module entier**, donc l'exécution des 26 tests de
+> `BackupManager`. J0 était un prérequis de l'étape 1, pas une digression.
 
-| # | Prérequis | Origine |
-|---|---|---|
-| 1 | 26 tests `BackupManager` verts | étapes 3–4 |
-| 2 | **B-013** — checkpoint WAL avant copie | ❌ bloquant Expert Room |
-| 3 | **B-157** — protocole de vérification manuelle des 5 chemins | ❌ bloquant Expert QA |
+## Livré cette session (11 tâches)
 
-## Ce que la Phase 7 a produit
-
-📄 4 rapports : `analyse_impact` · `analyse_conception` · `debat_technique` ·
-`opportunites` (tous datés du 2026-07-28, sujet `branchement_backupmanager` /
-`sauvegarde`).
-
-**Découvertes, avant toute ligne de code :**
-
-| Source | Découverte |
+| Réf. | Contenu |
 |---|---|
-| Conception | Solution A (tout migrer) **violerait D2-C** — clé recalculable depuis le `managerCode`. Écartée. |
-| Conception | Solution C retenue : corriger les fondations d'abord, brancher ensuite |
-| Débat (Room) | 🟠 **BUG-024** — fenêtre de concurrence pendant la restauration |
-| Débat (QA) | ❌ aucun état de référence : « aucune régression » serait invérifiable |
-| Débat (Sécurité) | fenêtre où deux exports coexistent, dont un non protégé → masquer dès l'étape 7 |
-| Opportunités | 13 améliorations, dont 5 duplications de `ACTION_SEND` et 2 exports CSV concurrents |
+| **B-003** | `ComponentActivity` + thème **plateforme** — zéro dépendance ajoutée |
+| B-001 | `gradlew` exécutable |
+| B-002 | `proguard-rules.pro` (Room, SQLCipher, serialization, ML Kit) |
+| B-004 | `sqlcipher` / `sqlite-ktx` dans le catalog |
+| B-006 | `configuration-cache=false` + Kotlin in-process |
+| B-007/008 | `conversation.txt` supprimé, 28 fichiers dé-versionnés, logo dans `res/` |
+| B-100 | `README.md` racine |
+| B-110 | « Exporter et partager » — textes seuls |
+| **B-125** | `MIGRATION_25_26` alignée sur `StaffEntity` *(BUG-022)* |
 
-**14 nouvelles tâches** (B-145 → B-158). Aucune implémentée : proposées.
-
-⚠️ **Une objection du débat s'est révélée fausse** à la vérification (« le
-singleton `AppDatabase` n'est pas invalidé » — il l'est bien, `AppDatabase.kt:138-142`).
-Corrigée, trace conservée. → règle ajoutée à §15.2.
-
-**Objectif :**
-Obtenir 26/26 tests verts, puis traiter B-013 et B-157, puis brancher.
+Bugs passés en `CORRIGÉ (INSPECTION)` : **BUG-003, BUG-016, BUG-022**.
 
 ---
 
@@ -60,21 +42,26 @@ Obtenir 26/26 tests verts, puis traiter B-013 et B-157, puis brancher.
 
 ```bash
 cd MobileCaisse
+make image        # si pas encore fait
 make verify
-./docker/scripts/test.sh "*BackupManager*"    # attendu : 26 tests, 0 échec
-make validate
+make validate     # compilation + analyses + 26 tests BackupManager
 ```
 
-⚠️ `make validate` échouera probablement sur **BUG-003** (`androidx.appcompat`),
-préexistant et sans rapport.
+**Ce qui change par rapport aux sessions précédentes** : `make validate` ne
+devrait **plus** échouer sur AppCompat. Si la compilation passe, les 26 tests de
+`BackupManager` s'exécuteront pour la première fois.
 
-## ❓ Arbitrage demandé
+Transmettez-moi la sortie, succès ou échec. J'appliquerai
+`PROMPTS/analyse_resultats_build.md`.
 
-Le rapport d'opportunités propose **B-155 — double saisie du mot de passe à
-l'export**. Coût très faible, et cela supprime le mode d'échec le plus probable
-de tout le système : une faute de frappe rend l'archive **définitivement**
-illisible. → **L'intégrer à l'étape 5, ou le laisser au backlog ?**
+### Ce que je ferai selon le résultat
+
+| Résultat | Action |
+|---|---|
+| ✅ Tout vert | BUG-003/016/018/019/021/022/023 → **`CORRIGÉ (VALIDÉ)`**, puis B-013 + B-157, puis branchement |
+| ❌ Erreurs de compilation | Analyse, correction, relance de toute la chaîne |
+| ❌ Tests en échec | Le test a-t-il raison ? Correction du code, jamais de l'assertion |
 
 ---
 
-*Mis à jour le 2026-07-28 (rév. 8 — Phase 7).*
+*Mis à jour le 2026-07-28 (rév. 9 — mode développement).*

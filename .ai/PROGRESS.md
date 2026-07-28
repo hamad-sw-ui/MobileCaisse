@@ -6,6 +6,73 @@
 
 ---
 
+## 2026-07-28 — Session 8 : J0 terminé + pinSalt corrigé (mode développement)
+
+**Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Changement de cap
+Le développement devient la priorité ; le framework n'évolue plus que sur
+incident réel. **Une seule règle ajoutée** (§18, classification des
+propositions), puis passage immédiat au code.
+
+### Fonctionnalités terminées — 11 tâches
+- **B-003** *(le déblocage)* : `MainActivity` étend `ComponentActivity` ;
+  `themes.xml` hérite de `@android:style/Theme.Material.Light.NoActionBar`,
+  thème de la **plateforme** (API 21+). **Zéro dépendance ajoutée** — ni
+  AppCompat, ni Material Components. 🔍 *Observé* : aucun usage fonctionnel
+  d'AppCompat n'existait, `Theme.kt` pilotait déjà tout le style.
+- B-001 `gradlew` exécutable · B-002 `proguard-rules.pro` · B-004 catalog ·
+  B-006 `configuration-cache=false` + Kotlin in-process ·
+  B-007/008 nettoyage (28 fichiers dé-versionnés) · B-100 `README.md`
+- **B-110** : « Exporter et partager » — libellés, chooser, `logAction`, nom de
+  fichier. Noms de fonctions internes **inchangés** (consigne explicite).
+- **B-125 / BUG-022** : `MIGRATION_25_26` alignée sur `StaffEntity` —
+  `pinSalt TEXT` nullable, `phone` ajouté, `permissions`/`createdAt` supprimés.
+- **§18** : classification Bloquante / Critique / Importante / Confort /
+  Cosmétique. Seules les deux premières interrompent la roadmap.
+
+### Décision d'ordonnancement
+J0 a été remonté **avant** la validation de `BackupManager`. 🧠 *Déduit* :
+BUG-003 empêchait la compilation du module entier, donc l'exécution des 26
+tests. Traiter J0 d'abord était le chemin le plus court vers l'étape 1.
+
+### Fichiers modifiés
+```
+M MainActivity.kt · themes.xml · app/build.gradle.kts · gradle.properties
+M AppDatabase.kt (MIGRATION_25_26) · MainRepository.kt · SettingsScreen.kt
+M MaintenanceScreen.kt · .gitignore · gradlew (mode +x)
+A README.md · app/proguard-rules.pro
+R app/logo.png → app/src/main/res/drawable-nodpi/brand_logo.png
+D conversation.txt + 28 fichiers .idea/ et .kotlin/ dé-versionnés
+M .ai/ : BUGS, BACKLOG, CODING_RULES §18, CURRENT_TASK, opportunites
+A .ai/REPORTS/analyse_impact_2026-07-28_j0_build.md (niveau L/S, allégée)
+```
+
+### Tests exécutés
+Aucun — ni Docker ni JDK côté agent. 🔨 compilation **non prouvée** ·
+🧪 tests **non exécutés**. Statut de tous les correctifs :
+**`CORRIGÉ (INSPECTION)`**.
+
+### Problèmes rencontrés
+1. **Choix du thème de remplacement** : `Theme.Material3` aurait exigé
+   `com.google.android.material`, soit une dépendance nouvelle pour un thème qui
+   ne sert qu'à l'écran système de démarrage. Le thème plateforme évite cela.
+2. **`git rm --cached` sur `.idea/`** : les fichiers restent sur le disque du
+   développeur, seul l'index est nettoyé — comportement voulu.
+
+### Rétrospective *(§17)*
+- **A bien fonctionné** : l'analyse d'impact **allégée** (niveau L) a pris 5 min
+  contre ~40 min au niveau C. La proportionnalité §15.0 tient ses promesses.
+- **A ralenti** : rien de notable. 11 tâches livrées dans la session.
+- **Erreur évitable** : aucune.
+- **Nouvelle règle nécessaire ?** ❌ **Non.** Conformément à la nouvelle
+  directive, aucune règle n'est ajoutée sans incident réel le justifiant.
+  §18 a été ajoutée sur demande explicite, pas par anticipation.
+
+### Étape suivante
+`make validate`. Si la compilation passe, les 26 tests de `BackupManager`
+s'exécuteront **pour la première fois**. Puis B-013 et B-157 avant branchement.
+
 ## 2026-07-28 — Session 7 : Phase 7 (conception, débat, opportunités)
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
