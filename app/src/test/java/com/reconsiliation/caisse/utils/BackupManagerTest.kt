@@ -267,16 +267,23 @@ class BackupManagerTest {
             ?: File("app/src/main/java/com/reconsiliation/caisse/utils/BackupManager.kt")
         assertTrue("Source introuvable : ${source.absolutePath}", source.exists())
 
-        val text = source.readText()
+        // On analyse le CODE, pas les commentaires : ceux-ci mentionnent
+        // légitimement les API bannies pour expliquer pourquoi elles le sont.
+        val code = source.readLines()
+            .map { it.substringBefore("//") }          // retire les commentaires de fin de ligne
+            .filterNot { it.trimStart().startsWith("*") }  // retire les blocs KDoc
+            .filterNot { it.trimStart().startsWith("/*") }
+            .joinToString("\n")
+
         listOf(
             "java.time.",
             "java.util.Base64",
-            "readAllBytes()",
-            "java.nio.file.Files"
+            ".readAllBytes()",
+            "java.nio.file."
         ).forEach { forbidden ->
             assertFalse(
-                "API incompatible minSdk 24 détectée : $forbidden",
-                text.contains(forbidden)
+                "API incompatible minSdk 24 détectée dans le code : $forbidden",
+                code.contains(forbidden)
             )
         }
     }

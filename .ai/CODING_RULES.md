@@ -503,3 +503,63 @@ Depuis le 2026-07-28, le framework **n'évolue plus par anticipation**. Une
 nouvelle règle n'est ajoutée que si **un problème réel rencontré pendant le
 développement** en démontre la nécessité — et la rétrospective (§17) doit alors
 citer l'incident précis qui la justifie.
+
+---
+
+## 19. Traitement des échecs de compilation et de tests
+
+> Objectif : **réduire le nombre de cycles « compiler → corriger → recompiler »**.
+> Une compilation Android coûte plusieurs minutes ; chaque cycle évité est du
+> temps de développement gagné.
+
+### 19.1 Ne jamais s'arrêter à la première erreur
+Lire **l'intégralité** du journal avant de corriger quoi que ce soit. La première
+erreur affichée n'est pas nécessairement la cause racine, et corriger au fil de
+l'eau produit des cycles inutiles.
+
+### 19.2 Classer par cause racine
+Regrouper toutes les erreurs par **origine commune**. Un import manquant peut
+générer trente erreurs « unresolved reference » : c'est **une** cause, pas trente.
+
+### 19.3 Distinguer causes et conséquences
+Identifier les erreurs qui ne sont que des **dérivées** d'une autre. Elles
+disparaîtront d'elles-mêmes et ne doivent pas être traitées séparément.
+
+Indices d'une erreur dérivée :
+- `unresolved reference` sur un symbole défini dans un fichier lui-même en erreur ;
+- erreur de type en cascade après une signature incorrecte ;
+- erreur KSP/Room consécutive à une entité qui ne compile pas.
+
+### 19.4 Corriger ensemble les causes indépendantes
+Toutes les causes racines **sans dépendance entre elles** sont corrigées dans la
+**même itération**, dès lors que cela n'ajoute pas de risque. Deux causes sont
+dépendantes si corriger l'une change la nature de l'autre.
+
+### 19.5 Ne recompiler qu'après traitement de toutes les causes racines
+Pas de recompilation « pour voir ». On recompile quand toutes les causes
+identifiées sont traitées.
+
+### 19.6 Rapport obligatoire après chaque build
+Court, factuel, dans `.ai/REPORTS/analyse_erreurs_<date>.md` :
+
+```markdown
+| Indicateur | Valeur |
+|---|---|
+| Erreurs totales | N |
+| Causes racines | N |
+| Erreurs dérivées | N |
+| Faux positifs écartés | N |
+| Recompilations économisées | N |
+
+## Ordre de correction recommandé
+| Ordre | Cause | Justification |
+```
+
+### 19.7 Passe pré-compilation *(quand l'agent ne peut pas compiler)*
+Si l'environnement ne permet pas de compiler, **anticiper** les causes racines
+par analyse statique avant de solliciter un build extérieur : références
+manquantes, ressources absentes, doublons, tests auto-contradictoires,
+API interdites. Chaque cause trouvée à ce stade économise un cycle complet.
+
+*Règle issue de la session du 2026-07-28 : cette passe a identifié 2 causes
+racines et écarté 3 faux positifs avant la première compilation.*
