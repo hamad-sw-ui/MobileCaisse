@@ -38,7 +38,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - ☑ **B-124** 26 tests unitaires `BackupManager` + harnais Python indépendant (16/16)
 - □ **B-101** 🟠 Brancher `BackupManager` sur les chemins A, B, C *(BUG-017)* — ⏳ **attend la validation des tests dans Docker**
 - ☑ **B-140** Restauration via fichier de transit validé avant `db.close()` *(BUG-024, risque R2)*
-- □ **B-141** Détecter le format `.zip` vs `.db` legacy par magie de fichier *(risque R1 : confusion → base corrompue)*
+- ☑ **B-141** `BackupFormat.detect()` — détection par signature binaire + 9 tests *(risque R1)*
 - □ **B-142** Composant `BackupPasswordDialog` réutilisable par les 3 écrans *(éviter la triplication)*
 - □ **B-143** Avertissement UI non contournable : mot de passe perdu = sauvegarde perdue *(risque R3)*
 - □ **B-144** Documenter dans l'UI la coexistence des deux formats de sauvegarde
@@ -47,7 +47,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 ### Issus du débat technique (2026-07-28)
 - □ **B-145** Extraire un `BackupRepository` — *avis Architecte, reporté à J5*
 - □ **B-146** Mesurer la durée d'export sur une base de 50 Mo avant d'optimiser
-- □ **B-157** Protocole de vérification manuelle des 5 chemins **avant** modification *(exigence QA, bloquante)*
+- ☑ **B-157** `CHECKLISTS/verification_sauvegarde.md` — protocole avant/après, 6 chemins *(exigence QA levée)*
 - □ **B-158** Masquer l'ancien bouton d'export dès l'étape 7 *(exigence Sécurité)*
 
 ### Opportunités identifiées (rapport `opportunites_2026-07-28_sauvegarde.md`) — **non planifiées**
@@ -160,7 +160,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **104** | **26** |
+| **TOTAL** | **105** | **29** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

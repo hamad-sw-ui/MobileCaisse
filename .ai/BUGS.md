@@ -532,6 +532,23 @@ remplacement.
 
 ---
 
+## 🟠 BUG-025 — Autorité `FileProvider` incorrecte : crash sur le relevé client
+
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Fichier** : `ui/viewmodel/MainViewModel.kt` (`generateCustomerStatement`)
+
+🔍 *Observé* : le code utilisait `"${'$'}{context.packageName}.provider"` alors que le
+manifeste déclare `${'$'}{applicationId}.fileprovider`. Les 4 autres appels à
+`getUriForFile` du projet utilisent bien `.fileprovider`.
+
+**Impact** : 🧠 *déduit* — `IllegalArgumentException: Failed to find configured
+root` au partage d'un relevé de compte client. Fonctionnalité inutilisable.
+
+**Correctif** : autorité alignée sur le manifeste. Les 5 appels sont désormais
+cohérents.
+
+---
+
 ## 🟠 BUG-022 — Contradiction `staff.pinSalt` : NOT NULL en migration vs nullable en logique
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR

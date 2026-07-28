@@ -441,7 +441,7 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
             val ventes = repository.getVentesByCustomer(customer.id).first()
             val file = repository.generateCustomerStatementPdf(context, customer, ventes)
             if (file != null) {
-                val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.provider", file)
+                val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
                     type = "application/pdf"
                     putExtra(android.content.Intent.EXTRA_STREAM, uri)
