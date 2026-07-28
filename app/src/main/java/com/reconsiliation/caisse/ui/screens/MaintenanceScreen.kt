@@ -97,7 +97,7 @@ fun MaintenanceScreen(navController: NavController) {
                 text = {
                     Column {
                         Text("Supprimer les données de plus de ${purgeMonths.toInt()} mois ?")
-                        Text("Cette action est irréversible. Assurez-vous d'avoir fait une sauvegarde cloud avant.", style = MaterialTheme.typography.bodySmall, color = RedError)
+                        Text("Cette action est irréversible. Assurez-vous d'avoir fait un export de sauvegarde avant.", style = MaterialTheme.typography.bodySmall, color = RedError)
                         Spacer(modifier = Modifier.height(16.dp))
                         Slider(
                             value = purgeMonths,

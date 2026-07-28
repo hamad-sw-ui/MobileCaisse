@@ -131,7 +131,14 @@ contrôlée. `fallbackToDestructiveMigration()` reste proscrit : le mécanisme d
 
 ## 🟠 BUG-003 — `androidx.appcompat` utilisé mais non déclaré
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**⏳ En attente de validation par compilation réelle.**
+**Correctif** : `MainActivity` étend désormais `ComponentActivity`
+(`androidx.activity`, déjà présent) ; `themes.xml` hérite de
+`@android:style/Theme.Material.Light.NoActionBar` (thème de la **plateforme**,
+API 21+). **Zéro dépendance ajoutée** — ni AppCompat, ni Material Components.
+🔍 *Observé* : aucun usage fonctionnel d'AppCompat n'existait (ni
+`supportActionBar`, ni `delegate`). `Theme.kt` pilotait déjà tout le style.
 **Fichiers** : `MainActivity.kt`, `res/values/themes.xml`, `app/build.gradle.kts`
 
 `MainActivity : AppCompatActivity` et `Theme.CAISSE` hérite de
@@ -514,7 +521,12 @@ remplacement.
 
 ## 🟠 BUG-022 — Contradiction `staff.pinSalt` : NOT NULL en migration vs nullable en logique
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(analysé — rév. 3)*
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**⏳ En attente de validation par compilation réelle.**
+**Correctif** : `MIGRATION_25_26` aligné sur `StaffEntity` —
+`pinSalt TEXT` (nullable), `phone TEXT` ajouté, `permissions`/`createdAt`
+supprimés (inexistants dans l'entité). La nullité de `pinSalt` reste le marqueur
+d'un hash legacy pour la migration paresseuse des PIN.
 **Fichiers** : `AppDatabase.kt:71` (MIGRATION_25_26), `entity/StaffEntity.kt:11`, `MainViewModel.kt:495`
 
 ### Les trois sources
@@ -603,7 +615,11 @@ réseau**. Sur un appareil durablement hors ligne, la sauvegarde quotidienne
 
 ## 🟡 BUG-016 — Déchets versionnés dans le dépôt
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Correctif** : `conversation.txt` supprimé · `.idea/` et `.kotlin/`
+dé-versionnés (28 fichiers) · `app/logo.png` → `res/drawable-nodpi/brand_logo.png`
+· `.gitignore` complété · `gradlew` rendu exécutable
+(`git update-index --chmod=+x`) · `app/proguard-rules.pro` créé.
 
 - `app/src/main/java/com/reconsiliation/caisse/conversation.txt` — 1 084 lignes
   de transcription d'un autre outil (package `com.rork.momocaisse`), dans le

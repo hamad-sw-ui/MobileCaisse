@@ -1,4 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.CAISSE" parent="Theme.AppCompat.Light.NoActionBar" />
+    <!--
+        Thème appliqué uniquement AVANT que Compose ne prenne la main
+        (écran système au lancement). L'apparence réelle de l'application est
+        définie par ui/theme/Theme.kt (Material 3).
+
+        Parent = thème de la PLATEFORME (API 21+) et non Theme.AppCompat :
+        androidx.appcompat n'est pas une dépendance du projet (BUG-003).
+    -->
+    <style name="Theme.CAISSE" parent="@android:style/Theme.Material.Light.NoActionBar" />
 </resources>

@@ -6,6 +6,15 @@
 **Contexte** : `analyse_impact_2026-07-28_branchement_backupmanager.md`
 
 > 🚫 Aucune de ces opportunités ne sera implémentée sans arbitrage explicite.
+>
+> **Classification §18 (ajoutée le 2026-07-28)** — aucune n'est 🔴 Bloquante ni
+> 🟠 Critique : **aucune n'interrompt la roadmap**. Toutes versées au backlog.
+>
+> | Catégorie | Opportunités |
+> |---|---|
+> | 🟡 Importante | O-04 (architecture), O-05 (mémoire), O-08 (testabilité), O-09 (traçabilité), O-10 (cache), O-13 (UX critique mais non bloquante) |
+> | 🔵 Confort | O-01, O-02, O-06, O-07, O-11, O-12 |
+> | ⚪ Cosmétique | O-03 |
 
 ---
 
@@ -222,8 +231,9 @@ O-06→B-146, O-08, O-11→B-141
 **À verser au backlog** : O-01 (B-147), O-02 (B-148), O-03 (B-149),
 O-05 (B-150), O-07 (B-151), O-09 (B-152), O-10 (B-153), O-12 (B-154), O-13 (B-155)
 
-**À traiter en priorité selon moi** : **O-13** (double saisie du mot de passe).
-Coût très faible, et elle supprime le mode d'échec le plus probable de tout le
-système : une faute de frappe qui rend la sauvegarde définitivement illisible.
+**Décision du responsable (2026-07-28)** : **O-13 / B-155 reste au backlog.**
+Motifs retenus : ce n'est ni un prérequis fonctionnel, ni un blocage de
+sécurité, ni nécessaire au branchement de `BackupManager`. Amélioration UX
+intégrable plus tard.
 
-**Arbitrage attendu du responsable** : ☑ oui
+**Arbitrage** : ☑ rendu — aucune opportunité n'interrompt la roadmap.

@@ -65,8 +65,8 @@ dependencies {
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.view)
     
-    implementation("net.zetetic:android-database-sqlcipher:4.5.4")
-    implementation("androidx.sqlite:sqlite-ktx:2.4.0")
+    implementation(libs.sqlcipher)
+    implementation(libs.androidx.sqlite.ktx)
 
     // BackupManager est du Kotlin/JVM pur (aucune dépendance au framework Android) :
     // ses tests s'exécutent en JVM, donc dans Docker, sans appareil ni Robolectric.

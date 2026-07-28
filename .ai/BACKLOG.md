@@ -18,14 +18,14 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 ## P0 — Sauver le build et les données (bloquant)
 
-- □ **B-001** Rendre `gradlew` exécutable (`git update-index --chmod=+x gradlew`)
-- □ **B-002** Créer `app/proguard-rules.pro` (référencé mais absent)
-- □ **B-003** Déclarer `androidx.appcompat` OU migrer vers `ComponentActivity` + `Theme.Material3` *(BUG-003)*
-- □ **B-004** Déplacer `sqlcipher` et `sqlite-ktx` du build script vers le version catalog
-- □ **B-005** Aligner la version Kotlin réellement utilisée sur `libs.versions.toml` (2.1.0)
-- □ **B-006** Vérifier la compatibilité `configuration-cache` + Gradle 9.5 + KSP ; désactiver si instable
-- □ **B-007** Supprimer `conversation.txt` du source set principal *(BUG-016)*
-- □ **B-008** Nettoyer le dépôt : dé-versionner `.idea/`, `.kotlin/`, déplacer `app/logo.png`, compléter `.gitignore`
+- ☑ **B-001** `gradlew` rendu exécutable
+- ☑ **B-002** `app/proguard-rules.pro` créé (Room, SQLCipher, serialization, ML Kit)
+- ☑ **B-003** Migré vers `ComponentActivity` + thème plateforme — **zéro dépendance ajoutée** *(BUG-003)*
+- ☑ **B-004** `sqlcipher` et `sqlite-ktx` déplacés dans le version catalog
+- ☑ **B-005** Kotlin figé à 2.1.0 par le catalog ; `.kotlin/errors/` dé-versionné
+- ☑ **B-006** `configuration-cache=false` + `kotlin.compiler.execution.strategy=in-process`
+- ☑ **B-007** `conversation.txt` supprimé (1 084 lignes)
+- ☑ **B-008** Dépôt nettoyé : 28 fichiers dé-versionnés, logo déplacé dans `res/`
 - □ **B-009** Activer `exportSchema = true` et versionner `app/schemas/` en Git
 - □ **B-010** 🔴 Réécrire les 6 migrations divergentes + migration corrective 28→29 *(BUG-001)*
 - □ **B-011** 🔴 Bases < v18 : détection + écran de consentement + export de courtoisie + recréation *(BUG-002 — **décision D1 : perte assumée avec accord de l'utilisateur**)*
@@ -61,7 +61,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-153** Purger les fichiers de cache après partage
 - □ **B-154** Afficher la date de la dernière sauvegarde
 - ☑ **B-138** Corriger l'erreur de compilation de `BackupManager` *(BUG-023, découvert en réparant)*
-- □ **B-125** 🟠 Corriger `MIGRATION_25_26` : `staff.pinSalt` en nullable *(BUG-022)* — intégré à la refonte J1.3
+- ☑ **B-125** `MIGRATION_25_26` aligné sur `StaffEntity` : `pinSalt` nullable, `phone` ajouté *(BUG-022)*
 - □ **B-014** Retirer la contrainte `NetworkType.CONNECTED` de `BackupWorker` *(BUG-015)*
 
 ## P1 — Sécurité
@@ -108,7 +108,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 ## P4 — Fonctionnalités manquantes / incomplètes
 
 ### Décision D2 — sauvegarde distante (deux volets en parallèle)
-- □ **B-110** Volet 1 : renommer honnêtement l'existant — « Exporter et partager » au lieu de « Synchronisation cloud » (libellés UI + `logAction`), **sans toucher à la logique**
+- ☑ **B-110** « Exporter et partager » — libellés UI, chooser, `logAction`, nom de fichier. Noms de fonctions **non modifiés** (consigne)
 - □ **B-111** Volet 2a : rapport d'analyse comparatif Google Drive vs Dropbox (`REPORTS/`)
 - □ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (dépend de B-101 : on n'envoie que des archives `BackupManager`)
 
@@ -145,7 +145,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-097** Ajouter ktlint ou detekt + configuration
 - □ **B-098** CI GitHub Actions : `assembleDebug`, `test`, `lint` sur chaque PR
 - □ **B-099** Mesurer la couverture (JaCoCo) et publier dans `REPORTS/`
-- □ **B-100** Rédiger un `README.md` racine (le dépôt n'en a aucun)
+- ☑ **B-100** `README.md` racine rédigé
 
 ---
 
@@ -153,14 +153,14 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 | Priorité | Total | Terminées |
 |---|---|---|
-| P0 — Build & données | 28 | 6 |
+| P0 — Build & données | 28 | 17 |
 | P1 — Sécurité | 10 | 2 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
 | P4 — Fonctionnalités | 12 | 1 |
-| P5 — Qualité & CI | 11 | 0 |
+| P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **104** | **12** |
+| **TOTAL** | **104** | **23** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

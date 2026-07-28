@@ -471,3 +471,35 @@ suivante** — jamais l'imposer.
 > existante peut être **fusionnée, simplifiée ou supprimée**. Un framework qui
 > grossit sans cesse finit par être contourné — et un framework contourné ne
 > protège plus rien.
+
+---
+
+## 18. Classification des propositions d'amélioration
+
+> **Le développement est la priorité. Le framework est un outil à son service,
+> non l'inverse.** *(décision du 2026-07-28)*
+
+Toute proposition d'amélioration est classée dans **une** de ces catégories :
+
+| Catégorie | Définition | Effet sur la roadmap |
+|---|---|---|
+| 🔴 **Bloquante** | Empêche de continuer : build cassé, perte de données, faille exploitable | ⛔ **interrompt** la roadmap |
+| 🟠 **Critique** | Ne bloque pas immédiatement mais aggrave un risque majeur (sécurité, intégrité des données, régression silencieuse) | ⛔ **peut interrompre** la roadmap, sur arbitrage |
+| 🟡 **Importante** | Vraie valeur, mais différable sans risque | → backlog |
+| 🔵 **Confort** | Améliore le travail ou l'usage sans nécessité | → backlog |
+| ⚪ **Cosmétique** | Formatage, nommage, présentation | → backlog |
+
+**Règles**
+- **Seules les catégories 🔴 Bloquante et 🟠 Critique peuvent interrompre la roadmap.**
+- Les autres sont **automatiquement versées au backlog**, sans interrompre le
+  développement ni demander d'arbitrage.
+- La catégorie est indiquée à chaque proposition, dans les rapports
+  d'opportunités comme dans le backlog.
+- En cas d'hésitation entre 🟠 et 🟡 : choisir 🟡. L'interruption doit rester
+  l'exception.
+
+### Évolution du framework
+Depuis le 2026-07-28, le framework **n'évolue plus par anticipation**. Une
+nouvelle règle n'est ajoutée que si **un problème réel rencontré pendant le
+développement** en démontre la nécessité — et la rétrospective (§17) doit alors
+citer l'incident précis qui la justifie.

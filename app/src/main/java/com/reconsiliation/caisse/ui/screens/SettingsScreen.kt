@@ -113,7 +113,7 @@ fun SettingsScreen(navController: NavController) {
 
             HorizontalDivider()
             
-            Text("Données & Migration", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text("Sauvegarde & Export", style = MaterialTheme.typography.titleMedium, color = Primary)
             val contextForSync = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = { viewModel.syncToCloud(contextForSync) },
@@ -122,7 +122,7 @@ fun SettingsScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.Backup, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Sauvegarder / Migrer (DB)")
+                Text("Exporter et partager la base")
             }
 
             val scope = androidx.compose.runtime.rememberCoroutineScope()

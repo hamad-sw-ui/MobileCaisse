@@ -885,11 +885,13 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
         }
     }
 
-    // Cloud Backup Preparation (Point 1)
+    // Export manuel de la base : copie puis partage via Intent.
+    // ⚠️ Ce n'est PAS une synchronisation cloud : aucun envoi automatique.
+    // Une vraie sauvegarde distante est planifiée (B-112).
     suspend fun syncToCloud(context: Context, role: String? = null) {
         val dbFile = context.getDatabasePath("caisse_database")
         if (dbFile.exists()) {
-            val backupFile = File(context.cacheDir, "caisse_cloud_sync_${System.currentTimeMillis()}.db")
+            val backupFile = File(context.cacheDir, "caisse_export_${System.currentTimeMillis()}.db")
             dbFile.copyTo(backupFile, overwrite = true)
             
             val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", backupFile)
@@ -899,8 +901,8 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
                 addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
                 addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             }
-            context.startActivity(android.content.Intent.createChooser(intent, "Synchroniser vers le Cloud / Email"))
-            logAction("CLOUD_SYNC", "Sauvegarde cloud initiée", role)
+            context.startActivity(android.content.Intent.createChooser(intent, "Exporter et partager"))
+            logAction("EXPORT_SHARE", "Export manuel de la base initié", role)
         }
     }
 

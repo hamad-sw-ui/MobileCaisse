@@ -68,7 +68,12 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_25_26 = object : Migration(25, 26) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `staff` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `pinHash` TEXT NOT NULL, `pinSalt` TEXT NOT NULL, `role` TEXT NOT NULL, `permissions` TEXT NOT NULL, `isActive` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL)")
+                // Schéma aligné sur StaffEntity (BUG-022).
+                // `pinSalt` est NULLABLE : sa nullité est le marqueur d'un hash
+                // SHA-256 legacy que MainViewModel.checkPin re-hache en PBKDF2
+                // (migration paresseuse). Un NOT NULL rendrait ce mécanisme
+                // de sécurité inopérant.
+                db.execSQL("CREATE TABLE IF NOT EXISTS `staff` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `pinHash` TEXT NOT NULL, `pinSalt` TEXT, `phone` TEXT, `isActive` INTEGER NOT NULL, `role` TEXT NOT NULL)")
             }
         }
 
