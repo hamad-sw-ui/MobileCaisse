@@ -13,12 +13,17 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
-## Le pipeline
+## Execution Engine — point d'entrée unique
 
-**Une seule commande** exécute tout le cycle :
+Toute la logique d'exécution est concentrée dans `engine/`.
 
 ```bash
-./software-factory/orchestrator/full-cycle.sh
+./software-factory/orchestrator/full-cycle.sh          # lanceur (40 lignes)
+cd software-factory && python3 -m engine.engine        # équivalent direct
+
+python3 -m engine.engine --resume       # reprend après échec
+python3 -m engine.engine --status       # état du dernier cycle
+python3 -m engine.engine --max-loops 3  # boucle corriger→revalider
 ```
 
 ```
@@ -34,6 +39,36 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 
 Options : `--no-emulator` · `--no-autofix` · `--skip-instr`
 
+### Reprise après échec
+
+L'état du pipeline est persisté dans `cache/pipeline-state.json`. Après un échec
+en compilation, `--resume` **ne rejoue pas** les étapes déjà validées :
+
+```
+▸ Reprise du cycle 2026-07-30_231856 (échec à « build »)
+  Étapes déjà validées, non rejouées : preflight, autofix
+```
+
+Garde-fou : la reprise est refusée si le commit a changé. Des étapes validées
+sur un autre code ne prouvent plus rien.
+
+### Architecture du moteur
+
+| Fichier | Rôle |
+|---|---|
+| `engine/engine.py` | orchestration, boucle, reprise, rapport |
+| `engine/runners.py` | une étape = une classe (`applicable`, `retryable`, `mutates_code`) |
+| `engine/state.py` | état persistant du pipeline |
+
+Ajouter une étape = ajouter une classe `Runner` et l'inscrire dans `PIPELINE`.
+Aucune modification de shell.
+
+Trois propriétés déclarées par chaque runner :
+- **`applicable`** — sinon `SKIPPED` avec motif, jamais un échec silencieux ;
+- **`retryable`** — une compilation peut échouer sur un verrou Gradle (on relance),
+  un test qui échoue échouera encore (on ne relance pas) ;
+- **`mutates_code`** — `autofix` invalide les étapes déjà validées après lui.
+
 ### Chaque module supprime une intervention humaine précise
 
 | Module | Intervention supprimée |
@@ -44,6 +79,8 @@ Options : `--no-emulator` · `--no-autofix` · `--skip-instr`
 | `autofix/` | corriger un à un ce que l'analyse détecte |
 | `analyzers/` | lire un journal Gradle et deviner la cause racine |
 | `publish.py` + `last-cycle/` | copier-coller le journal vers l'agent |
+| `engine/state.py` | tout relancer depuis le début après un échec (dont l'image Docker, 5-10 min) |
+| `engine/engine.py --max-loops` | enchaîner à la main corriger → relancer → vérifier |
 
 **Reste manuel** : `git push` — volontairement. Un commit poussé sans relecture
 serait une automatisation de trop.

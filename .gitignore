@@ -33,3 +33,4 @@ __pycache__/
 .ai/REPORTS/preflight_*.md
 software-factory/cache/
 .ai/REPORTS/cycle_*.md
+software-factory/cache/pipeline-state.json

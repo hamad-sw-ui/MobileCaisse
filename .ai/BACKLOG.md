@@ -129,7 +129,8 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - ☑ **SF-03** `autofix` — 141 corrections appliquées, zones protégées respectées
 - ☑ **SF-06** Canal de retour `last-cycle/` — supprime le copier-coller de journal
 - ☑ **SF-04** `environment` (détection + émulateur) + pipeline unifié en 8 étapes
-- □ **SF-05** CI GitHub Actions *(quand le build est stable)*
+- ☑ **SF-05** Execution Engine — point d'entrée unique, reprise, boucle auto
+- □ **SF-07** CI GitHub Actions *(quand le build est stable)*
 
 ## P6 — Environnement Docker *(livré 2026-07-28, à valider)*
 
@@ -169,7 +170,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **112** | **40** |
+| **TOTAL** | **113** | **41** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

@@ -111,4 +111,5 @@ passe de façon stable en local.
 | SF-02 | `orchestrator` + `analyzers` | ✅ **livré 2026-07-30** | 5 demandes manuelles répétées |
 | SF-03 | `fix` | ⏳ en attente | **motifs d'erreur réels** issus d'un vrai build |
 | SF-04 | `environment` + pipeline | ✅ **livré 2026-07-30** | pipeline bloqué sans Docker |
-| SF-05 | CI | ⏳ en attente | build stable |
+| SF-05 | Execution Engine | ✅ **livré 2026-07-30** | duplication bash/python, pas de reprise |
+| SF-06 | CI GitHub Actions | ⏳ en attente | build stable |
