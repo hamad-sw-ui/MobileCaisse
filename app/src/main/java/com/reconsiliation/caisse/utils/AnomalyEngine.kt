@@ -16,8 +16,8 @@ object AnomalyEngine {
         }
 
         // 2. Détection de ventes répétitives (Suspicion de spam ou doublon)
-        val similarSales = history.filter { 
-            it.amount == vente.amount && 
+        val similarSales = history.filter {
+            it.amount == vente.amount &&
             Math.abs(it.date.time - vente.date.time) < 30000 // Moins de 30 secondes
         }
         if (similarSales.isNotEmpty()) {

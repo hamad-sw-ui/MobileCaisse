@@ -114,8 +114,8 @@ fun AppNavigation() {
                                     viewModel.requestAccess(screen.route)
                                 } else {
                                     navController.navigate(screen.route) {
-                                        popUpTo(Screen.Home.route) { 
-                                            saveState = true 
+                                        popUpTo(Screen.Home.route) {
+                                            saveState = true
                                         }
                                         launchSingleTop = true
                                         restoreState = true
@@ -130,7 +130,7 @@ fun AppNavigation() {
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
             NavHost(
-                navController = navController, 
+                navController = navController,
                 startDestination = Screen.Splash.route
             ) {
             composable(Screen.Splash.route) { SplashScreen(navController) }
@@ -142,7 +142,7 @@ fun AppNavigation() {
                 composable(Screen.History.route) { SalesListScreen(navController) }
                 composable(
                     route = Screen.Stock.route,
-                    arguments = listOf(androidx.navigation.navArgument("barcode") { 
+                    arguments = listOf(androidx.navigation.navArgument("barcode") {
                         type = androidx.navigation.NavType.StringType
                         nullable = true
                         defaultValue = null
@@ -202,7 +202,7 @@ fun AppNavigation() {
             }
 
             if (showPinDialog) {
-                Dialog(onDismissRequest = { 
+                Dialog(onDismissRequest = {
                     viewModel.dismissPinDialog()
                     pinInput = ""
                 }) {
@@ -236,11 +236,11 @@ fun AppNavigation() {
                             }
                             
                             com.reconsiliation.caisse.ui.components.NumericKeypad(
-                                onNumberClick = { 
+                                onNumberClick = {
                                     viewModel.recordActivity()
                                     if (pinInput.length < 4) {
                                         isError = false
-                                        pinInput += it 
+                                        pinInput += it
                                         if (pinInput.length == 4) {
                                             scope.launch {
                                                 if (viewModel.handlePinInput(pinInput)) {
@@ -261,14 +261,14 @@ fun AppNavigation() {
                                         }
                                     }
                                 },
-                                onDeleteClick = { 
+                                onDeleteClick = {
                                     viewModel.recordActivity()
                                     isError = false
-                                    if (pinInput.isNotEmpty()) pinInput = pinInput.dropLast(1) 
+                                    if (pinInput.isNotEmpty()) pinInput = pinInput.dropLast(1)
                                 }
                             )
                             
-                            TextButton(onClick = { 
+                            TextButton(onClick = {
                                 viewModel.dismissPinDialog()
                                 pinInput = ""
                             }) {

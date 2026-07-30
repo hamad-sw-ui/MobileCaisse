@@ -153,7 +153,7 @@ fun ClosureScreen(navController: NavController) {
                 
                 if (!isLocked) {
                     Button(
-                        onClick = { 
+                        onClick = {
                             if (cashDiff < 0) {
                                 viewModel.addExpense(com.reconsiliation.caisse.data.local.entity.ExpenseEntity(
                                     label = "Manquant de caisse (${FormatUtil.formatDate(Date())})",
@@ -216,7 +216,7 @@ fun ClosureCard(label: String, amount: Double) {
 fun exportToCsv(context: android.content.Context, ventes: List<com.reconsiliation.caisse.data.local.entity.VenteEntity>) {
     val fileName = "ventes_${System.currentTimeMillis()}.csv"
     val fileContent = StringBuilder("ID,Date,Description,Montant,Methode,Statut\n")
-    ventes.forEach { 
+    ventes.forEach {
         fileContent.append("${it.id},${it.date},${it.description},${it.amount},${it.paymentMethod},${it.status}\n")
     }
     

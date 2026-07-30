@@ -1099,8 +1099,8 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
 
     suspend fun openSession(seller: String, balance: Double, staffId: Long? = null) {
         db.sessionDao().openSession(SessionEntity(
-            sellerName = seller, 
-            startTime = Date(), 
+            sellerName = seller,
+            startTime = Date(),
             openingBalance = balance,
             staffId = staffId
         ))

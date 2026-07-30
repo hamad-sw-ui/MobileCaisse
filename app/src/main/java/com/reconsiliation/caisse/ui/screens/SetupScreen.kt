@@ -95,9 +95,9 @@ fun SetupScreen(navController: NavController) {
             
             Text("Sécurité", style = MaterialTheme.typography.titleMedium, color = Primary)
             OutlinedTextField(
-                value = pin, 
-                onValueChange = { if (it.length <= 4) pin = it }, 
-                label = { Text("Code PIN (4 chiffres)") }, 
+                value = pin,
+                onValueChange = { if (it.length <= 4) pin = it },
+                label = { Text("Code PIN (4 chiffres)") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 visualTransformation = PasswordVisualTransformation(),
@@ -123,7 +123,7 @@ fun SetupScreen(navController: NavController) {
                                 operator = operator,
                                 momoNumber = momoNumber.trim(),
                                 isSetupComplete = true,
-                                pinHash = hashedPin, 
+                                pinHash = hashedPin,
                                 pinSalt = salt,
                                 managerPinHash = hashedPin,
                                 managerPinSalt = salt

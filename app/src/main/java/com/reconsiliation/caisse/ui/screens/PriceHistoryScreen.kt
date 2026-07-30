@@ -63,8 +63,8 @@ fun PriceHistoryRow(log: com.reconsiliation.caisse.data.local.entity.PriceHistor
     
     ListItem(
         headlineContent = { Text("Changement de prix de $typeLabel", fontWeight = FontWeight.Bold) },
-        supportingContent = { 
-            Text("${FormatUtil.formatCurrency(log.oldPrice)} ➔ ${FormatUtil.formatCurrency(log.newPrice)}") 
+        supportingContent = {
+            Text("${FormatUtil.formatCurrency(log.oldPrice)} ➔ ${FormatUtil.formatCurrency(log.newPrice)}")
         },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {

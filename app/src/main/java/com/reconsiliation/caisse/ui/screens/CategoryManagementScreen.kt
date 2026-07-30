@@ -16,10 +16,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.data.local.entity.CategoryEntity
 import com.reconsiliation.caisse.ui.components.AddCategoryDialog
 import com.reconsiliation.caisse.ui.theme.Primary
-import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)

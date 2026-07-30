@@ -117,7 +117,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                             ListItem(
                                 headlineContent = { Text(FormatUtil.formatDate(data.vente.date)) },
                                 supportingContent = { Text(data.vente.description.take(50)) },
-                                trailingContent = { 
+                                trailingContent = {
                                     Column(horizontalAlignment = Alignment.End) {
                                         Text(FormatUtil.formatCurrency(data.vente.amount, currency), fontWeight = FontWeight.Bold)
                                         Text(data.vente.paymentMethod, style = MaterialTheme.typography.labelSmall)

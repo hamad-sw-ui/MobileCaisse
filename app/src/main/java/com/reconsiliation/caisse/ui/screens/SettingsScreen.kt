@@ -43,7 +43,7 @@ fun SettingsScreen(navController: NavController) {
 
     Scaffold(
         snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
-        topBar = { 
+        topBar = {
             TopAppBar(
                 title = { Text("Paramètres") },
                 navigationIcon = {
@@ -51,7 +51,7 @@ fun SettingsScreen(navController: NavController) {
                         Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 }
-            ) 
+            )
         }
     ) { padding ->
         Column(
@@ -108,7 +108,7 @@ fun SettingsScreen(navController: NavController) {
             }
             
             Button(
-                onClick = { navController.navigate("support") }, 
+                onClick = { navController.navigate("support") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
             ) {
@@ -143,7 +143,7 @@ fun SettingsScreen(navController: NavController) {
             val scope = androidx.compose.runtime.rememberCoroutineScope()
             if (allStock.isEmpty() && allVentes.isEmpty()) {
                 Button(
-                    onClick = { 
+                    onClick = {
                         scope.launch(kotlinx.coroutines.Dispatchers.IO) {
                             com.reconsiliation.caisse.data.seed.DataSeeder(com.reconsiliation.caisse.data.local.AppDatabase.getDatabase(contextForSync)).seedSampleData()
                         }
@@ -170,7 +170,7 @@ fun SettingsScreen(navController: NavController) {
                     text = { Text("Voulez-vous vraiment effacer toutes les données (Ventes, Stocks, Clients) ? Cette action est irréversible et vous devrez reconfigurer votre boutique.") },
                     confirmButton = {
                         TextButton(
-                            onClick = { 
+                            onClick = {
                                 viewModel.resetApplicationData()
                                 showResetDialog = false
                                 navController.navigate(Screen.Splash.route) {

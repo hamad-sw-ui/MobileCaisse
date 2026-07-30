@@ -17,8 +17,8 @@ import java.io.Serializable
 import kotlinx.coroutines.flow.first
 
 data class CartItem(
-    val product: StockEntity, 
-    val quantity: Double, 
+    val product: StockEntity,
+    val quantity: Double,
     val priceAtSale: Double,
     val isRetail: Boolean = false,
     val parentId: Long? = null,
@@ -47,13 +47,13 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     private val _staffId = savedStateHandle.getStateFlow<Long?>("staff_id", null)
     val staffId = _staffId
 
-    fun login(role: String, id: Long? = null) { 
-        savedStateHandle["user_role"] = role 
+    fun login(role: String, id: Long? = null) {
+        savedStateHandle["user_role"] = role
         savedStateHandle["staff_id"] = id
         recordActivity()
     }
-    fun logout() { 
-        savedStateHandle["user_role"] = null 
+    fun logout() {
+        savedStateHandle["user_role"] = null
         savedStateHandle["staff_id"] = null
         _showPinDialog.value = false
         pendingRoute = null
@@ -223,9 +223,9 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
         viewModelScope.launch {
             // Combine multiple flows to ensure critical data is considered "loaded"
             combine(boutique, subscription, activeSession) { _, _, _ ->
-                true 
+                true
             }.collect {
-                _isDataLoaded.value = true 
+                _isDataLoaded.value = true
             }
         }
 
@@ -300,9 +300,9 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
         val current = _cart.value.toMutableList()
         val existing = current.find { it.product.id == product.id && it.isRetail == isRetail }
         if (existing != null) {
-            val updatedList = current.map { 
-                if (it.product.id == product.id && it.isRetail == isRetail) 
-                    it.copy(quantity = it.quantity + 1, priceAtSale = price) 
+            val updatedList = current.map {
+                if (it.product.id == product.id && it.isRetail == isRetail)
+                    it.copy(quantity = it.quantity + 1, priceAtSale = price)
                 else it
             }
             savedStateHandle["cart_items"] = updatedList
@@ -320,15 +320,15 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
     fun updateCartItemQuantity(item: CartItem, newQuantity: Double) {
         val current = _cart.value.toMutableList()
-        val updatedList = current.map { 
-            if (it.product.id == item.product.id && it.isRetail == item.isRetail) 
-                it.copy(quantity = newQuantity) 
+        val updatedList = current.map {
+            if (it.product.id == item.product.id && it.isRetail == item.isRetail)
+                it.copy(quantity = newQuantity)
             else it
         }
         savedStateHandle["cart_items"] = updatedList
     }
 
-    fun clearCart() { 
+    fun clearCart() {
         savedStateHandle["cart_items"] = emptyList<CartItem>()
     }
 
@@ -353,9 +353,9 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
                 if (cartItem.isRetail && cartItem.parentId != null) {
                     VenteItemEntity(
                         venteId = 0,
-                        productId = cartItem.parentId, 
+                        productId = cartItem.parentId,
                         productName = cartItem.product.productName,
-                        quantity = cartItem.quantity / cartItem.conversionFactor, 
+                        quantity = cartItem.quantity / cartItem.conversionFactor,
                         unitPrice = cartItem.priceAtSale,
                         purchasePrice = cartItem.product.purchasePrice / cartItem.conversionFactor
                     )
@@ -406,11 +406,11 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     fun performAudit(note: String?, items: List<AuditItemEntity>) = viewModelScope.launch { try { repository.performAudit(note, items) } catch (e: Exception) { _uiError.value = e.message } }
     fun performClosure(closure: ClosureEntity) = viewModelScope.launch { try { repository.performClosure(closure, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     
-    fun openSession(seller: String, balance: Double) = viewModelScope.launch { 
-        try { repository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message } 
+    fun openSession(seller: String, balance: Double) = viewModelScope.launch {
+        try { repository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message }
     }
-    fun closeSession(balance: Double) = viewModelScope.launch { 
-        try { repository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message } 
+    fun closeSession(balance: Double) = viewModelScope.launch {
+        try { repository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
 
     fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { repository.addRepayment(customerId, amount, method, userRole.value) }
@@ -423,7 +423,7 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) { repository.printTicket(venteId, printerAddress) }
     fun testPrint(address: String) = viewModelScope.launch(Dispatchers.IO) { repository.testPrint(getApplication(), address) }
     
-    fun exportSalesData(context: android.content.Context) = viewModelScope.launch { 
+    fun exportSalesData(context: android.content.Context) = viewModelScope.launch {
         try {
             val ventes = db.venteDao().getAllVentesWithItems().first()
             val file = com.reconsiliation.caisse.utils.ExportUtil.exportSalesToCsv(context, ventes)

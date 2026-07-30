@@ -126,7 +126,8 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 - ☑ **SF-01** `preflight` — analyse statique pré-compilation, 8 contrôles, rapport §19.6
 - ☑ **SF-02** `orchestrator` + `analyzers` — cycle complet, causes racines, 10 tests
-- □ **SF-03** `fix` — corrections automatiques sûres *(après SF-02)*
+- ☑ **SF-03** `autofix` — 141 corrections appliquées, zones protégées respectées
+- ☑ **SF-06** Canal de retour `last-cycle/` — supprime le copier-coller de journal
 - □ **SF-04** `cycle` — boucle complète *(après SF-03)*
 - □ **SF-05** CI GitHub Actions *(quand le build est stable)*
 
@@ -168,7 +169,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **111** | **37** |
+| **TOTAL** | **112** | **39** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

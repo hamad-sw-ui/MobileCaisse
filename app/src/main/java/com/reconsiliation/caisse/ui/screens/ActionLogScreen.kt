@@ -67,7 +67,7 @@ fun ActionLogScreen(navController: NavController) {
                         ListItem(
                             headlineContent = { Text(log.actionType, fontWeight = FontWeight.Bold, color = color) },
                             supportingContent = { Text(log.details) },
-                            trailingContent = { 
+                            trailingContent = {
                                 Column(horizontalAlignment = androidx.compose.ui.Alignment.End) {
                                     Text(FormatUtil.formatDate(log.date), style = MaterialTheme.typography.labelSmall)
                                     Text(log.userRole, color = Color.Gray, style = MaterialTheme.typography.labelSmall)

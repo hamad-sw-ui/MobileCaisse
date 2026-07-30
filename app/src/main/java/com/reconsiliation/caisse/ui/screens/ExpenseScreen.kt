@@ -41,7 +41,7 @@ fun ExpenseScreen(navController: NavController) {
     val categories by viewModel.getCategories("EXPENSE").collectAsState(initial = emptyList())
 
     val filteredExpenses = remember(expenses, selectedCategory, searchQuery) {
-        expenses.filter { 
+        expenses.filter {
             (selectedCategory == "Tout" || it.category == selectedCategory) &&
             (it.label.contains(searchQuery, ignoreCase = true))
         }

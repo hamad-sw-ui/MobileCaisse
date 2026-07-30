@@ -105,7 +105,7 @@ fun ReportsScreen(navController: NavController) {
 
             Text(
                 if (period == "MONTH") "Ventes Quotidiennes" else "Ventes Mensuelles",
-                style = MaterialTheme.typography.titleMedium, 
+                style = MaterialTheme.typography.titleMedium,
                 color = Primary
             )
             if (dailySales.isEmpty()) {
@@ -249,8 +249,8 @@ fun DetailedSalesChart(
             )
             
             // X Label
-            val shouldShowLabel = data.size <= 12 || 
-                                 index % (data.size / 6).coerceAtLeast(1) == 0 || 
+            val shouldShowLabel = data.size <= 12 ||
+                                 index % (data.size / 6).coerceAtLeast(1) == 0 ||
                                  index == data.size - 1
             
             if (shouldShowLabel) {

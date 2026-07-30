@@ -58,7 +58,7 @@ fun SupportScreen(navController: NavController) {
                 Column(modifier = Modifier.padding(16.dp)) {
                     Text("Statut de l'abonnement", style = MaterialTheme.typography.titleSmall)
                     subscription?.let {
-                        Text(if (it.isActive) "ACTIF jusqu'au ${com.reconsiliation.caisse.utils.FormatUtil.formatDate(it.endDate)}" else "EXPIRÉ", 
+                        Text(if (it.isActive) "ACTIF jusqu'au ${com.reconsiliation.caisse.utils.FormatUtil.formatDate(it.endDate)}" else "EXPIRÉ",
                             color = if (it.isActive) com.reconsiliation.caisse.ui.theme.GreenSuccess else com.reconsiliation.caisse.ui.theme.RedError,
                             fontWeight = FontWeight.Bold)
                     } ?: Text("Aucun abonnement", color = androidx.compose.ui.graphics.Color.Gray)

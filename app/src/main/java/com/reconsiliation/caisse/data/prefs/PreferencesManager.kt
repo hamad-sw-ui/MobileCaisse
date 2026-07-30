@@ -2,7 +2,6 @@ package com.reconsiliation.caisse.data.prefs
 
 import android.content.Context
 import android.content.SharedPreferences
-import java.security.MessageDigest
 
 class PreferencesManager(context: Context) {
     private val prefs: SharedPreferences = context.getSharedPreferences("caisse_prefs", Context.MODE_PRIVATE)

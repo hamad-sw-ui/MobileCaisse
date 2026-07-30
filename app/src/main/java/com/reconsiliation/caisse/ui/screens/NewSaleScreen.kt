@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,7 +31,6 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.scanner.BarcodeScannerDialog
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
-import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
@@ -120,7 +118,7 @@ fun NewSaleScreen(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { 
+        topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_new_sale)) },
                 navigationIcon = {
@@ -128,7 +126,7 @@ fun NewSaleScreen(navController: NavController) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 }
-            ) 
+            )
         },
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
@@ -181,9 +179,9 @@ fun NewSaleScreen(navController: NavController) {
                 }
                 
                 IconButton(
-                    onClick = { 
+                    onClick = {
                         viewModel.recordActivity()
-                        showScanner = true 
+                        showScanner = true
                     },
                     modifier = Modifier.size(48.dp).background(Primary, RoundedCornerShape(12.dp)),
                     colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
@@ -202,15 +200,15 @@ fun NewSaleScreen(navController: NavController) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     cart.forEach { item ->
                         CartRow(
-                            item = item, 
-                            onUpdateQuantity = { newQty -> 
+                            item = item,
+                            onUpdateQuantity = { newQty ->
                                 viewModel.recordActivity()
                                 if (newQty > 0) viewModel.updateCartItemQuantity(item, newQty)
                                 else viewModel.removeFromCart(item)
                             },
-                            onRemove = { 
+                            onRemove = {
                                 viewModel.recordActivity()
-                                viewModel.removeFromCart(item) 
+                                viewModel.removeFromCart(item)
                             }
                         )
                     }
@@ -224,7 +222,7 @@ fun NewSaleScreen(navController: NavController) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = customerPhone,
-                        onValueChange = { 
+                        onValueChange = {
                             customerPhone = it
                             if (it.length >= 8) {
                                 scope.launch {
@@ -269,8 +267,8 @@ fun NewSaleScreen(navController: NavController) {
                     listOf("CASH", operatorName, "MIXED", "CREDIT").forEach { method ->
                         FilterChip(
                             selected = paymentMethod == method || (method == operatorName && paymentMethod == "MOMO"),
-                            onClick = { 
-                                paymentMethod = if (method == operatorName) "MOMO" else method 
+                            onClick = {
+                                paymentMethod = if (method == operatorName) "MOMO" else method
                                 if (paymentMethod != "MIXED") {
                                     amountCashStr = ""
                                     amountMomoStr = ""
@@ -375,7 +373,7 @@ fun NewSaleScreen(navController: NavController) {
                             
                             val vente = VenteEntity(
                                 amount = finalTotal,
-                                description = cart.joinToString(", ") { 
+                                description = cart.joinToString(", ") {
                                     val qtyStr = if (it.quantity % 1.0 == 0.0) it.quantity.toInt().toString() else "%.2f".format(it.quantity)
                                     "${it.product.productName} x$qtyStr"
                                 },
@@ -388,7 +386,7 @@ fun NewSaleScreen(navController: NavController) {
                                 amountCash = cashVal,
                                 amountMomo = momoVal
                             )
-                            val items = cart.map { 
+                            val items = cart.map {
                                 VenteItemEntity(venteId = 0, productId = it.product.id, productName = it.product.productName, quantity = it.quantity, unitPrice = it.priceAtSale, purchasePrice = it.product.purchasePrice)
                             }
                             viewModel.addVenteWithItems(vente, items)
@@ -453,7 +451,7 @@ fun NewSaleScreen(navController: NavController) {
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { 
+                    TextButton(onClick = {
                         viewModel.clearLastVenteId()
                         navController.popBackStack()
                     }) { Text("Terminer") }
@@ -463,7 +461,7 @@ fun NewSaleScreen(navController: NavController) {
 
         if (showScanner) {
             BarcodeScannerDialog(
-                onDismiss = { 
+                onDismiss = {
                     showScanner = false
                     continuousScan = false
                 },
@@ -518,7 +516,7 @@ fun ProductPickerDialog(
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
 
     val filteredItems = remember(searchQuery, selectedCategory, stockItems) {
-        stockItems.filter { 
+        stockItems.filter {
             (it.productName.contains(searchQuery, ignoreCase = true) || it.category.contains(searchQuery, ignoreCase = true)) &&
             (selectedCategory == "Tout" || it.category == selectedCategory)
         }
@@ -606,7 +604,7 @@ fun ProductPickerDialog(
 
 @Composable
 fun CartRow(
-    item: com.reconsiliation.caisse.ui.viewmodel.CartItem, 
+    item: com.reconsiliation.caisse.ui.viewmodel.CartItem,
     onUpdateQuantity: (Double) -> Unit,
     onRemove: () -> Unit
 ) {

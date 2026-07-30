@@ -77,7 +77,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             boutique?.let { b ->
                                 val text = FormatUtil.generateReceiptText(
                                     boutique = b,
-                                    vente = data.vente, 
+                                    vente = data.vente,
                                     items = data.items,
                                     currency = currency
                                 )
@@ -127,7 +127,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             ListItem(
                                 headlineContent = { Text(item.productName) },
                                 supportingContent = { Text("${item.quantity.toInt()} x ${item.unitPrice} $currency") },
-                                trailingContent = { 
+                                trailingContent = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(FormatUtil.formatCurrency(item.quantity * item.unitPrice, currency), fontWeight = FontWeight.Bold)
                                         if (vente.status != "CANCELLED" && !vente.isLocked) {
@@ -164,7 +164,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                 if (vente.status != "CANCELLED" && !vente.isLocked) {
                     Spacer(modifier = Modifier.weight(1f))
                     Button(
-                        onClick = { 
+                        onClick = {
                             if (userRole == "MANAGER") showCancelDialog = true
                             else {
                                 showPinDialog = true
@@ -258,10 +258,10 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             }
                         }
                         com.reconsiliation.caisse.ui.components.NumericKeypad(
-                            onNumberClick = { 
+                            onNumberClick = {
                                 if (pinInput.length < 4) {
                                     isError = false
-                                    pinInput += it 
+                                    pinInput += it
                                     if (pinInput.length == 4) {
                                         scope.launch {
                                             val result = viewModel.checkPin(pinInput)
@@ -278,9 +278,9 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                                     }
                                 }
                             },
-                            onDeleteClick = { 
+                            onDeleteClick = {
                                 isError = false
-                                if (pinInput.isNotEmpty()) pinInput = pinInput.dropLast(1) 
+                                if (pinInput.isNotEmpty()) pinInput = pinInput.dropLast(1)
                             }
                         )
                     }

@@ -86,7 +86,7 @@ interface VenteDao {
     fun getTotalMomo(start: Date, end: Date): Flow<Double?>
 
     @Query("""
-        SELECT 
+        SELECT
             SUM(v.amount - v.fees - v.discount - (SELECT SUM(vi.quantity * vi.purchasePrice) FROM vente_items vi WHERE vi.venteId = v.id))
         FROM ventes v
         WHERE v.date BETWEEN :start AND :end AND v.status = 'CONFIRMED'

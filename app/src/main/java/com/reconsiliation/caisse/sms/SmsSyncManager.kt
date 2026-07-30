@@ -3,7 +3,6 @@ package com.reconsiliation.caisse.sms
 import android.content.Context
 import android.provider.Telephony
 import android.util.Log
-import java.util.Date
 
 object SmsSyncManager {
     /**
@@ -54,16 +53,16 @@ object SmsSyncManager {
         val b = body.lowercase()
         
         // Match common operator names or shortcodes
-        val isOperatorAddr = addr.contains("momo") || 
-                             addr.contains("mtn") || 
-                             addr.contains("orange") || 
+        val isOperatorAddr = addr.contains("momo") ||
+                             addr.contains("mtn") ||
+                             addr.contains("orange") ||
                              addr.contains("om") ||
                              addr.length <= 6 // Shortcodes are usually operator messages
         
-        val containsKeywords = b.contains("recu") || 
-                               b.contains("reçu") || 
-                               b.contains("transfert") || 
-                               b.contains("fcfa") || 
+        val containsKeywords = b.contains("recu") ||
+                               b.contains("reçu") ||
+                               b.contains("transfert") ||
+                               b.contains("fcfa") ||
                                b.contains("ref")
                                
         return isOperatorAddr || containsKeywords

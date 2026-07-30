@@ -231,10 +231,10 @@ fun ReturnToSupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onCo
                     )
                     DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                         stockItems.forEach { item ->
-                            DropdownMenuItem(text = { Text(item.productName) }, onClick = { 
+                            DropdownMenuItem(text = { Text(item.productName) }, onClick = {
                                 selectedProduct = item
                                 price = item.purchasePrice.toString()
-                                expanded = false 
+                                expanded = false
                             })
                         }
                     }

@@ -108,9 +108,9 @@ fun SmsErrorScreen(navController: NavController) {
                             Spacer(modifier = Modifier.height(12.dp))
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                                 TextButton(
-                                    onClick = { 
+                                    onClick = {
                                         selectedError = error
-                                        showResolveDialog = true 
+                                        showResolveDialog = true
                                     }
                                 ) {
                                     Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(16.dp))

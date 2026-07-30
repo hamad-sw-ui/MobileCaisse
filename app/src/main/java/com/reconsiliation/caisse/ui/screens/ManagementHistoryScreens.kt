@@ -15,10 +15,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.data.local.dao.AuditWithItems
-import com.reconsiliation.caisse.data.local.entity.ClosureEntity
 import com.reconsiliation.caisse.data.local.entity.SessionEntity
-import com.reconsiliation.caisse.data.local.entity.SupplyEntity
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary

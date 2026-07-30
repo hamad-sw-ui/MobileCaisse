@@ -21,9 +21,9 @@ object FormatUtil {
     }
 
     fun generateReceiptText(
-        boutique: com.reconsiliation.caisse.data.local.entity.BoutiqueEntity, 
-        vente: com.reconsiliation.caisse.data.local.entity.VenteEntity, 
-        items: List<com.reconsiliation.caisse.data.local.entity.VenteItemEntity>, 
+        boutique: com.reconsiliation.caisse.data.local.entity.BoutiqueEntity,
+        vente: com.reconsiliation.caisse.data.local.entity.VenteEntity,
+        items: List<com.reconsiliation.caisse.data.local.entity.VenteItemEntity>,
         currency: String = "FCFA"
     ): String {
         val sb = StringBuilder()

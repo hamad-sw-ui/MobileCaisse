@@ -11,8 +11,10 @@
 .cxx
 local.properties
 
-# Rapports générés par la chaîne de validation Docker (horodatés, non versionnés).
-# Les MODÈLES et les rapports d'analyse rédigés à la main restent versionnés.
+# Rapports HORODATÉS de la chaîne Docker : non versionnés (bruit).
+# EXCEPTION : software-factory/last-cycle/ est versionné — c'est le canal de
+# retour vers l'agent. Sans lui, un cycle exécuté sur la machine du développeur
+# ne remonte jamais, et la boucle reste manuelle.
 .ai/REPORTS/rapport_compilation_*.md
 .ai/REPORTS/rapport_tests_*.md
 .ai/REPORTS/rapport_couverture_*.md

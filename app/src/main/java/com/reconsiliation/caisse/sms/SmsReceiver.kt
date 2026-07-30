@@ -28,8 +28,8 @@ class SmsReceiver : BroadcastReceiver() {
 
     companion object {
         fun processSms(
-            context: Context, 
-            messages: List<Pair<String, String?>>, 
+            context: Context,
+            messages: List<Pair<String, String?>>,
             pendingResult: PendingResult? = null
         ) {
             val db = AppDatabase.getDatabase(context)

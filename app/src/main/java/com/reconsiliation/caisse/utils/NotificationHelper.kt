@@ -53,7 +53,7 @@ class NotificationHelper(private val context: Context) {
     fun showSubscriptionReminder(daysRemaining: Int) {
         val intent = Intent(context, MainActivity::class.java).apply {
             // Suggesting navigation to subscription screen in the future
-            putExtra("navigate_to", "subscription") 
+            putExtra("navigate_to", "subscription")
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
         }
         val pendingIntent = PendingIntent.getActivity(context, 1, intent, PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT)

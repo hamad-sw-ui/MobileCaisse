@@ -8,7 +8,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.Error
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Pending
@@ -117,7 +116,7 @@ fun SalesListScreen(navController: NavController) {
                             onClick = { navController.navigate(Screen.SaleDetail.createRoute(vente.id)) },
                             onDelete = { venteToDelete = vente },
                             onAdopt = { venteToAdoption = vente },
-                            onForceConfirm = { 
+                            onForceConfirm = {
                                 // Point 1: Force Confirm logic
                                 val updated = it.copy(status = "CONFIRMED", reconciliationStatus = "OK", description = it.description + " (Manuel)")
                                 viewModel.updateVente(updated)

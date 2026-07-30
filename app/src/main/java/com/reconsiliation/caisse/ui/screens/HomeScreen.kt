@@ -27,7 +27,6 @@ import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
-import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
@@ -66,7 +65,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val userRole by viewModel.userRole.collectAsState()
     val isLoggedIn = userRole != null
 
-    // Remove the aggressive redirection here. 
+    // Remove the aggressive redirection here.
     // SplashScreen and SetupScreen handle transitions.
     // We only keep a safety check for critical missing data.
 
@@ -115,7 +114,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
     if (showSessionDialog) {
         AlertDialog(
-            onDismissRequest = { }, 
+            onDismissRequest = { },
             title = { Text("Ouverture de Session", style = MaterialTheme.typography.titleLarge) },
             text = {
                 val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
@@ -158,7 +157,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     Scaffold(
         topBar = {
             CenterAlignedTopAppBar(
-                title = { 
+                title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(boutique?.name ?: stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                         activeSession?.let {
@@ -170,7 +169,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                     IconButton(onClick = { viewModel.catchUpSms(context.applicationContext as android.app.Application) }) {
                         Icon(Icons.Default.Sync, contentDescription = null)
                     }
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         viewModel.logout()
                         navController.navigate(Screen.Pin.route) {
                             popUpTo(0) { inclusive = true }
@@ -306,9 +305,9 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             // Main Action
             BigButton(
                 text = "NOUVELLE VENTE",
-                onClick = { 
+                onClick = {
                     viewModel.recordActivity()
-                    navController.navigate(Screen.NewSale.route) 
+                    navController.navigate(Screen.NewSale.route)
                 },
                 containerColor = MaterialTheme.colorScheme.secondary,
                 modifier = Modifier.height(72.dp)
@@ -322,9 +321,9 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                     ModernQuickActionCard(
                         title = "Historique",
                         icon = Icons.Default.History,
-                        onClick = { 
+                        onClick = {
                             viewModel.recordActivity()
-                            navController.navigate(Screen.History.route) 
+                            navController.navigate(Screen.History.route)
                         },
                         modifier = Modifier.weight(1f)
                     )

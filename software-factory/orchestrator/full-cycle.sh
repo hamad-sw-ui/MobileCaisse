@@ -33,7 +33,7 @@ fail()  { echo "${c_red}❌ $*${c_off}"; }
 FAILED_STEP=""
 
 # ---------------------------------------------------------------- 1. preflight
-step "1/6 · preflight (analyse statique)"
+step "1/7 · preflight (analyse statique)"
 if python3 software-factory/preflight/run.py --report; then
   ok "preflight : aucune erreur bloquante"
 else
@@ -42,7 +42,7 @@ else
 fi
 
 # ------------------------------------------------------------------ 2. Docker
-step "2/6 · Environnement Docker"
+step "2/7 · Environnement Docker"
 if ! command -v docker >/dev/null 2>&1; then
   fail "Docker introuvable. Installer Docker Desktop ou Docker Engine."
   exit 1
@@ -55,7 +55,7 @@ fi
 ok "Environnement validé"
 
 # ------------------------------------------------------------- 3. compilation
-step "3/6 · Compilation"
+step "3/7 · Compilation"
 BUILD_LOG="$LOGS/build_${STAMP}.log"
 if ./docker/scripts/build.sh debug 2>&1 | tee "$BUILD_LOG"; then
   ok "Compilation réussie"
@@ -66,7 +66,7 @@ fi
 
 # ------------------------------------------------------- 4. tests unitaires
 if [[ -z "$FAILED_STEP" ]]; then
-  step "4/6 · Tests unitaires"
+  step "4/7 · Tests unitaires"
   TEST_LOG="$LOGS/tests_${STAMP}.log"
   if ./docker/scripts/test.sh 2>&1 | tee "$TEST_LOG"; then
     ok "Tests unitaires réussis"
@@ -75,11 +75,11 @@ if [[ -z "$FAILED_STEP" ]]; then
     FAILED_STEP="tests"
   fi
 else
-  step "4/6 · Tests unitaires — ignorés (compilation en échec)"
+  step "4/7 · Tests unitaires — ignorés (compilation en échec)"
 fi
 
 # ---------------------------------------------------- 5. instrumentation
-step "5/6 · Tests d'instrumentation"
+step "5/7 · Tests d'instrumentation"
 if [[ -n "$FAILED_STEP" ]]; then
   warn "Ignorés : une étape précédente a échoué"
 elif ! command -v adb >/dev/null 2>&1; then
@@ -99,12 +99,28 @@ else
 fi
 
 # ------------------------------------------------------------- 6. analyse
-step "6/6 · Analyse des journaux"
+step "6/7 · Analyse des journaux"
 for log in "$LOGS"/*_"${STAMP}".log; do
   [[ -f "$log" ]] || continue
   echo "${c_dim}— $(basename "$log")${c_off}"
   python3 software-factory/orchestrator/run.py --analyze "$log"
 done
+
+# ------------------------------------------- 7. canal de retour vers l'agent
+step "7/7 · Publication du résultat"
+python3 software-factory/orchestrator/publish.py "$STAMP" "${FAILED_STEP:-}"
+
+if [[ -d .git ]] && command -v git >/dev/null 2>&1; then
+  git add software-factory/last-cycle 2>/dev/null || true
+  if ! git diff --cached --quiet -- software-factory/last-cycle 2>/dev/null; then
+    MSG="ci(cycle): resultat ${STAMP} - ${FAILED_STEP:-succes}"
+    if git -c user.name="Software Factory" -c user.email="factory@mobilecaisse" \
+           commit -q -m "$MSG" -- software-factory/last-cycle 2>/dev/null; then
+      ok "Résultat committé"
+      echo "${c_dim}   Pousser pour que l'agent le récupère : git push${c_off}"
+    fi
+  fi
+fi
 
 echo
 if [[ -z "$FAILED_STEP" ]]; then

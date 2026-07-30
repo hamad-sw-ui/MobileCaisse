@@ -21,8 +21,10 @@ software-factory/
 │   ├── run.py           cycle + détection d'environnement
 │   └── full-cycle.sh    reprise automatique sur machine outillée
 ├── preflight/      analyse statique sans JDK (SF-01)
+├── autofix/        corrections automatiques sûres (SF-03)
 ├── analyzers/      analyse des journaux Gradle + tests
-└── cache/logs/     journaux de build horodatés (non versionnés)
+├── last-cycle/     canal de retour VERSIONNÉ vers l'agent
+└── cache/logs/     journaux horodatés (non versionnés)
 ```
 
 ---
@@ -60,6 +62,34 @@ Deux défauts de l'analyseur ont été trouvés par ces tests avant tout usage :
 `unresolved` classé prioritaire alors qu'il est presque toujours une
 conséquence, et des motifs écrits en casse mixte alors que `_classify` compare
 en minuscules (`AEADBadTagException` sortait en « unknown »).
+
+---
+
+## SF-03 · `autofix` — corrections automatiques sûres
+
+```bash
+python3 software-factory/autofix/run.py           # simulation (défaut)
+python3 software-factory/autofix/run.py --apply   # applique
+```
+
+**Rien n'est modifié sans `--apply`.** Une correction silencieuse serait plus
+dangereuse que le défaut qu'elle corrige.
+
+Une règle n'est automatisée que si elle est **déterministe**, **vérifiable** et
+**sans risque métier**. `SecurityUtil`, `BackupManager`, `LicenseUtil`,
+`AppDatabase` et les entités sont en **zone protégée** : jamais modifiés
+automatiquement (§13).
+
+`empty-catch` est volontairement en *proposition seule* : les 6 cas corrigés le
+2026-07-30 appelaient cinq traitements différents. Un `Log.e` générique
+masquerait le vrai besoin.
+
+### Garde-fou appris à l'usage
+
+La première version supprimait `getValue`/`setValue` — opérateurs de délégation
+de `by remember`, jamais nommés dans le code. **Cela aurait cassé la
+compilation.** La règle exclut désormais les symboles à usage implicite.
+Détecté en simulation, avant application.
 
 ---
 

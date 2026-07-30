@@ -37,7 +37,6 @@ import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
 import com.reconsiliation.caisse.data.local.entity.StockEntity
-import com.reconsiliation.caisse.data.local.entity.RecipeEntity
 import com.reconsiliation.caisse.ui.components.AddCategoryDialog
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
@@ -61,7 +60,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
     
     val filteredItems = remember(stockItems, selectedCategory, searchQuery) {
-        stockItems.filter { 
+        stockItems.filter {
             (selectedCategory == "Tout" || it.category == selectedCategory) &&
             (it.productName.contains(searchQuery, ignoreCase = true) || it.barcode?.contains(searchQuery) == true)
         }

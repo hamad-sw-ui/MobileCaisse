@@ -72,7 +72,7 @@ fun DebtScreen(navController: NavController) {
                     DebtorCard(
                         debtor = debtor,
                         onRepay = { selectedDebtor = debtor; showRepayDialog = true },
-                        onRemind = { 
+                        onRemind = {
                             val message = "Bonjour ${debtor.name}, votre boutique vous rappelle votre dette de ${FormatUtil.formatCurrency(debtor.totalDebt, boutique?.currency ?: "FCFA")}. Merci de régulariser dès que possible."
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse("sms:${debtor.phone}?body=${Uri.encode(message)}"))
                             context.startActivity(intent)

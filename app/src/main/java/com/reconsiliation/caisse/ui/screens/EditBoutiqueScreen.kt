@@ -14,7 +14,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.data.local.entity.BoutiqueEntity
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -93,9 +92,9 @@ fun EditBoutiqueScreen(navController: NavController) {
                 FilterChip(selected = operator == "ORANGE", onClick = { operator = "ORANGE" }, label = { Text("Orange Money") })
             }
             OutlinedTextField(
-                value = momoNumber, 
-                onValueChange = { momoNumber = it }, 
-                label = { Text("Numéro MoMo de réception") }, 
+                value = momoNumber,
+                onValueChange = { momoNumber = it },
+                label = { Text("Numéro MoMo de réception") },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 colors = textFieldColors
@@ -106,9 +105,9 @@ fun EditBoutiqueScreen(navController: NavController) {
             
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
-                    value = printerAddress, 
-                    onValueChange = { printerAddress = it }, 
-                    label = { Text("Adresse de l'imprimante (MAC)") }, 
+                    value = printerAddress,
+                    onValueChange = { printerAddress = it },
+                    label = { Text("Adresse de l'imprimante (MAC)") },
                     placeholder = { Text("Sélectionnez ou saisissez") },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
@@ -131,7 +130,7 @@ fun EditBoutiqueScreen(navController: NavController) {
                     } else {
                         pairedPrinters.forEach { device ->
                             DropdownMenuItem(
-                                text = { 
+                                text = {
                                     Column {
                                         @android.annotation.SuppressLint("MissingPermission")
                                         Text(device.name ?: "Inconnu")
@@ -174,9 +173,9 @@ fun EditBoutiqueScreen(navController: NavController) {
             if (isTaxEnabled) {
                 OutlinedTextField(value = taxName, onValueChange = { taxName = it }, label = { Text("Nom de la Taxe") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
                 OutlinedTextField(
-                    value = taxRate, 
-                    onValueChange = { taxRate = it }, 
-                    label = { Text("Taux (%)") }, 
+                    value = taxRate,
+                    onValueChange = { taxRate = it },
+                    label = { Text("Taux (%)") },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = textFieldColors
