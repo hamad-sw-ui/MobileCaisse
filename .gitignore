@@ -25,3 +25,7 @@ local.properties
 
 # Sortie des analyses statiques
 build/quality/
+
+# Software Factory
+__pycache__/
+.ai/REPORTS/preflight_*.md
