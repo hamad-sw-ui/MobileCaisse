@@ -1,17 +1,18 @@
 #!/usr/bin/env bash
 ###############################################################################
-# Cycle de validation complet — à exécuter sur un environnement outillé.
+# Pipeline de validation MobileCaisse — exécution autonome.
 #
-#   ./software-factory/orchestrator/full-cycle.sh
+#   ./software-factory/orchestrator/full-cycle.sh [options]
 #
-# Enchaîne sans intervention :
-#   preflight → image Docker → environnement → compilation → tests unitaires
-#   → [instrumentation si appareil] → analyse par causes racines → rapports
+#   --no-emulator   ne pas démarrer d'émulateur
+#   --no-autofix    ne pas appliquer les corrections sûres
+#   --skip-instr    ignorer les tests d'instrumentation
 #
-# Tout est écrit dans .ai/REPORTS/. En cas d'échec, le rapport de cycle
-# contient l'ordre de correction recommandé (§19.6).
+# Détecte l'environnement, choisit sa stratégie (Docker ou JDK local), compile,
+# teste, analyse les causes racines, applique les corrections sûres, relance,
+# publie le résultat dans software-factory/last-cycle/.
 #
-# Aucun prérequis hors Docker : ni JDK, ni SDK Android sur la machine hôte.
+# Aucune intervention humaine hors « git push » final.
 ###############################################################################
 set -uo pipefail
 
@@ -22,102 +23,138 @@ STAMP="$(date +%Y-%m-%d_%H%M%S)"
 LOGS="software-factory/cache/logs"
 mkdir -p "$LOGS" .ai/REPORTS
 
+WITH_EMULATOR=1; WITH_AUTOFIX=1; WITH_INSTR=1
+for arg in "$@"; do
+  case "$arg" in
+    --no-emulator) WITH_EMULATOR=0 ;;
+    --no-autofix)  WITH_AUTOFIX=0 ;;
+    --skip-instr)  WITH_INSTR=0 ;;
+  esac
+done
+
 c_grn=$'\033[32m'; c_red=$'\033[31m'; c_yel=$'\033[33m'
 c_bold=$'\033[1m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
-
-step()  { echo; echo "${c_bold}━━━ $* ━━━${c_off}"; }
-ok()    { echo "${c_grn}✅ $*${c_off}"; }
-warn()  { echo "${c_yel}⚠️  $*${c_off}"; }
-fail()  { echo "${c_red}❌ $*${c_off}"; }
+step() { echo; echo "${c_bold}━━━ $* ━━━${c_off}"; }
+ok()   { echo "${c_grn}✅ $*${c_off}"; }
+warn() { echo "${c_yel}⚠️  $*${c_off}"; }
+fail() { echo "${c_red}❌ $*${c_off}"; }
 
 FAILED_STEP=""
 
-# ---------------------------------------------------------------- 1. preflight
-step "1/7 · preflight (analyse statique)"
-if python3 software-factory/preflight/run.py --report; then
-  ok "preflight : aucune erreur bloquante"
+# ------------------------------------------------------- 1. environnement
+step "1/8 · Détection de l'environnement"
+python3 software-factory/environment/detect.py
+eval "$(python3 software-factory/environment/detect.py --export)"
+
+case "${SF_STRATEGY:-none}" in
+  docker) ok "Stratégie : Docker (reproductible)" ;;
+  local)  warn "Stratégie : JDK local — Docker indisponible, repli sur Gradle" ;;
+  *)      fail "Aucune stratégie de compilation disponible."
+          echo "  Corriger les points bloquants ci-dessus, puis relancer."
+          python3 software-factory/orchestrator/publish.py "$STAMP" "environnement"
+          exit 1 ;;
+esac
+
+# Le wrapper est invoqué par « sh gradlew » : fonctionne même sans bit +x.
+run_gradle() {  # $1 = nom, $2.. = tâches
+  local name="$1"; shift
+  local log="$LOGS/${name}_${STAMP}.log"
+  if [[ "${SF_STRATEGY}" == "docker" ]]; then
+    case "$name" in
+      build) ./docker/scripts/build.sh debug 2>&1 | tee "$log" ;;
+      tests) ./docker/scripts/test.sh          2>&1 | tee "$log" ;;
+      *)     ./docker/scripts/build.sh debug   2>&1 | tee "$log" ;;
+    esac
+  else
+    JAVA_HOME="$(dirname "$(dirname "${SF_JDK}")")" \
+    ANDROID_HOME="${SF_SDK}" \
+      sh ./gradlew "$@" 2>&1 | tee "$log"
+  fi
+  return "${PIPESTATUS[0]}"
+}
+
+# ---------------------------------------------------------- 2. preflight
+step "2/8 · Analyse statique (preflight)"
+python3 software-factory/preflight/run.py --report \
+  || warn "preflight signale des problèmes — la compilation confirmera"
+
+# ------------------------------------------------------------ 3. autofix
+if [[ $WITH_AUTOFIX -eq 1 ]]; then
+  step "3/8 · Corrections automatiques sûres"
+  python3 software-factory/autofix/run.py --apply
 else
-  fail "preflight a détecté des erreurs — corriger avant de compiler"
-  echo "${c_dim}Poursuite quand même : la compilation confirmera.${c_off}"
+  step "3/8 · Corrections automatiques — ignorées (--no-autofix)"
 fi
 
-# ------------------------------------------------------------------ 2. Docker
-step "2/7 · Environnement Docker"
-if ! command -v docker >/dev/null 2>&1; then
-  fail "Docker introuvable. Installer Docker Desktop ou Docker Engine."
-  exit 1
-fi
-if ! docker image inspect mobilecaisse/android-build:1.0.0 >/dev/null 2>&1; then
-  warn "Image absente — construction (~5-10 min la première fois)…"
-  ./docker/scripts/build-image.sh || { fail "Construction de l'image échouée"; exit 1; }
-fi
-./docker/scripts/verify-env.sh || { fail "Environnement invalide"; exit 1; }
-ok "Environnement validé"
-
-# ------------------------------------------------------------- 3. compilation
-step "3/7 · Compilation"
-BUILD_LOG="$LOGS/build_${STAMP}.log"
-if ./docker/scripts/build.sh debug 2>&1 | tee "$BUILD_LOG"; then
+# -------------------------------------------------------- 4. compilation
+step "4/8 · Compilation"
+if run_gradle build assembleDebug --warning-mode all; then
   ok "Compilation réussie"
 else
   fail "Compilation échouée"
   FAILED_STEP="build"
 fi
 
-# ------------------------------------------------------- 4. tests unitaires
+# ----------------------------------------------------- 5. tests unitaires
 if [[ -z "$FAILED_STEP" ]]; then
-  step "4/7 · Tests unitaires"
-  TEST_LOG="$LOGS/tests_${STAMP}.log"
-  if ./docker/scripts/test.sh 2>&1 | tee "$TEST_LOG"; then
+  step "5/8 · Tests unitaires"
+  if run_gradle tests testDebugUnitTest; then
     ok "Tests unitaires réussis"
   else
     fail "Tests unitaires en échec"
     FAILED_STEP="tests"
   fi
 else
-  step "4/7 · Tests unitaires — ignorés (compilation en échec)"
+  step "5/8 · Tests unitaires — ignorés (compilation en échec)"
 fi
 
-# ---------------------------------------------------- 5. instrumentation
-step "5/7 · Tests d'instrumentation"
+# ------------------------------------------------- 6. instrumentation
+step "6/8 · Tests d'instrumentation"
 if [[ -n "$FAILED_STEP" ]]; then
   warn "Ignorés : une étape précédente a échoué"
-elif ! command -v adb >/dev/null 2>&1; then
-  warn "adb absent — instrumentation ignorée"
-elif [[ "$(adb devices | grep -cw device)" -eq 0 ]]; then
-  warn "Aucun appareil connecté — instrumentation ignorée"
-  echo "${c_dim}   SecurityMigrationTest exige un Keystore matériel : brancher un${c_off}"
-  echo "${c_dim}   téléphone ou lancer un émulateur, puis relancer ce script.${c_off}"
+elif [[ $WITH_INSTR -eq 0 ]]; then
+  warn "Ignorés (--skip-instr)"
+elif [[ -z "${SF_ADB:-}" ]]; then
+  warn "adb indisponible — instrumentation impossible"
 else
-  INSTR_LOG="$LOGS/instrumentation_${STAMP}.log"
-  if ./docker/scripts/test-instrumented.sh 2>&1 | tee "$INSTR_LOG"; then
-    ok "Tests instrumentés réussis"
+  if [[ "${SF_DEVICES:-0}" -eq 0 && $WITH_EMULATOR -eq 1 ]]; then
+    python3 software-factory/environment/emulator.py --ensure
+    eval "$(python3 software-factory/environment/detect.py --export)"
+  fi
+  if [[ "${SF_DEVICES:-0}" -gt 0 ]]; then
+    INSTR_LOG="$LOGS/instrumentation_${STAMP}.log"
+    if JAVA_HOME="$(dirname "$(dirname "${SF_JDK}")")" ANDROID_HOME="${SF_SDK}" \
+         sh ./gradlew connectedDebugAndroidTest 2>&1 | tee "$INSTR_LOG"; then
+      ok "Tests instrumentés réussis"
+    else
+      fail "Tests instrumentés en échec"
+      FAILED_STEP="${FAILED_STEP:-instrumentation}"
+    fi
   else
-    fail "Tests instrumentés en échec"
-    FAILED_STEP="${FAILED_STEP:-instrumentation}"
+    warn "Aucun appareil disponible — instrumentation ignorée"
   fi
 fi
 
-# ------------------------------------------------------------- 6. analyse
-step "6/7 · Analyse des journaux"
+# ------------------------------------------------------------- 7. analyse
+step "7/8 · Analyse des journaux"
 for log in "$LOGS"/*_"${STAMP}".log; do
   [[ -f "$log" ]] || continue
   echo "${c_dim}— $(basename "$log")${c_off}"
   python3 software-factory/orchestrator/run.py --analyze "$log"
 done
 
-# ------------------------------------------- 7. canal de retour vers l'agent
-step "7/7 · Publication du résultat"
+# --------------------------------------------------------- 8. publication
+step "8/8 · Publication du résultat"
 python3 software-factory/orchestrator/publish.py "$STAMP" "${FAILED_STEP:-}"
 
 if [[ -d .git ]] && command -v git >/dev/null 2>&1; then
   git add software-factory/last-cycle 2>/dev/null || true
   if ! git diff --cached --quiet -- software-factory/last-cycle 2>/dev/null; then
-    MSG="ci(cycle): resultat ${STAMP} - ${FAILED_STEP:-succes}"
     if git -c user.name="Software Factory" -c user.email="factory@mobilecaisse" \
-           commit -q -m "$MSG" -- software-factory/last-cycle 2>/dev/null; then
+         commit -q -m "ci(cycle): ${STAMP} - ${FAILED_STEP:-succes}" \
+         -- software-factory/last-cycle 2>/dev/null; then
       ok "Résultat committé"
-      echo "${c_dim}   Pousser pour que l'agent le récupère : git push${c_off}"
+      echo "${c_dim}   git push  → l'agent récupère le diagnostic${c_off}"
     fi
   fi
 fi
@@ -125,14 +162,10 @@ fi
 echo
 if [[ -z "$FAILED_STEP" ]]; then
   echo "${c_grn}${c_bold}═══ CYCLE RÉUSSI ═══${c_off}"
-  echo
-  echo "Les bugs en CORRIGÉ (INSPECTION) peuvent passer en CORRIGÉ (VALIDÉ)."
-  echo "Rapports : .ai/REPORTS/"
+  echo "Les bugs CORRIGÉ (INSPECTION) peuvent passer en CORRIGÉ (VALIDÉ)."
   exit 0
 else
-  echo "${c_red}${c_bold}═══ CYCLE EN ÉCHEC — étape « ${FAILED_STEP} » ═══${c_off}"
-  echo
-  echo "L'ordre de correction recommandé figure ci-dessus (causes racines d'abord)."
-  echo "Journaux complets : $LOGS/"
+  echo "${c_red}${c_bold}═══ ÉCHEC — étape « ${FAILED_STEP} » ═══${c_off}"
+  echo "Ordre de correction : software-factory/last-cycle/summary.md"
   exit 1
 fi

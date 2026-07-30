@@ -72,12 +72,18 @@ ou à la logique métier.
 
 **Déclencheur** : après SF-02, sur les motifs d'erreur réellement observés.
 
-### SF-04 — `cycle` : boucle complète 🟡 PRIORITÉ 4
+### SF-04 — `environment` + pipeline unifié ✅ **LIVRÉ 2026-07-30**
 
-`preflight → docker build → tests → report → fix → relance`, avec garde-fou :
-arrêt après 3 itérations sans progrès.
+**Interventions supprimées** : le pipeline abandonnait sans Docker ; l'émulateur
+devait être lancé à la main depuis Android Studio ; `JAVA_HOME` et
+`ANDROID_HOME` devaient être configurés manuellement.
 
-**Déclencheur** : quand SF-01 à SF-03 sont éprouvés.
+`environment/detect.py` — trouve Docker, JDK (dont le JBR d'Android Studio),
+SDK, adb, émulateur, AVD, appareils. Choisit la stratégie de compilation.
+`environment/emulator.py --ensure` — démarre un émulateur **seulement** si aucun
+appareil n'est connecté, et attend `boot_completed` + fin de l'animation.
+
+`full-cycle.sh` devient le point d'entrée unique en 8 étapes.
 
 ### SF-05 — CI GitHub Actions ⚪ PRIORITÉ 5
 
@@ -104,5 +110,5 @@ passe de façon stable en local.
 | SF-01 | `preflight` | ✅ **livré 2026-07-28** | 3 répétitions manuelles |
 | SF-02 | `orchestrator` + `analyzers` | ✅ **livré 2026-07-30** | 5 demandes manuelles répétées |
 | SF-03 | `fix` | ⏳ en attente | **motifs d'erreur réels** issus d'un vrai build |
-| SF-04 | `cycle` | ⏳ en attente | après SF-03 |
+| SF-04 | `environment` + pipeline | ✅ **livré 2026-07-30** | pipeline bloqué sans Docker |
 | SF-05 | CI | ⏳ en attente | build stable |

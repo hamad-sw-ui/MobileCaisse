@@ -13,19 +13,68 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
+## Le pipeline
+
+**Une seule commande** exécute tout le cycle :
+
+```bash
+./software-factory/orchestrator/full-cycle.sh
+```
+
+```
+1 détection environnement  → Docker ? JDK ? SDK ? adb ? appareils ?
+2 preflight                → analyse statique, sans JDK
+3 autofix                  → corrections sûres appliquées
+4 compilation              → Docker si présent, sinon JDK local
+5 tests unitaires
+6 instrumentation          → démarre un émulateur si aucun appareil
+7 analyse                  → regroupement par causes racines
+8 publication              → last-cycle/ + commit automatique
+```
+
+Options : `--no-emulator` · `--no-autofix` · `--skip-instr`
+
+### Chaque module supprime une intervention humaine précise
+
+| Module | Intervention supprimée |
+|---|---|
+| `environment/detect.py` | « installer Docker », « où est le JDK ? », « exporter ANDROID_HOME » |
+| `environment/emulator.py` | ouvrir Android Studio → Device Manager → démarrer l'AVD → attendre |
+| `preflight/` | relire le code à la main avant de compiler |
+| `autofix/` | corriger un à un ce que l'analyse détecte |
+| `analyzers/` | lire un journal Gradle et deviner la cause racine |
+| `publish.py` + `last-cycle/` | copier-coller le journal vers l'agent |
+
+**Reste manuel** : `git push` — volontairement. Un commit poussé sans relecture
+serait une automatisation de trop.
+
 ## Architecture
 
 ```
 software-factory/
-├── orchestrator/   pilote la boucle complète (SF-02)
-│   ├── run.py           cycle + détection d'environnement
-│   └── full-cycle.sh    reprise automatique sur machine outillée
-├── preflight/      analyse statique sans JDK (SF-01)
-├── autofix/        corrections automatiques sûres (SF-03)
-├── analyzers/      analyse des journaux Gradle + tests
-├── last-cycle/     canal de retour VERSIONNÉ vers l'agent
-└── cache/logs/     journaux horodatés (non versionnés)
+├── orchestrator/   pipeline complet
+│   ├── full-cycle.sh    ← point d'entrée unique
+│   ├── run.py           cycle piloté par Python
+│   └── publish.py       canal de retour
+├── environment/    détection Docker/JDK/SDK/adb + gestion émulateur
+├── preflight/      analyse statique sans JDK
+├── autofix/        corrections automatiques sûres
+├── analyzers/      journaux Gradle → causes racines
+├── last-cycle/     résultat du dernier cycle (VERSIONNÉ)
+└── cache/          journaux horodatés (non versionnés)
 ```
+
+### Stratégie de compilation adaptative
+
+`full-cycle.sh` ne dépend plus de Docker. Il choisit :
+
+1. **Docker** si le démon répond — reproductible, recommandé ;
+2. **JDK local** sinon — y compris le JetBrains Runtime d'Android Studio, qui
+   embarque un JDK 21 conforme à `toolchainVersion=21` ;
+3. **diagnostic actionnable** si aucun des deux, avec les liens d'installation.
+
+Auparavant le pipeline s'arrêtait net sans Docker, alors qu'Android Studio
+fournit tout le nécessaire.
 
 ---
 
