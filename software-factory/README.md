@@ -13,18 +13,53 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
-## Execution Engine — point d'entrée unique
-
-Toute la logique d'exécution est concentrée dans `engine/`.
+## Une seule commande
 
 ```bash
-./software-factory/orchestrator/full-cycle.sh          # lanceur (40 lignes)
-cd software-factory && python3 -m engine.engine        # équivalent direct
-
-python3 -m engine.engine --resume       # reprend après échec
-python3 -m engine.engine --status       # état du dernier cycle
-python3 -m engine.engine --max-loops 3  # boucle corriger→revalider
+./software-factory/run
 ```
+
+Pilote un cycle MobileCaisse complet, sans autre intervention :
+
+```
+environnement → preflight → autofix → compilation → tests unitaires
+  → instrumentation → causes racines → promotion des statuts → publication
+```
+
+| Option | Effet |
+|---|---|
+| `--resume` | reprend un cycle interrompu sans rejouer l'acquis |
+| `--status` | état du dernier cycle, sans rien exécuter |
+| `--loops N` | boucles corriger→revalider |
+| `--push` | pousse le résultat sur la branche courante |
+| `--no-emulator` · `--no-autofix` · `--skip-instr` · `--no-promote` | désactivations |
+
+### Promotion automatique des statuts de bug
+
+Après un cycle vert, les bugs passent de `CORRIGÉ (INSPECTION)` à
+`CORRIGÉ (VALIDÉ)` — **mais seulement si les preuves obtenues couvrent ce que
+le bug exige** (`CODING_RULES.md` §13) :
+
+| Exigence | Preuve nécessaire |
+|---|---|
+| compilation | étape `build` verte |
+| comportement testé | étape `tests` verte |
+| SQLCipher / Keystore / migration | étape `instrumentation` verte |
+| compatibilité API 24 | instrumentation **sur appareil API 24** |
+
+Exemple réel, cycle avec build + tests verts mais sans instrumentation :
+
+```
+✓ BUG-003, 018, 019, 021, 023, 025, 016 → CORRIGÉ (VALIDÉ)
+· BUG-020 maintenu — exige une exécution sur appareil API 24
+· BUG-011 maintenu — checkpoint WAL, exige une base SQLCipher réelle
+· BUG-024 maintenu — concurrence, exige une base réelle
+· BUG-022 maintenu — migration staff.pinSalt, exige un test Room
+```
+
+**Aucune promotion sur cycle rouge.** C'est l'étape où l'erreur humaine était la
+plus fréquente : j'avais moi-même écrit « CORRIGÉ » sur du code jamais compilé,
+ce qui a motivé la règle §13.
 
 ```
 1 détection environnement  → Docker ? JDK ? SDK ? adb ? appareils ?
@@ -81,6 +116,8 @@ Trois propriétés déclarées par chaque runner :
 | `publish.py` + `last-cycle/` | copier-coller le journal vers l'agent |
 | `engine/state.py` | tout relancer depuis le début après un échec (dont l'image Docker, 5-10 min) |
 | `engine/engine.py --max-loops` | enchaîner à la main corriger → relancer → vérifier |
+| `engine/promote.py` | relire BUGS.md et promouvoir 13 statuts à la main (~90 min cumulées) |
+| `run` | choisir entre 3 points d'entrée documentés |
 
 **Reste manuel** : `git push` — volontairement. Un commit poussé sans relecture
 serait une automatisation de trop.

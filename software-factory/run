@@ -1,0 +1,91 @@
+#!/usr/bin/env bash
+###############################################################################
+#  ./software-factory/run  —  point d'entrée unique de la Software Factory
+#
+#  Pilote un cycle MobileCaisse complet, sans autre intervention :
+#
+#     découverte environnement → preflight → autofix → compilation
+#       → tests unitaires → instrumentation → analyse causes racines
+#       → promotion des statuts de bug → publication → commit
+#
+#  Options
+#     --resume        reprend un cycle interrompu sans rejouer l'acquis
+#     --status        état du dernier cycle, sans rien exécuter
+#     --loops N       boucles corriger→revalider (défaut 1)
+#     --no-emulator   ne pas démarrer d'émulateur
+#     --no-autofix    ne pas appliquer les corrections automatiques
+#     --skip-instr    ignorer les tests d'instrumentation
+#     --no-promote    ne pas mettre à jour les statuts de bug
+#     --push          pousser le résultat sur la branche courante
+###############################################################################
+set -uo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$ROOT"
+
+c_grn=$'\033[32m'; c_yel=$'\033[33m'; c_red=$'\033[31m'
+c_bold=$'\033[1m'; c_dim=$'\033[2m'; c_off=$'\033[0m'
+
+command -v python3 >/dev/null 2>&1 || {
+  echo "${c_red}❌ python3 est requis.${c_off}" >&2; exit 1; }
+
+PROMOTE=1; PUSH=0; ENGINE_ARGS=()
+for arg in "$@"; do
+  case "$arg" in
+    --no-promote) PROMOTE=0 ;;
+    --push)       PUSH=1 ;;
+    --loops)      ENGINE_ARGS+=("--max-loops") ;;
+    *)            ENGINE_ARGS+=("$arg") ;;
+  esac
+done
+
+# --status : consultation seule, on n'enchaîne rien derrière.
+for arg in "$@"; do
+  if [[ "$arg" == "--status" ]]; then
+    cd software-factory && exec python3 -m engine.engine --status
+  fi
+done
+
+echo "${c_bold}╔══════════════════════════════════════════════════════════╗${c_off}"
+echo "${c_bold}║  Software Factory — cycle MobileCaisse                   ║${c_off}"
+echo "${c_bold}╚══════════════════════════════════════════════════════════╝${c_off}"
+
+cd "$ROOT/software-factory"
+python3 -m engine.engine "${ENGINE_ARGS[@]}"
+CYCLE_STATUS=$?
+
+# --- Promotion des statuts de bug -------------------------------------------
+# Seul un cycle vert peut faire passer un bug en CORRIGÉ (VALIDÉ) : c'est la
+# règle §13, appliquée ici automatiquement au lieu d'être relue à la main.
+if [[ $PROMOTE -eq 1 && $CYCLE_STATUS -eq 0 ]]; then
+  echo
+  python3 -m engine.promote --apply
+elif [[ $PROMOTE -eq 1 ]]; then
+  echo
+  echo "${c_dim}Statuts de bug inchangés : le cycle n'est pas vert.${c_off}"
+fi
+
+# --- Publication vers l'agent ------------------------------------------------
+cd "$ROOT"
+if [[ -d .git ]] && command -v git >/dev/null 2>&1; then
+  git add software-factory/last-cycle .ai/BUGS.md 2>/dev/null || true
+  if ! git diff --cached --quiet 2>/dev/null; then
+    if git -c user.name="Software Factory" -c user.email="factory@mobilecaisse" \
+         commit -q -m "ci(cycle): $(date +%Y-%m-%d_%H%M%S) — $([[ $CYCLE_STATUS -eq 0 ]] && echo succes || echo echec)" \
+         -- software-factory/last-cycle .ai/BUGS.md 2>/dev/null; then
+      echo "${c_dim}Résultat committé.${c_off}"
+      if [[ $PUSH -eq 1 ]]; then
+        BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+        if git push -q origin "$BRANCH" 2>/dev/null; then
+          echo "${c_grn}Poussé sur ${BRANCH}.${c_off}"
+        else
+          echo "${c_yel}Push échoué — pousser manuellement.${c_off}"
+        fi
+      else
+        echo "${c_dim}Transmettre à l'agent :  git push${c_off}"
+      fi
+    fi
+  fi
+fi
+
+exit $CYCLE_STATUS

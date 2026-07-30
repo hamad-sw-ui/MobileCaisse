@@ -603,6 +603,13 @@ Sept questions, à renseigner **avant** tout ajout :
 **Si le bénéfice n'est pas clairement supérieur au coût, la règle n'est pas
 ajoutée.** En cas d'égalité ou de doute : **ne pas ajouter**.
 
+### 20.1bis Promotion des statuts — automatisée
+
+La transition `CORRIGÉ (INSPECTION)` → `CORRIGÉ (VALIDÉ)` n'est plus manuelle :
+`./software-factory/run` l'applique après un cycle vert, en vérifiant que les
+preuves obtenues couvrent l'exigence de chaque bug. Un bug de compatibilité
+API 24 reste en `INSPECTION` tant qu'aucun appareil API 24 n'a exécuté les tests.
+
 ### 20.2 Priorité à l'outil sur la règle
 
 Une règle repose sur la discipline humaine ; un outil s'applique tout seul.
