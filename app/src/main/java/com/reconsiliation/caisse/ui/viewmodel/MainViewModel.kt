@@ -589,7 +589,12 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
                         val salt = sec.generateSalt()
                         val newHash = sec.hashPinPbkdf2(pin, salt)
                         repository.updateBoutique(b.copy(managerPinHash = newHash, managerPinSalt = salt))
-                    } catch (e: Exception) { }
+                    } catch (e: Exception) {
+                        // Le login a réussi : ne pas gêner l'utilisateur. Mais tracer,
+                        // car un échec répété signifie que le PIN manager reste en
+                        // SHA-256 legacy indéfiniment.
+                        android.util.Log.w("MainViewModel", "Migration PBKDF2 du PIN manager échouée", e)
+                    }
                 }
             }
             return@withContext Pair("MANAGER", null)
@@ -603,7 +608,9 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
                         val salt = sec.generateSalt()
                         val newHash = sec.hashPinPbkdf2(pin, salt)
                         repository.updateBoutique(b.copy(pinHash = newHash, pinSalt = salt))
-                    } catch (e: Exception) { }
+                    } catch (e: Exception) {
+                        android.util.Log.w("MainViewModel", "Migration PBKDF2 du PIN staff échouée", e)
+                    }
                 }
             }
             return@withContext Pair("STAFF", null)

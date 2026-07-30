@@ -37,6 +37,7 @@ fun SetupScreen(navController: NavController) {
     var pin by remember { mutableStateOf("") }
     
     var showRestoreDialog by remember { mutableStateOf(false) }
+    var setupError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         val externalDir = context.getExternalFilesDir(null)
@@ -61,6 +62,24 @@ fun SetupScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
+
+            // Sans ce bandeau, un échec d'écriture en base laissait l'utilisateur
+            // sur l'écran de configuration sans aucune explication.
+            setupError?.let { message ->
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.errorContainer
+                    )
+                ) {
+                    Text(
+                        text = message,
+                        modifier = Modifier.padding(12.dp),
+                        color = MaterialTheme.colorScheme.onErrorContainer,
+                        style = MaterialTheme.typography.bodySmall
+                    )
+                }
+            }
 
             Text("Informations Générales", style = MaterialTheme.typography.titleMedium, color = Primary)
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nom de la boutique") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
@@ -126,7 +145,10 @@ fun SetupScreen(navController: NavController) {
                                     popUpTo(Screen.Setup.route) { inclusive = true }
                                 }
                             } catch (e: Exception) {
-                                // Handle potential DB errors
+                                // Échec de la configuration initiale : l'utilisateur
+                                // resterait bloqué sur un écran sans explication.
+                                android.util.Log.e("SetupScreen", "Échec de la configuration", e)
+                                setupError = e.message ?: "Erreur lors de la configuration"
                             }
                         }
                     }

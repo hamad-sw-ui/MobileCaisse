@@ -80,13 +80,16 @@ def strip_kotlin(src: str) -> str:
 
 def code_only(src: str) -> str:
     """Code sans commentaires, en conservant les littéraux (recherche de motifs)."""
-    src = re.sub(r'/\*.*?\*/', '', src, flags=re.S)
+    # Les lignes retirées sont remplacées par du vide plutôt que supprimées :
+    # sinon la numérotation se décale et les positions signalées sont fausses.
+    src = re.sub(r'/\*.*?\*/', lambda m: "\n" * m.group(0).count("\n"), src, flags=re.S)
     lines = []
     for ln in src.split("\n"):
         st = ln.lstrip()
         if st.startswith("*") or st.startswith("//"):
-            continue
-        lines.append(ln.split("//")[0])
+            lines.append("")
+        else:
+            lines.append(ln.split("//")[0])
     return "\n".join(lines)
 
 
@@ -294,7 +297,8 @@ def check_coding_rules(ctx: Context) -> list[Finding]:
         code = code_only(src)
         rel = ctx.rel(p)
 
-        for m in re.finditer(r'catch\s*\([^)]*\)\s*\{\s*\}', code):
+        # `[ \t]*\n?[ \t]*` : tolère un unique retour à la ligne, pas davantage.
+        for m in re.finditer(r'catch\s*\([^)]*\)[ \t]*\{[ \t]*\n?[ \t]*\}', code):
             out.append(Finding("warning", "empty-catch",
                                "bloc catch vide — §5 : logger et remonter l'erreur",
                                rel, line_of(code, m.start())))

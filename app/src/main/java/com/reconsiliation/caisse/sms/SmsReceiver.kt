@@ -70,7 +70,11 @@ class SmsReceiver : BroadcastReceiver() {
                                     Log.d("SmsReceiver", "Dette remboursée par MoMo : ${parsed.transactionId}")
                                     continue
                                 } catch (e: Exception) {
-                                    // Not a debtor or error, continue to normal sale logic
+                                    // Repli volontaire : l'expéditeur n'est pas un
+                                    // débiteur connu, le SMS suit le traitement de
+                                    // vente normal. Tracé en debug pour permettre le
+                                    // diagnostic d'un rapprochement manqué.
+                                    Log.d("SmsReceiver", "Pas un remboursement de dette : ${e.message}")
                                 }
                             }
 

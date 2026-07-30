@@ -95,6 +95,10 @@ class EscPosPrinter(private val context: Context) {
         try {
             outputStream?.close()
             socket?.close()
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            // La fermeture d'un socket déjà rompu est sans conséquence :
+            // on trace sans propager, l'appelant n'a rien à décider.
+            android.util.Log.w("EscPosPrinter", "Fermeture de la connexion imprimante", e)
+        }
     }
 }
