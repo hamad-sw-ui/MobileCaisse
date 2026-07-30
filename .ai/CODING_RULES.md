@@ -562,9 +562,17 @@ Court, factuel, dans `.ai/REPORTS/analyse_erreurs_<date>.md` :
 
 ### 19.7 Passe pré-compilation *(quand l'agent ne peut pas compiler)*
 Si l'environnement ne permet pas de compiler, **anticiper** les causes racines
-par analyse statique avant de solliciter un build extérieur : références
-manquantes, ressources absentes, doublons, tests auto-contradictoires,
-API interdites. Chaque cause trouvée à ce stade économise un cycle complet.
+par analyse statique avant de solliciter un build extérieur.
+
+**Cette passe est désormais automatisée** — ne plus la refaire à la main :
+
+```bash
+python3 software-factory/preflight/run.py --report
+```
+
+Voir `software-factory/README.md`. Tout nouveau motif d'erreur récurrent doit
+être ajouté comme contrôle plutôt que revérifié manuellement (§20.2 : l'outil
+prime sur la règle).
 
 *Règle issue de la session du 2026-07-28 : cette passe a identifié 2 causes
 racines et écarté 3 faux positifs avant la première compilation.*
