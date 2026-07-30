@@ -13,6 +13,56 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 
 ---
 
+## Architecture
+
+```
+software-factory/
+├── orchestrator/   pilote la boucle complète (SF-02)
+│   ├── run.py           cycle + détection d'environnement
+│   └── full-cycle.sh    reprise automatique sur machine outillée
+├── preflight/      analyse statique sans JDK (SF-01)
+├── analyzers/      analyse des journaux Gradle + tests
+└── cache/logs/     journaux de build horodatés (non versionnés)
+```
+
+---
+
+## SF-02 · `orchestrator` — boucle de validation
+
+```bash
+python3 software-factory/orchestrator/run.py             # cycle complet
+python3 software-factory/orchestrator/run.py --dry-run   # ce qui est possible ici
+python3 software-factory/orchestrator/run.py --analyze journal.log
+./software-factory/orchestrator/full-cycle.sh            # tout, sur machine outillée
+```
+
+Enchaîne : `preflight → compilation → tests → [instrumentation] → collecte →
+causes racines → rapport`.
+
+**Détection d'environnement** : chaque étape se déclare exécutable ou non.
+Ce qui ne peut pas tourner est **reporté, jamais simulé** — un rapport
+affirmant « compilation réussie » sans compilateur serait un mensonge outillé.
+
+### `analyzers/gradle_log.py`
+
+Classe les erreurs par **cause racine** (§19.2) et distingue les **dérivées**
+(§19.3) : une erreur dans `BackupManager.kt` produit trois `unresolved
+reference` dans les fichiers qui l'utilisent — l'analyseur les écarte et
+remonte la vraie cause en tête.
+
+30 motifs reconnus : Kotlin, KSP/Room, Gradle, tests.
+
+```bash
+python3 software-factory/analyzers/test_gradle_log.py   # 10 tests, sans JDK
+```
+
+Deux défauts de l'analyseur ont été trouvés par ces tests avant tout usage :
+`unresolved` classé prioritaire alors qu'il est presque toujours une
+conséquence, et des motifs écrits en casse mixte alors que `_classify` compare
+en minuscules (`AEADBadTagException` sortait en « unknown »).
+
+---
+
 ## SF-01 · `preflight` — analyse statique pré-compilation
 
 ```bash

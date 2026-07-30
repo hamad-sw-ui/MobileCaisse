@@ -52,14 +52,17 @@ Détecte, sans JDK :
 **Gain** : ~15 min par session, et surtout **fiabilité** — plus de faux positifs.
 **Coût** : 1 session. **ROI : élevé, immédiat.**
 
-### SF-02 — `report` : agrégation des sorties de build 🟠 PRIORITÉ 2
+### SF-02 — `orchestrator` + `analyzers` ✅ **LIVRÉ 2026-07-30**
 
-Analyse un journal Gradle et produit le rapport §19.6 : total, causes racines,
-dérivées, ordre de correction, recompilations économisées.
+**Déclencheur constaté** : 5 sessions consécutives se sont terminées par
+« lancez `make validate` et transmettez-moi la sortie », et 2 rapports d'analyse
+d'erreurs ont été rédigés à la main. Le chaînage était le goulot.
 
-**Déclencheur** : à construire **quand le premier vrai journal de build
-existera**. Le faire avant serait spéculatif — je ne connais pas encore le
-format réel des erreurs de ce projet.
+Livré : `orchestrator/run.py` (cycle + détection d'environnement),
+`orchestrator/full-cycle.sh` (reprise automatique), `analyzers/gradle_log.py`
+(30 motifs, causes racines, dérivées), `analyzers/test_gradle_log.py` (10 tests).
+
+Validé sur échantillons réalistes — **10/10** — sans JDK.
 
 ### SF-03 — `fix` : corrections automatiques sûres 🟡 PRIORITÉ 3
 
@@ -99,7 +102,7 @@ passe de façon stable en local.
 | # | Composant | Statut | Déclencheur |
 |---|---|---|---|
 | SF-01 | `preflight` | ✅ **livré 2026-07-28** | 3 répétitions manuelles |
-| SF-02 | `report` | ⏳ en attente | premier journal de build réel |
-| SF-03 | `fix` | ⏳ en attente | après SF-02 |
+| SF-02 | `orchestrator` + `analyzers` | ✅ **livré 2026-07-30** | 5 demandes manuelles répétées |
+| SF-03 | `fix` | ⏳ en attente | **motifs d'erreur réels** issus d'un vrai build |
 | SF-04 | `cycle` | ⏳ en attente | après SF-03 |
 | SF-05 | CI | ⏳ en attente | build stable |

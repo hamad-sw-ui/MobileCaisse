@@ -1,0 +1,9 @@
+> Task :app:compileDebugKotlin FAILED
+e: file:///workspace/app/src/main/java/com/reconsiliation/caisse/utils/BackupManager.kt:112:9 Type mismatch: inferred type is Result<Unit> but File was expected
+e: file:///workspace/app/src/main/java/com/reconsiliation/caisse/utils/BackupManager.kt:145:20 Unresolved reference: outputFile
+e: file:///workspace/app/src/main/java/com/reconsiliation/caisse/data/repository/MainRepository.kt:806:32 Unresolved reference: BackupManager
+e: file:///workspace/app/src/main/java/com/reconsiliation/caisse/ui/viewmodel/MainViewModel.kt:460:18 Unresolved reference: exportEncryptedBackup
+e: file:///workspace/app/src/main/java/com/reconsiliation/caisse/ui/screens/SettingsScreen.kt:122:31 Unresolved reference: BackupUiState
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
