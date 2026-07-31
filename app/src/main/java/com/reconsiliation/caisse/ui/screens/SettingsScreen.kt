@@ -5,6 +5,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.FileUpload
+import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
@@ -184,6 +185,16 @@ fun SettingsScreen(navController: NavController) {
                         TextButton(onClick = { showResetDialog = false }) { Text("Annuler") }
                     }
                 )
+            }
+
+            Button(
+                onClick = { viewModel.requestAccess("staff"); navController.navigate("staff") },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+            ) {
+                Icon(Icons.Default.Group, null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Gestion du personnel")
             }
 
             Button(

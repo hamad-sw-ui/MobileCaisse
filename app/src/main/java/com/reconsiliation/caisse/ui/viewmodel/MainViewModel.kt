@@ -98,7 +98,8 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
             "edit_boutique",
             "suppliers",
             "categories",
-            "restoration_wizard"
+            "restoration_wizard",
+            "staff"
         )
     }
 
@@ -542,6 +543,34 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
         } catch (e: Exception) {
             android.util.Log.e("MainViewModel", "Échec de la configuration initiale", e)
             onResult(e.message ?: "Erreur lors de la configuration")
+        }
+    }
+
+    // ---------- Gestion du personnel ----------
+
+    /** Employés actifs. */
+    val activeStaff: StateFlow<List<StaffEntity>> = repository.activeStaff
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    /** Crée ou met à jour un employé ; [onResult] reçoit `null` si succès. */
+    fun saveStaff(
+        name: String, pin: String, role: String, phone: String? = null,
+        existing: StaffEntity? = null, onResult: (String?) -> Unit = {}
+    ) = viewModelScope.launch {
+        try {
+            repository.saveStaff(name, pin, role, phone, existing)
+            onResult(null)
+        } catch (e: Exception) {
+            onResult(e.message ?: "Enregistrement impossible")
+        }
+    }
+
+    /** Désactive un employé sans supprimer son historique. */
+    fun deactivateStaff(staff: StaffEntity) = viewModelScope.launch {
+        try {
+            repository.deactivateStaff(staff)
+        } catch (e: Exception) {
+            _uiError.value = e.message
         }
     }
 

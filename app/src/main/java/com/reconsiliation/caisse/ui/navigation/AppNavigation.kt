@@ -60,6 +60,7 @@ sealed class Screen(val route: String, val title: String? = null, val icon: andr
     data object ActionLogs : Screen("action_logs")
     data object Suppliers : Screen("suppliers")
     data object Categories : Screen("categories")
+    data object Staff : Screen("staff")
     data object Maintenance : Screen("maintenance")
     data object StockMovements : Screen("stock_movements/{productId}") {
         fun createRoute(productId: Long) = "stock_movements/$productId"
@@ -169,6 +170,7 @@ fun AppNavigation() {
                 composable(Screen.ActionLogs.route) { ActionLogScreen(navController) }
                 composable(Screen.Suppliers.route) { SupplierListScreen(navController) }
                 composable(Screen.Categories.route) { CategoryManagementScreen(navController) }
+                composable(Screen.Staff.route) { StaffManagementScreen(navController) }
                 composable(Screen.Maintenance.route) { MaintenanceScreen(navController) }
                 composable(
                     route = Screen.StockMovements.route,

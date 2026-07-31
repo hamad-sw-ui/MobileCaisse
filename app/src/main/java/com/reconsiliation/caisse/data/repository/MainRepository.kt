@@ -940,6 +940,55 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
         return mirror.exists() && mirror.length() > 0
     }
 
+    // ==================== Personnel ====================
+
+    /** Employés actifs, flux réactif pour l'écran de gestion. */
+    val activeStaff: Flow<List<StaffEntity>> = db.staffDao().getAllActiveStaff()
+
+    /**
+     * Crée ou met à jour un employé.
+     *
+     * Le PIN est haché en PBKDF2 avec un sel unique avant toute écriture : il
+     * ne transite jamais en clair vers la base (SECURITY.md).
+     */
+    suspend fun saveStaff(
+        name: String, pin: String, role: String, phone: String? = null,
+        existing: StaffEntity? = null
+    ) {
+        require(name.isNotBlank()) { "Le nom de l'employé est obligatoire" }
+        val sec = com.reconsiliation.caisse.utils.SecurityUtil
+
+        val entity = if (pin.isBlank() && existing != null) {
+            // Modification sans changement de PIN : on conserve le hash existant.
+            existing.copy(name = name.trim(), role = role, phone = phone?.trim())
+        } else {
+            require(pin.length == 4) { "Le code PIN doit comporter 4 chiffres" }
+            val salt = sec.generateSalt()
+            val hash = sec.hashPinPbkdf2(pin, salt)
+            existing?.copy(
+                name = name.trim(), role = role, phone = phone?.trim(),
+                pinHash = hash, pinSalt = salt
+            ) ?: StaffEntity(
+                name = name.trim(), pinHash = hash, pinSalt = salt,
+                phone = phone?.trim(), role = role, isActive = true
+            )
+        }
+        db.staffDao().insertOrUpdate(entity)
+        logAction("STAFF_SAVE", "Employé enregistré : ${entity.name} (${entity.role})")
+    }
+
+    /**
+     * Désactive un employé au lieu de le supprimer.
+     *
+     * Les ventes et sessions référencent `staffId` : une suppression physique
+     * rendrait l'historique incohérent. La désactivation préserve la traçabilité
+     * tout en bloquant la connexion.
+     */
+    suspend fun deactivateStaff(staff: StaffEntity) {
+        db.staffDao().insertOrUpdate(staff.copy(isActive = false))
+        logAction("STAFF_DEACTIVATE", "Employé désactivé : ${staff.name}", severity = "WARNING")
+    }
+
     /** Lecture ponctuelle de la boutique, hors flux réactif. */
     suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
 
