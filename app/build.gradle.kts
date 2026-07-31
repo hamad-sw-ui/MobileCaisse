@@ -38,6 +38,9 @@ android {
     }
     buildFeatures {
         compose = true
+        // Requis depuis AGP 8 : sans cela, BuildConfig n'est pas généré.
+        // Utilisé pour réserver le mode démo aux builds debug (BUG-014).
+        buildConfig = true
     }
 }
 

@@ -504,6 +504,80 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
     /** Indique si [file] exige un mot de passe, pour adapter l'interface. */
     /**
+     * Finalise la configuration initiale : hachage du PIN, écriture en base,
+     * préférence et journalisation.
+     *
+     * @param onResult `null` en cas de succès, message d'erreur sinon.
+     */
+    fun completeSetup(
+        name: String, owner: String, phone: String, operator: String,
+        momoNumber: String, pin: String,
+        onResult: (String?) -> Unit
+    ) = viewModelScope.launch {
+        try {
+            val sec = com.reconsiliation.caisse.utils.SecurityUtil
+            val salt = sec.generateSalt()
+            val hashed = kotlinx.coroutines.withContext(Dispatchers.Default) {
+                sec.hashPinPbkdf2(pin, salt)
+            }
+            val boutique = BoutiqueEntity(
+                id = 1,
+                name = name.trim(),
+                ownerName = owner.trim(),
+                phoneNumber = phone.trim(),
+                operator = operator,
+                momoNumber = momoNumber.trim(),
+                isSetupComplete = true,
+                pinHash = hashed,
+                pinSalt = salt,
+                // Le PIN initial sert aussi de code manager : l'utilisateur
+                // pourra les dissocier ensuite depuis les paramètres.
+                managerPinHash = hashed,
+                managerPinSalt = salt
+            )
+            repository.completeSetup(boutique)
+            com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
+                .setSetupComplete(true)
+            onResult(null)
+        } catch (e: Exception) {
+            android.util.Log.e("MainViewModel", "Échec de la configuration initiale", e)
+            onResult(e.message ?: "Erreur lors de la configuration")
+        }
+    }
+
+    /** Une sauvegarde miroir est-elle disponible pour restauration ? */
+    fun hasMirrorBackup(context: android.content.Context): Boolean =
+        repository.hasMirrorBackup(context)
+
+    /** Restaure la sauvegarde miroir ; [onResult] reçoit true si la base a été remplacée. */
+    fun restoreMirrorBackup(context: android.content.Context, onResult: (Boolean) -> Unit) =
+        viewModelScope.launch {
+            val ok = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                try {
+                    repository.restoreMirrorBackup(context)
+                } catch (e: Exception) {
+                    android.util.Log.e("MainViewModel", "Restauration du miroir échouée", e)
+                    false
+                }
+            }
+            if (ok) {
+                com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
+                    .setSetupComplete(true)
+            }
+            onResult(ok)
+        }
+
+    /** Injecte un jeu de données de démonstration. Réservé aux builds debug. */
+    fun seedDemoData(onDone: () -> Unit = {}) = viewModelScope.launch(Dispatchers.IO) {
+        try {
+            com.reconsiliation.caisse.data.seed.DataSeeder(db).seedSampleData()
+        } catch (e: Exception) {
+            _uiError.value = "Injection des données de démo impossible : ${e.message}"
+        }
+        onDone()
+    }
+
+    /**
      * Indique si la configuration initiale a déjà été effectuée.
      *
      * Consulte la préférence locale **et** la base : la préférence peut avoir
@@ -556,10 +630,6 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     fun getStockMovements(productId: Long) = db.stockMovementDao().getMovementsForProduct(productId)
     fun resolveSmsError(error: SmsErrorEntity, venteId: Long) = viewModelScope.launch {
         try { repository.resolveSmsError(error, venteId) } catch (e: Exception) { _uiError.value = e.message }
-    }
-
-    fun syncToCloud(context: android.content.Context) = viewModelScope.launch {
-        repository.syncToCloud(context)
     }
 
     // Category Management

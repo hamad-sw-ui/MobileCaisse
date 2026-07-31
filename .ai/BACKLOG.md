@@ -172,7 +172,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P4 — Fonctionnalités | 12 | 1 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **114** | **44** |
+| **TOTAL** | **114** | **47** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.

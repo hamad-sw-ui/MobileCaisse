@@ -15,7 +15,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.Dispatchers
 import androidx.navigation.NavController
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -140,20 +139,20 @@ fun SettingsScreen(navController: NavController) {
                 style = MaterialTheme.typography.bodySmall
             )
 
-            val scope = androidx.compose.runtime.rememberCoroutineScope()
-            if (allStock.isEmpty() && allVentes.isEmpty()) {
+            // Mode démo réservé aux builds de développement (BUG-014) : injecter
+            // une boutique fictive dans une installation réelle polluerait des
+            // données comptables non reconstituables.
+            if (com.reconsiliation.caisse.BuildConfig.DEBUG &&
+                allStock.isEmpty() && allVentes.isEmpty()
+            ) {
                 Button(
-                    onClick = {
-                        scope.launch(kotlinx.coroutines.Dispatchers.IO) {
-                            com.reconsiliation.caisse.data.seed.DataSeeder(com.reconsiliation.caisse.data.local.AppDatabase.getDatabase(contextForSync)).seedSampleData()
-                        }
-                    },
+                    onClick = { viewModel.seedDemoData() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Text("Mode Démo (Injecter données)")
                 }
-            } else {
+            } else if (allStock.isNotEmpty() || allVentes.isNotEmpty()) {
                 Button(
                     onClick = { showResetDialog = true },
                     modifier = Modifier.fillMaxWidth(),

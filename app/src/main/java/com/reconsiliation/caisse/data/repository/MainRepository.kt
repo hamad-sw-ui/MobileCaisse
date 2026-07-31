@@ -914,6 +914,32 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
      * au manifeste : une divergence provoque une `IllegalArgumentException`
      * (BUG-025).
      */
+    /**
+     * Enregistre la configuration initiale de la boutique.
+     *
+     * Regroupe l'écriture en base et la journalisation : l'écran de
+     * configuration n'a plus à connaître ni le DAO ni `logAction`.
+     */
+    suspend fun completeSetup(boutique: BoutiqueEntity) {
+        db.boutiqueDao().insertOrUpdate(boutique)
+        logAction("SETUP_COMPLETE", "Configuration initiale terminée")
+    }
+
+    /** Restaure la sauvegarde miroir produite par `BackupWorker`, si elle existe. */
+    suspend fun restoreMirrorBackup(context: Context): Boolean {
+        val mirror = File(context.getExternalFilesDir(null), "caisse_mirror.db")
+        if (!mirror.exists() || mirror.length() == 0L) return false
+        val restored = restoreDatabase(context, mirror)
+        if (restored) logAction("BACKUP_IMPORT", "Restauration depuis la sauvegarde miroir")
+        return restored
+    }
+
+    /** Présence d'une sauvegarde miroir exploitable. */
+    fun hasMirrorBackup(context: Context): Boolean {
+        val mirror = File(context.getExternalFilesDir(null), "caisse_mirror.db")
+        return mirror.exists() && mirror.length() > 0
+    }
+
     /** Lecture ponctuelle de la boutique, hors flux réactif. */
     suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
 
@@ -1125,26 +1151,13 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
         }
     }
 
-    // Export manuel de la base : copie puis partage via Intent.
-    // ⚠️ Ce n'est PAS une synchronisation cloud : aucun envoi automatique.
-    // Une vraie sauvegarde distante est planifiée (B-112).
-    suspend fun syncToCloud(context: Context, role: String? = null) {
-        val dbFile = context.getDatabasePath("caisse_database")
-        if (dbFile.exists()) {
-            val backupFile = File(context.cacheDir, "caisse_export_${System.currentTimeMillis()}.db")
-            dbFile.copyTo(backupFile, overwrite = true)
-            
-            val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", backupFile)
-            val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "application/octet-stream"
-                putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(android.content.Intent.createChooser(intent, "Exporter et partager"))
-            logAction("EXPORT_SHARE", "Export manuel de la base initié", role)
-        }
-    }
+    // syncToCloud() a été supprimé (étape 6) : il partageait une copie brute de
+    // la base, sans mot de passe utilisateur ni contrôle d'intégrité.
+    // Remplacé par exportEncryptedBackup(), qui chiffre l'archive par un mot de
+    // passe saisi à chaque export (décision D2-C).
+    // Les chemins sans interface — BackupWorker et le miroir de SetupScreen —
+    // conservent la copie brute, protégée par SQLCipher : aucun mot de passe
+    // n'y est saisissable.
 
     // PDF Statement Generation (Multi-page Support)
     fun generateCustomerStatementPdf(context: Context, customer: CustomerEntity, ventes: List<VenteWithItems>): File? {

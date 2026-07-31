@@ -12,9 +12,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.data.local.AppDatabase
-import com.reconsiliation.caisse.data.local.entity.BoutiqueEntity
-import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
@@ -25,9 +22,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SetupScreen(navController: NavController) {
     val context = LocalContext.current
-    val scope = rememberCoroutineScope()
-    val db = AppDatabase.getDatabase(context)
-    val prefs = PreferencesManager(context)
+    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel()
 
     var name by remember { mutableStateOf("") }
     var owner by remember { mutableStateOf("") }
@@ -40,13 +36,7 @@ fun SetupScreen(navController: NavController) {
     var setupError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        val externalDir = context.getExternalFilesDir(null)
-        if (externalDir != null) {
-            val mirrorFile = java.io.File(externalDir, "caisse_mirror.db")
-            if (mirrorFile.exists()) {
-                showRestoreDialog = true
-            }
-        }
+        showRestoreDialog = viewModel.hasMirrorBackup(context)
     }
 
     Scaffold(
@@ -110,45 +100,19 @@ fun SetupScreen(navController: NavController) {
                 text = "Finaliser la configuration",
                 onClick = {
                     if (name.isNotBlank() && pin.length == 4) {
-                        scope.launch {
-                            val sec = com.reconsiliation.caisse.utils.SecurityUtil
-                            val salt = sec.generateSalt()
-                            val hashedPin = sec.hashPinPbkdf2(pin, salt)
-                            
-                            val boutique = BoutiqueEntity(
-                                id = 1, // Explicit ID for replacement
-                                name = name.trim(),
-                                ownerName = owner.trim(),
-                                phoneNumber = phone.trim(),
-                                operator = operator,
-                                momoNumber = momoNumber.trim(),
-                                isSetupComplete = true,
-                                pinHash = hashedPin,
-                                pinSalt = salt,
-                                managerPinHash = hashedPin,
-                                managerPinSalt = salt
-                            )
-                            
-                            try {
-                                // 1. Update Database
-                                db.boutiqueDao().insertOrUpdate(boutique)
-                                
-                                // 2. Update Preferences
-                                prefs.setSetupComplete(true)
-                                
-                                // 3. Log initial action
-                                val repository = com.reconsiliation.caisse.data.repository.MainRepository(db, context)
-                                repository.logAction("SETUP_COMPLETE", "Configuration initiale terminée")
-
-                                // 4. Navigate home
+                        setupError = null
+                        // Hachage, écriture en base et journalisation sont
+                        // portés par le ViewModel (CODING_RULES §1).
+                        viewModel.completeSetup(
+                            name = name, owner = owner, phone = phone,
+                            operator = operator, momoNumber = momoNumber, pin = pin
+                        ) { error ->
+                            if (error == null) {
                                 navController.navigate(Screen.Home.route) {
                                     popUpTo(Screen.Setup.route) { inclusive = true }
                                 }
-                            } catch (e: Exception) {
-                                // Échec de la configuration initiale : l'utilisateur
-                                // resterait bloqué sur un écran sans explication.
-                                android.util.Log.e("SetupScreen", "Échec de la configuration", e)
-                                setupError = e.message ?: "Erreur lors de la configuration"
+                            } else {
+                                setupError = error
                             }
                         }
                     }
@@ -163,15 +127,15 @@ fun SetupScreen(navController: NavController) {
                 text = { Text("Une sauvegarde locale de votre boutique a été détectée. Voulez-vous restaurer vos produits, ventes et dettes ?") },
                 confirmButton = {
                     TextButton(onClick = {
-                        scope.launch {
-                            val externalDir = context.getExternalFilesDir(null)
-                            val mirrorFile = java.io.File(externalDir, "caisse_mirror.db")
-                            val repository = com.reconsiliation.caisse.data.repository.MainRepository(db, context)
-                            if (repository.restoreDatabase(context, mirrorFile)) {
-                                prefs.setSetupComplete(true)
+                        showRestoreDialog = false
+                        viewModel.restoreMirrorBackup(context) { restored ->
+                            if (restored) {
                                 navController.navigate(Screen.Splash.route) {
                                     popUpTo(Screen.Setup.route) { inclusive = true }
                                 }
+                            } else {
+                                setupError = "La restauration a échoué. " +
+                                    "Vous pouvez poursuivre la configuration."
                             }
                         }
                     }) { Text("Restaurer") }

@@ -622,7 +622,12 @@ la `sealed class Screen`. Tout nouvel écran sensible sera **non protégé par o
 
 ## 🟡 BUG-014 — Données de démonstration accessibles en production
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-31** · **Gravité** : 🟡 MINEUR
+**⏳ En attente de validation par compilation réelle.**
+**Correctif** : le bouton « Mode Démo » est conditionné par `BuildConfig.DEBUG`.
+`buildConfig = true` ajouté dans `app/build.gradle.kts` — depuis AGP 8,
+`BuildConfig` n'est plus généré par défaut. L'injection passe désormais par
+`MainViewModel.seedDemoData()` au lieu d'ouvrir la base depuis l'écran.
 **Fichiers** : `data/seed/DataSeeder.kt`, `ui/screens/SettingsScreen.kt:133`
 
 `DataSeeder.seedSampleData()` (boutique fictive « Boulangerie Chez Marie »,
