@@ -22,8 +22,34 @@ Feuille de route et priorisation : [`ROADMAP.md`](ROADMAP.md).
 Pilote un cycle MobileCaisse complet, sans autre intervention :
 
 ```
-environnement → preflight → autofix → compilation → tests unitaires
-  → instrumentation → causes racines → promotion des statuts → publication
+environnement → PROVISION → preflight → autofix → compilation → tests unitaires
+  → ADB/émulateur → instrumentation → causes racines → promotion → publication
+```
+
+### Provisionnement automatique
+
+**Interventions supprimées** — mesurées à 38 min, bloquant le premier cycle :
+
+| Avant | Après |
+|---|---|
+| Android Studio → SDK Manager → cocher platform-35, build-tools | `sdkmanager` automatique |
+| Android Studio → Device Manager → Create Device → télécharger l'image | `avdmanager` automatique |
+| accepter les licences SDK une par une | `--licenses` automatique |
+| démarrer Docker Desktop à la main | tentative automatique |
+| `adb kill-server` quand un appareil est « offline » | réparation automatique |
+
+Deux garde-fous :
+- **rien n'est téléchargé si l'environnement est déjà complet** — l'étape est
+  simplement ignorée ;
+- **aucun AVD n'est créé si un téléphone est branché** — créer un émulateur
+  alors qu'un appareil réel est disponible téléchargerait plusieurs centaines
+  de Mo pour rien, et donnerait des résultats moins fiables sur les tests de
+  sécurité.
+
+```bash
+python3 -m environment.provision --check    # diagnostic seul
+python3 -m environment.provision --apply    # installe
+python3 -m environment.test_provision       # 6 tests, sans SDK
 ```
 
 | Option | Effet |
@@ -118,6 +144,7 @@ Trois propriétés déclarées par chaque runner :
 | `engine/engine.py --max-loops` | enchaîner à la main corriger → relancer → vérifier |
 | `engine/promote.py` | relire BUGS.md et promouvoir 13 statuts à la main (~90 min cumulées) |
 | `run` | choisir entre 3 points d'entrée documentés |
+| `environment/provision.py` | ouvrir Android Studio pour installer SDK, AVD et licences (~38 min) |
 
 **Reste manuel** : `git push` — volontairement. Un commit poussé sans relecture
 serait une automatisation de trop.

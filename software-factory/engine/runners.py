@@ -33,6 +33,7 @@ class RunContext:
     with_emulator: bool = True
     with_autofix: bool = True
     with_instrumentation: bool = True
+    with_provision: bool = True
 
     def gradle_env(self) -> dict[str, str]:
         """Variables d'environnement pour un appel Gradle local."""
@@ -82,6 +83,46 @@ class Runner:
 
 
 # ------------------------------------------------------------------ étapes
+
+class ProvisionRunner(Runner):
+    """
+    Installe les composants Android manquants avant toute compilation.
+
+    **Intervention supprimée** : ouvrir Android Studio → SDK Manager pour cocher
+    platform-35 et build-tools, puis Device Manager pour créer un AVD, puis
+    accepter les licences. Mesuré : ~38 min, bloquant le premier cycle.
+
+    Ne s'exécute que si quelque chose manque réellement : sur un poste déjà
+    équipé, l'étape est ignorée sans rien télécharger.
+    """
+    name = "provision"
+    retryable = False
+
+    def applicable(self, ctx: RunContext) -> tuple[bool, str]:
+        if not ctx.with_provision:
+            return False, "désactivé (--no-provision)"
+        try:
+            from environment.provision import plan
+            actions = [a for a in plan(ctx.env) if a.command]
+        except Exception as e:
+            return False, f"planification impossible : {e}"
+        if not actions:
+            return False, "environnement déjà complet"
+        return True, ""
+
+    def execute(self, ctx: RunContext, step: StepState) -> int:
+        code = self._run(
+            [sys.executable, "-m", "environment.provision", "--apply"], ctx, step)
+        # L'environnement a changé : la détection initiale n'est plus valable.
+        if code == 0:
+            try:
+                from environment.detect import detect
+                ctx.env = detect()
+                step.detail = f"environnement prêt — stratégie {ctx.env.strategy}"
+            except Exception:
+                pass
+        return code
+
 
 class PreflightRunner(Runner):
     name = "preflight"
@@ -182,6 +223,7 @@ class InstrumentationRunner(Runner):
 
 
 PIPELINE: list[Runner] = [
+    ProvisionRunner(),
     PreflightRunner(),
     AutofixRunner(),
     BuildRunner(),

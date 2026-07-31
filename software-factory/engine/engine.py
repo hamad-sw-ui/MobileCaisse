@@ -166,7 +166,8 @@ class ExecutionEngine:
         ctx = RunContext(env=self.env, stamp=self.state.stamp, logs_dir=self.logs,
                          with_emulator=not self.args.no_emulator,
                          with_autofix=not self.args.no_autofix,
-                         with_instrumentation=not self.args.skip_instr)
+                         with_instrumentation=not self.args.skip_instr,
+                         with_provision=not self.args.no_provision)
 
         for runner in PIPELINE:
             status = self.run_step(runner, ctx)
@@ -185,6 +186,21 @@ class ExecutionEngine:
     def run(self) -> int:
         self.discover()
         print()
+
+        if self.env.strategy == "none" and not self.args.no_provision:
+            # Le provisionnement peut installer ce qui manque : on lui laisse sa
+            # chance avant de déclarer l'environnement inutilisable.
+            from engine.runners import ProvisionRunner
+            ctx = RunContext(env=self.env, stamp=self.state.stamp,
+                             logs_dir=self.logs, with_provision=True)
+            runner = ProvisionRunner()
+            ok, reason = runner.applicable(ctx)
+            if ok:
+                print(f"{Y}Environnement incomplet — tentative de provisionnement{X}")
+                if self.run_step(runner, ctx) == Status.OK:
+                    self.env = ctx.env
+                    self.state.strategy = self.env.strategy
+                    print(f"  Stratégie après provisionnement : {self.env.strategy}\n")
 
         if self.env.strategy == "none":
             print(f"{R}Compilation impossible dans cet environnement.{X}")
@@ -313,6 +329,8 @@ def main() -> int:
     ap.add_argument("--no-emulator", action="store_true")
     ap.add_argument("--no-autofix", action="store_true")
     ap.add_argument("--skip-instr", action="store_true")
+    ap.add_argument("--no-provision", action="store_true",
+                    help="ne pas installer les composants Android manquants")
     args = ap.parse_args()
 
     if args.status:
