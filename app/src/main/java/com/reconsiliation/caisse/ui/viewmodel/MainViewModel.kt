@@ -503,6 +503,30 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     }
 
     /** Indique si [file] exige un mot de passe, pour adapter l'interface. */
+    /**
+     * Indique si la configuration initiale a déjà été effectuée.
+     *
+     * Consulte la préférence locale **et** la base : la préférence peut avoir
+     * été effacée (réinstallation, nettoyage) alors que la boutique existe.
+     * Resynchronise la préférence le cas échéant.
+     *
+     * Évite à `SplashScreen` d'ouvrir la base directement (§1 MVVM).
+     */
+    suspend fun isSetupComplete(): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        val prefs = com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
+        val fromPrefs = prefs.isSetupComplete()
+        val boutique = try {
+            repository.getBoutiqueOnce()
+        } catch (e: Exception) {
+            // Base absente ou illisible : on se rabat sur la préférence seule.
+            android.util.Log.w("MainViewModel", "Lecture boutique impossible au démarrage", e)
+            null
+        }
+        val complete = fromPrefs || boutique?.isSetupComplete == true
+        if (complete && !fromPrefs) prefs.setSetupComplete(true)
+        complete
+    }
+
     fun isBackupEncrypted(file: File): Boolean =
         repository.detectBackupFormat(file) is com.reconsiliation.caisse.utils.BackupFormat.Encrypted
     

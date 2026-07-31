@@ -8,43 +8,28 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
-    val context = LocalContext.current
-    val prefs = PreferencesManager(context)
+    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel =
+        androidx.lifecycle.viewmodel.compose.viewModel()
 
     LaunchedEffect(Unit) {
         // Reduced delay for a snappier launch, but enough to show branding
         delay(1000)
         
         try {
-            // Robust check: Preference OR Database
-            val db = com.reconsiliation.caisse.data.local.AppDatabase.getDatabase(context)
-            val boutique: com.reconsiliation.caisse.data.local.entity.BoutiqueEntity? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-                try {
-                    db.boutiqueDao().getBoutiqueOnce()
-                } catch (e: Exception) {
-                    null // If DB is empty/corrupt, we handle it
-                }
-            }
-            
-            val isSetup = prefs.isSetupComplete() || (boutique != null && boutique.isSetupComplete)
-            
+            // La vérification (préférence + base) est portée par le ViewModel :
+            // un Composable n'ouvre pas la base directement (CODING_RULES §1).
+            val isSetup = viewModel.isSetupComplete()
+
             if (isSetup) {
-                // Ensure prefs are synced
-                if (boutique?.isSetupComplete == true && !prefs.isSetupComplete()) {
-                    prefs.setSetupComplete(true)
-                }
-                
                 navController.navigate(Screen.Pin.route) {
                     popUpTo(Screen.Splash.route) { inclusive = true }
                 }

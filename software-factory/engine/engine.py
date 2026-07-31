@@ -180,6 +180,28 @@ class ExecutionEngine:
                         self.state.step(later.name).status = Status.PENDING
 
             if status == Status.FAILED:
+                # Si la compilation casse immédiatement après autofix, il faut
+                # savoir laquelle des deux hypothèses est vraie : le code était
+                # déjà cassé, ou autofix l'a cassé. On annule et on recompile :
+                # la réponse est alors sans ambiguïté.
+                if runner.name == "build" and ctx.autofix_baseline:
+                    from engine.runners import revert_autofix
+                    applied = self.state.step("autofix").attempts
+                    if applied and revert_autofix(ctx.autofix_baseline):
+                        print(f"{Y}↩{X} Compilation en échec après {applied} "
+                              f"correction·s automatiques — annulation et "
+                              f"nouvelle tentative")
+                        ctx.autofix_baseline = None
+                        self.state.step("autofix").detail = (
+                            f"{applied} correction·s annulée·s (build cassé)")
+                        self.state.step("autofix").status = Status.SKIPPED
+                        self.state.step("build").status = Status.PENDING
+                        if self.run_step(runner, ctx) == Status.OK:
+                            print(f"  {R}→ autofix était la cause : "
+                                  f"corrections écartées.{X}")
+                            continue
+                        print(f"  {D}→ le code était déjà en échec avant "
+                              f"autofix.{X}")
                 return False
         return True
 

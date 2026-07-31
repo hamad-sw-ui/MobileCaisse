@@ -34,6 +34,8 @@ class RunContext:
     with_autofix: bool = True
     with_instrumentation: bool = True
     with_provision: bool = True
+    # Empreinte git avant autofix, pour annuler ses corrections si le build casse.
+    autofix_baseline: str | None = None
 
     def gradle_env(self) -> dict[str, str]:
         """Variables d'environnement pour un appel Gradle local."""
@@ -46,6 +48,38 @@ class RunContext:
             e["ANDROID_HOME"] = sdk.path
             e["ANDROID_SDK_ROOT"] = sdk.path
         return e
+
+
+def _git_head_state() -> str | None:
+    """Empreinte du code suivi par git, avant modification automatique."""
+    try:
+        r = subprocess.run(["git", "stash", "create"], capture_output=True,
+                           text=True, cwd=ROOT, timeout=30)
+        return r.stdout.strip() or "clean"
+    except Exception:
+        return None
+
+
+def revert_autofix(baseline: str | None) -> bool:
+    """
+    Annule les corrections d'autofix en restaurant l'état mémorisé.
+
+    Ne touche qu'aux fichiers suivis par git : une modification manuelle non
+    committée serait elle aussi annulée, d'où l'appel réservé au cas où le
+    build casse immédiatement après autofix.
+    """
+    if not baseline:
+        return False
+    try:
+        if baseline == "clean":
+            subprocess.run(["git", "checkout", "--", "app/src"],
+                           cwd=ROOT, timeout=60, capture_output=True)
+        else:
+            subprocess.run(["git", "checkout", baseline, "--", "app/src"],
+                           cwd=ROOT, timeout=60, capture_output=True)
+        return True
+    except Exception:
+        return False
 
 
 class Runner:
@@ -103,11 +137,21 @@ class ProvisionRunner(Runner):
             return False, "désactivé (--no-provision)"
         try:
             from environment.provision import plan
-            actions = [a for a in plan(ctx.env) if a.command]
+            all_actions = plan(ctx.env)
         except Exception as e:
             return False, f"planification impossible : {e}"
-        if not actions:
+
+        automatable = [a for a in all_actions if a.command]
+        manual = [a for a in all_actions if not a.command]
+
+        if not all_actions:
             return False, "environnement déjà complet"
+        if not automatable:
+            # Distinction essentielle : « rien à faire » et « rien que JE puisse
+            # faire » ne sont pas la même chose. Confondre les deux masquait un
+            # SDK absent derrière « environnement déjà complet ».
+            return False, ("action manuelle requise — "
+                           + " ; ".join(a.manual_hint or a.description for a in manual))
         return True, ""
 
     def execute(self, ctx: RunContext, step: StepState) -> int:
@@ -144,6 +188,11 @@ class AutofixRunner(Runner):
         return True, ""
 
     def execute(self, ctx: RunContext, step: StepState) -> int:
+        # Point de restauration : si la compilation casse juste après, le moteur
+        # doit pouvoir distinguer « le code était déjà cassé » de « autofix l'a
+        # cassé », et annuler dans le second cas.
+        ctx.autofix_baseline = _git_head_state()
+
         code = self._run(
             [sys.executable, "software-factory/autofix/run.py", "--apply"],
             ctx, step)

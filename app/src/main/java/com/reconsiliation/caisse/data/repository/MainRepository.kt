@@ -914,6 +914,9 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
      * au manifeste : une divergence provoque une `IllegalArgumentException`
      * (BUG-025).
      */
+    /** Lecture ponctuelle de la boutique, hors flux réactif. */
+    suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
+
     fun shareBackupFile(context: Context, file: File) {
         val uri = androidx.core.content.FileProvider.getUriForFile(
             context, "${context.packageName}.fileprovider", file
