@@ -84,7 +84,7 @@ que j'ai audité**. L'audit initial portait bien sur l'état *après* correction
 
 ## 🔴 BUG-001 — Migrations Room désynchronisées des entités
 
-**Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
 
 Six migrations produisent un schéma différent de celui généré depuis les
 `@Entity`. Room lève `IllegalStateException: Migration didn't properly handle: <table>`
@@ -140,9 +140,9 @@ données, couvrir par `MigrationTestHelper`.
 
 ## 🔴 BUG-002 — Chaîne de migrations incomplète sous la version 18
 
-**Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
 
-`version = 28`, migrations fournies de 18 à 28 uniquement, aucun
+`version = 30`, migrations fournies de 18 à 30 uniquement, aucun
 `fallbackToDestructiveMigration` — dont le retrait est un correctif volontaire
 et validé, **à ne pas annuler**. Une base en version 1–17 ne peut pas être
 migrée → crash irrécupérable.
@@ -169,7 +169,7 @@ contrôlée. `fallbackToDestructiveMigration()` reste proscrit : le mécanisme d
 
 ## 🟠 BUG-003 — `androidx.appcompat` utilisé mais non déclaré
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif** : `MainActivity` étend désormais `ComponentActivity`
 (`androidx.activity`, déjà présent) ; `themes.xml` hérite de
@@ -244,7 +244,7 @@ en jeu aujourd'hui. **Non prioritaire.**
 
 ## 🟠 BUG-005 — Secret de licence en clair + minification désactivée
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **Fichiers** : `utils/LicenseUtil.kt`, `app/build.gradle.kts`
 
 `SECRET_SALT = "M0M0_C41SS3_V1_PRO_S3CR3T_2024_K3Y"` en clair, et
@@ -275,7 +275,7 @@ hors-ligne reste imparfait (documenté dans `KNOWN_LIMITATIONS.md`).
 
 ## 🟠 BUG-006 — SQL construit par concaténation dans `PRAGMA rekey`
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR · **Fichier** : `data/local/AppDatabase.kt`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR · **Fichier** : `data/local/AppDatabase.kt`
 
 `db.execSQL("PRAGMA rekey = '$newKeyPassphrase'")` dans `performRekeyIfNecessary`
 et `forceRekey`. La passphrase est hexadécimale (donc sûre en pratique), mais le
@@ -386,7 +386,7 @@ implémenté : l'app ignore les refus.
 
 ## 🟠 BUG-018 — `BackupManager` : le chiffrement AES-GCM est cassé (aller-retour impossible)
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🔴 CRITIQUE
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🔴 CRITIQUE
 **⏳ En attente de validation par compilation réelle.**
 **Cause racine** : `Cipher.doFinal()` en mode GCM retourne déjà `ciphertext || tag` ;
 le code extrayait le tag *sans le retirer*, puis le reconcaténait au déchiffrement
@@ -438,7 +438,7 @@ gestion manuelle du tag, `doFinal` s'en charge.
 
 ## 🟠 BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **⏳ En attente de validation par compilation réelle.**
 **Cause racine** : `zip.write(dbBytes)` écrivait les octets bruts ; seules les
 métadonnées étaient chiffrées.
@@ -478,7 +478,7 @@ déchiffrer symétriquement à l'import. À traiter avec BUG-018.
 
 ## 🟠 BUG-020 — `java.time.Instant` incompatible avec minSdk 24
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **⏳ En attente de validation par compilation réelle.**
 ⚠️ Validation complète = exécution **sur un appareil API 24**, hors Docker.
 **Correctif** : `SimpleDateFormat` en UTC (API 1), cohérent avec `java.util.Date`
@@ -513,7 +513,7 @@ projet, qui utilise `java.util.Date` partout).
 
 ## 🟡 BUG-021 — `BackupMetadata.databaseVersion` figé à 27
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟡 MINEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif** : `databaseVersion` devient un paramètre obligatoire de
 `exportBackupWithPassword`, fourni par l'appelant depuis `AppDatabase`.
@@ -538,7 +538,7 @@ métadonnée censée permettre de refuser une sauvegarde incompatible est fausse
 
 ## 🔴 BUG-023 — `BackupManager` ne compilait pas
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🔴 CRITIQUE *(découvert rév. 5)*
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🔴 CRITIQUE
 **⏳ En attente de validation par compilation réelle.**
 
 > 🎯 **Bug le plus exposé à l'auto-illusion.** Un défaut de compilation ne peut,
@@ -571,7 +571,7 @@ supprimé, import `Mac` mort supprimé.
 
 ## 🟠 BUG-017 — La sauvegarde chiffrée `BackupManager` n'est branchée nulle part
 
-**Statut** : OUVERT · **Gravité** : 🟠 MAJEUR *(nouveau — rév. 2)*
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **Fichiers** : `utils/BackupManager.kt`, `ui/screens/SettingsScreen.kt`, `data/repository/MainRepository.kt`
 
 Le correctif n°4 (sauvegarde chiffrée par mot de passe) est **réellement
@@ -618,7 +618,7 @@ requalifier les copies brutes. À traiter avec **BUG-011** et la décision **D2*
 
 ## 🟡 BUG-011 — Sauvegarde du fichier `.db` sans checkpoint WAL
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟡 MINEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif** : `checkpointWal()` exécute `PRAGMA wal_checkpoint(FULL)` avant
 toute copie et **échoue explicitement** si le checkpoint est bloqué — une
@@ -679,7 +679,7 @@ première, `MainViewModel` et `SubscriptionWorker` la seconde. Confusion garanti
 
 ## 🟠 BUG-024 — Fenêtre de concurrence pendant la restauration de la base
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif (B-140)** : la copie est intégralement écrite dans un fichier de
 transit (`cacheDir/restore_staging.db`) et sa taille vérifiée **avant** que
@@ -725,7 +725,7 @@ remplacement.
 
 ## 🟠 BUG-025 — Autorité `FileProvider` incorrecte : crash sur le relevé client
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **Fichier** : `ui/viewmodel/MainViewModel.kt` (`generateCustomerStatement`)
 
 🔍 *Observé* : le code utilisait `"${'$'}{context.packageName}.provider"` alors que le
@@ -751,7 +751,7 @@ cohérents.
 
 ## 🟠 BUG-022 — Contradiction `staff.pinSalt` : NOT NULL en migration vs nullable en logique
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟠 MAJEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif** : `MIGRATION_25_26` aligné sur `StaffEntity` —
 `pinSalt TEXT` (nullable), `phone TEXT` ajouté, `permissions`/`createdAt`
@@ -840,7 +840,7 @@ la `sealed class Screen`. Tout nouvel écran sensible sera **non protégé par o
 
 ## 🟡 BUG-014 — Données de démonstration accessibles en production
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-31** · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟡 MINEUR
 **⏳ En attente de validation par compilation réelle.**
 **Correctif** : le bouton « Mode Démo » est conditionné par `BuildConfig.DEBUG`.
 `buildConfig = true` ajouté dans `app/build.gradle.kts` — depuis AGP 8,
@@ -867,7 +867,7 @@ release. Risque de pollution de données réelles.
 
 ## 🟡 BUG-015 — Contrainte réseau inutile sur `BackupWorker`
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `MainActivity.kt`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟡 MINEUR
 
 `NetworkType.CONNECTED` est exigé alors que le worker n'effectue **aucun accès
 réseau**. Sur un appareil durablement hors ligne, la sauvegarde quotidienne
@@ -886,7 +886,7 @@ réseau**. Sur un appareil durablement hors ligne, la sauvegarde quotidienne
 
 ## 🟡 BUG-016 — Déchets versionnés dans le dépôt
 
-**Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-08-05** · **Gravité** : 🟡 MINEUR
 **Correctif** : `conversation.txt` supprimé · `.idea/` et `.kotlin/`
 dé-versionnés (28 fichiers) · `app/logo.png` → `res/drawable-nodpi/brand_logo.png`
 · `.gitignore` complété · `gradlew` rendu exécutable

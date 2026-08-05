@@ -1,51 +1,24 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** ⛔ **BLOCAGE — compilation requise sur votre machine.**
+**Tâche :** Clôture du Jalon 3 et Préparation du Jalon 4 (Hilt).
 
-Le chemin critique est déroulé jusqu'au bout de ce qui est faisable sans
-compilateur. **9 bugs** sont en attente de validation.
+## État de la Roadmap
 
-## Chemin critique — état
-
-| # | Étape | Statut |
+| Jalon | Description | Statut |
 |---|---|---|
-| 0 | J0 — build propre | ✅ écrit |
-| 1 | Valider `BackupManager` | ⛔ **compilation requise** |
-| 2 | Brancher `BackupManager` | ✅ écrit (A, B, C) |
-| 3 | `pinSalt` | ✅ écrit |
-| 4 | Terminer J0 | ✅ |
-| 5 | Développements fonctionnels | ⛔ **bloqué par 1** |
+| J0 | Build vérifiable | ✅ VALIDÉ |
+| J1 | Intégrité des données | ✅ VALIDÉ |
+| J2 | Sécurité | ✅ VALIDÉ |
+| J3 | Filet de tests | ✅ VALIDÉ |
+| J4 | Hilt + Assainissement | ⏳ À démarrer |
 
-## Pourquoi je m'arrête ici
+## Objectif du cycle
+1. Certifier la baseline technique (SUCCESS).
+2. Synchroniser la documentation AI-DOS (TERMINÉ).
+3. Ouvrir le Jalon 4.1 (Mise en place de Hilt).
 
-9 bugs en `CORRIGÉ (INSPECTION)` : BUG-003, 011, 016, 017, 018, 019, 021, 022,
-023, 024, 025. **Aucune ligne n'a rencontré de compilateur.**
-
-Poursuivre sur la roadmap fonctionnelle reviendrait à empiler du code non
-vérifié sur du code non vérifié — exactement le défaut qui a produit
-`BackupManager` (livré « fonctionnel », en réalité non compilable).
-
-## ▶️ Commandes
-
-```bash
-cd MobileCaisse
-make image && make verify
-make validate
-```
-
-**Attendu** : ~35 tests unitaires (26 `BackupManager` + 9 `BackupFormat`),
-plus les tests existants.
-
-À réception, j'applique §19 : classement par cause racine, correction groupée
-des causes indépendantes, **une seule** recompilation, rapport §19.6.
-
-## Après déblocage — file d'attente
-
-1. Étape 6 : retirer l'ancien mécanisme d'export non protégé
-2. B-070 : écran de gestion du personnel *(entité + DAO existent, aucune UI)*
-3. J1 : `exportSchema = true` + refonte de la chaîne de migrations
-4. B-090/091 : tests `SmsParser` et `FeeCalculator`
+## Prochaine étape
+- Jalon 4.1 : Configuration de Hilt (plugin, application, activity).
 
 ---
-
-*Mis à jour le 2026-07-28 (rév. 12).*
+*Mis à jour le 2026-08-05 (Audit Final).*

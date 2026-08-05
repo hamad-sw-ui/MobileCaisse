@@ -46,8 +46,8 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Date | Commande | Résultat | Git Hash | Branche | Tâches | Durée |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2024-05-22 | `./gradlew :app:assembleDebug` | **SUCCESS** | `056ae4b` | `arena/...` | 39 | 1m 20s |
-| 2024-05-22 | `./gradlew clean :app:testDebugUnitTest` | **SUCCESS** | `056ae4b` | `arena/...` | 29 | 6m 47s |
+| 2026-08-05 | `./gradlew :app:assembleDebug` | **SUCCESS** | `a3a5bfd` | `arena/...` | 39 | 1m 43s |
+| 2026-08-05 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `a3a5bfd` | `arena/...` | 28 | 6m 10s |
 
 ---
 
@@ -55,4 +55,4 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Branche | Commit Initial | Commit Final | État |
 | :--- | :--- | :--- | :--- |
-| `arena/019fa5ec-mobilecaisse` | `056ae4b` | — | **53 fichiers staged** |
+| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `a3a5bfd` | **Working tree clean** |
