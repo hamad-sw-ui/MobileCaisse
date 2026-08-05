@@ -23,7 +23,8 @@ object SecurityUtil {
     private const val KEY_ALIAS = "db_key_enc_v1"
     private const val PREFS_NAME = "security_prefs"
     private const val ENCRYPTED_KEY_SET = "encrypted_db_key"
-    private const val PBKDF2_ITERATIONS = 5000
+    private const val PBKDF2_ITERATIONS_LEGACY = 5000
+    private const val PBKDF2_ITERATIONS_NEW = 100_000
     private const val KEY_LENGTH = 256
 
     private fun getSecretKey(): SecretKey {
@@ -86,9 +87,9 @@ object SecurityUtil {
     }
 
     @OptIn(ExperimentalEncodingApi::class)
-    fun hashPinPbkdf2(pin: String, salt: String): String {
+    fun hashPinPbkdf2(pin: String, salt: String, iterations: Int = PBKDF2_ITERATIONS_NEW): String {
         val saltBytes = Base64.decode(salt)
-        val spec = PBEKeySpec(pin.toCharArray(), saltBytes, PBKDF2_ITERATIONS, KEY_LENGTH)
+        val spec = PBEKeySpec(pin.toCharArray(), saltBytes, iterations, KEY_LENGTH)
         val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
         val hash = factory.generateSecret(spec).encoded
         return Base64.encode(hash)
@@ -97,13 +98,18 @@ object SecurityUtil {
     /**
      * Vérifie un PIN par rapport à un hash stocké avec comparaison à temps constant.
      * Tente PBKDF2 si un sel existe, sinon se rabat sur SHA-256 legacy.
+     * Supporte le format de sel "salt:iterations".
      */
     @OptIn(ExperimentalEncodingApi::class)
     suspend fun verifyPin(pin: String, savedHash: String?, savedSalt: String?): Boolean = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         if (savedHash == null) return@withContext false
         
         if (savedSalt != null) {
-            val computedHash = hashPinPbkdf2(pin, savedSalt)
+            val parts = savedSalt.split(":")
+            val salt = parts[0]
+            val iterations = if (parts.size > 1) parts[1].toIntOrNull() ?: PBKDF2_ITERATIONS_NEW else PBKDF2_ITERATIONS_LEGACY
+            
+            val computedHash = hashPinPbkdf2(pin, salt, iterations)
             // Comparaison à temps constant pour PBKDF2 (Base64)
             java.security.MessageDigest.isEqual(
                 Base64.decode(computedHash),

@@ -60,11 +60,6 @@ class MainActivity : ComponentActivity() {
 
     private fun scheduleBackup() {
         val backupRequest = PeriodicWorkRequestBuilder<BackupWorker>(24, TimeUnit.HOURS)
-            .setConstraints(
-                Constraints.Builder()
-                    .setRequiredNetworkType(NetworkType.CONNECTED)
-                    .build()
-            )
             .build()
 
         WorkManager.getInstance(this).enqueueUniquePeriodicWork(

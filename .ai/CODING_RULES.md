@@ -140,12 +140,13 @@ le code technique, français pour le texte affiché.
 
 ---
 
-## 13. Définition de « terminé » — validation obligatoire
+## 13. Définition de « terminé » — validation obligatoire (AI-DOS 3.0)
 
-> **Aucun correctif ne peut être considéré comme terminé tant que :**
-> - **la compilation réelle a réussi ;**
-> - **les tests automatisés sont passés ;**
-> - **aucune régression n'a été détectée.**
+> **Une correction ou tâche n'est considérée comme VALIDÉE que si la chaîne de traçabilité est complète :**
+> **Bug/Tâche → Analyse d'Impact → ADR (si requis) → Code → Build SUCCESS → Test SUCCESS → Documentation → TRACEABILITY.md.**
+
+Si un seul de ces maillons manque, l'élément reste au statut `CORRIGÉ (INSPECTION)`.
+Toute promotion vers `VALIDÉ` doit être justifiée dans la matrice de traçabilité.
 
 Cette règle est **non négociable** et prévaut sur toute impression de complétude.
 
@@ -653,3 +654,49 @@ double emploi avec §20. §17 est **conservée pour la rétrospective** — util
 apprendre — mais son volet « proposer une nouvelle règle » est désormais
 **subordonné à §20**. Aucune règle nouvelle ne peut naître d'une rétrospective
 sans passer les sept questions.
+
+---
+
+## 21. Enforcement de la Source de Vérité
+
+Le dossier `.ai` est l'unique source de vérité du projet. Aucune action (analyse,
+développement, commit) ne peut être entreprise sans une lecture vérifiable de
+son contenu.
+
+### 21.1 Protocole de début de session
+Chaque session doit impérativement commencer par :
+1.  **Vérification de l'existence** du dossier `.ai`.
+2.  **Lecture de `INDEX.md`** et du manifeste.
+3.  **Lecture des documents obligatoires** listés dans le manifeste.
+4.  **Production d'un rapport de vérification** (Framework Verification).
+
+### 21.2 Preuve par l'exemple
+Toute affirmation sur le respect des règles ou de la roadmap doit citer un fait
+spécifique ou un numéro de ligne issu des documents `.ai`.
+
+---
+
+## 22. Audit indépendant des preuves (Niveaux de confiance)
+
+Toute affirmation technique importante doit être classée selon son niveau de
+preuve. **AI-DOS ne déclare jamais un élément "VALIDÉ" si sa meilleure preuve
+est de niveau C ou D.**
+
+### 22.1 Niveaux de preuve
+- **Niveau A — Preuve vérifiée** : Affirmation démontrée par une exécution réelle
+  (build SUCCESS, tests au vert, APK généré, test instrumenté passé).
+- **Niveau B — Preuve statique** : Affirmation démontrée par l'analyse du code ou
+  de la configuration (lecture de script, annotation présente, règle ProGuard).
+- **Niveau C — Déduction technique** : Affirmation raisonnablement déduite mais
+  non encore démontrée (comportement attendu, performance supposée).
+- **Niveau D — Hypothèse** : Affirmation nécessitant une validation future
+  (comportement sur appareil physique, signature Release).
+
+### 22.2 Format de qualification
+Pour chaque point critique du rapport :
+> **Affirmation** : [Texte]  
+> **Niveau** : [A/B/C/D]  
+> **Justification** : [Pourquoi ce niveau]  
+> **Preuve** : [Lien vers log ou fichier]  
+> **Limites** : [Ce qui n'est pas prouvé]  
+> **Action restante** : [Ce qu'il faut faire pour monter de niveau]

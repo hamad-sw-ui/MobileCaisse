@@ -37,32 +37,33 @@ object SmsParser {
         // Rule: A number followed by a currency indicator, preceded by success keywords
         var amount = 0.0
         val amountPatterns = listOf(
-            Regex("(\\d{2,})\\s*(?:fcfa|fcf|xaf|f)\\b"), // Standard: 5000 FCFA
-            Regex("(?:montant|somme|valeur)[:\\s]*(\\d{2,})") // Fallback: Montant: 5000
+            Regex("(\\d+(?:[.,]\\d+)?)\\s*(?:fcfa|fcf|xaf|f)\\b"), // Standard: 1500,50 FCFA
+            Regex("(?:montant|somme|valeur)[:\\s]*(\\d+(?:[.,]\\d+)?)") // Fallback: Montant: 5000
         )
         
         for (pattern in amountPatterns) {
             val match = pattern.find(cleanBody)
             if (match != null) {
-                amount = match.groupValues[1].toDoubleOrNull() ?: 0.0
+                val rawAmount = match.groupValues[1].replace(",", ".")
+                amount = rawAmount.toDoubleOrNull() ?: 0.0
                 if (amount > 0) break
             }
         }
 
         // 4. SURGICAL EXTRACTION - Transaction ID
         // Rule: Long alphanumeric string (8+ chars) that isn't a phone number
-        // We prioritize strings next to ID/REF keywords
-        val idKeywordsPattern = Regex("(?:id|ref|transaction|no|n°|reference)[:\\s]*([a-z0-9]{8,})")
+        // We prioritize strings next to ID/REF keywords. Include dots and dashes.
+        val idKeywordsPattern = Regex("(?:id|ref|transaction|no|n°|reference)[:\\s]*([a-z0-9.\\-]{8,})")
         val idMatch = idKeywordsPattern.find(cleanBody)
         
         val transactionId = if (idMatch != null) {
-            idMatch.groupValues[1].uppercase()
+            idMatch.groupValues[1].uppercase().removeSuffix(".")
         } else {
             // Fallback: Look for any isolated long alphanumeric string that isn't 9 digits starting with 6
             val words = cleanBody.split(" ")
             words.find { word ->
                 word.length >= 10 && !word.matches(Regex("^6[25-9]\\d{7}$")) && word.matches(Regex(".*[a-z0-9].*"))
-            }?.uppercase() ?: ""
+            }?.uppercase()?.removeSuffix(".") ?: ""
         }
 
         // 5. SURGICAL EXTRACTION - Sender Phone

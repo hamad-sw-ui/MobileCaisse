@@ -2,6 +2,7 @@ package com.reconsiliation.caisse.data.local.entity
 
 import androidx.room.Entity
 import androidx.room.ForeignKey
+import androidx.room.Index
 import androidx.room.PrimaryKey
 
 @Entity(
@@ -13,7 +14,8 @@ import androidx.room.PrimaryKey
             childColumns = ["venteId"],
             onDelete = ForeignKey.CASCADE
         )
-    ]
+    ],
+    indices = [Index(value = ["venteId"])]
 )
 data class VenteItemEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,

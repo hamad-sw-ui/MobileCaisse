@@ -7,7 +7,6 @@ import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.sms.SmsParser
 import com.reconsiliation.caisse.utils.PhoneUtil
 import com.reconsiliation.caisse.utils.FormatUtil
-import androidx.room.withTransaction
 import android.content.Context
 import android.net.Uri
 import android.provider.Settings
@@ -114,9 +113,9 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
             else -> return
         }
         
-        val key = com.reconsiliation.caisse.utils.LicenseUtil.generateActivationKey(boutique.phoneNumber, monthsToAdd)
-        activateSubscription(context, key)
-        logAction("AUTO_SUB", "Abonnement auto-activé ($monthsToAdd mois) via SMS MoMo")
+        // Le générateur de clé a été retiré de l'APK client pour sécurité (B-023).
+        // L'auto-activation n'est plus possible en local sans secret.
+        logAction("AUTO_SUB_PAYMENT", "Paiement de $amount FCFA reçu (équivalent $monthsToAdd mois). En attente de clé manuelle.", severity = "WARNING")
         markSmsAsProcessed(transactionId)
     }
 
@@ -130,7 +129,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun insertVenteWithItems(vente: VenteEntity, items: List<VenteItemEntity>, role: String? = null): Long {
-        return db.withTransaction {
+        return db.runInTransaction {
             checkSubscription()
             val activeSession = db.sessionDao().getActiveSession().first()
             val boutique = db.boutiqueDao().getBoutique().first()
@@ -249,14 +248,14 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
             }
 
             logAction("SALE_CREATE", "Vente #$venteId créée (${vente.amount} FCFA, ${vente.paymentMethod})", role)
-            return@withTransaction venteId
+            return@runInTransaction venteId
         }
     }
 
     suspend fun updateVente(vente: VenteEntity, newItems: List<VenteItemEntity>? = null, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             checkSubscription()
-            val oldVenteWithItems = db.venteDao().getVenteWithItemsById(vente.id) ?: return@withTransaction
+            val oldVenteWithItems = db.venteDao().getVenteWithItemsById(vente.id) ?: return@runInTransaction
             val oldVente = oldVenteWithItems.vente
             val oldItems = oldVenteWithItems.items
             if (oldVente.isLocked) throw Exception("Cette vente est clôturée et ne peut plus être modifiée.")
@@ -330,8 +329,8 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun deleteVente(vente: VenteEntity, role: String? = null) {
-        db.withTransaction {
-            val venteWithItems = db.venteDao().getVenteWithItemsById(vente.id) ?: return@withTransaction
+        db.runInTransaction {
+            val venteWithItems = db.venteDao().getVenteWithItemsById(vente.id) ?: return@runInTransaction
             if (venteWithItems.vente.isLocked) throw Exception("Impossible de supprimer une vente clôturée.")
             
             if (role == "STAFF") {
@@ -359,7 +358,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun confirmOrphanSale(vente: VenteEntity, product: StockEntity, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             val existing = db.venteDao().getVenteWithItemsById(vente.id)
             if (existing != null && existing.vente.isLocked) throw Exception("Vente clôturée.")
             val updatedVente = vente.copy(
@@ -381,7 +380,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun resolveSmsError(error: SmsErrorEntity, venteId: Long, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             val vente = db.venteDao().getVenteById(venteId) ?: throw Exception("Vente non trouvée")
             val parsed = SmsParser.parse(error.body, error.sender) ?: throw Exception("Impossible de lire ce SMS")
             
@@ -403,7 +402,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
         }
     }
     suspend fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null, role: String? = null): Long {
-        return db.withTransaction {
+        return db.runInTransaction {
             val parsed = SmsParser.parse(error.body)
             val amount = parsed?.amount ?: 0.0
             val vente = VenteEntity(
@@ -437,9 +436,9 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun adjustStock(stock: StockEntity, newQuantity: Double, reason: String, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             val diff = newQuantity - stock.quantity
-            if (diff == 0.0) return@withTransaction
+            if (diff == 0.0) return@runInTransaction
             db.stockDao().updateQuantity(stock.id, diff)
             if (diff < 0) {
                 val lossAmount = abs(diff) * stock.purchasePrice
@@ -473,7 +472,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun updateStock(stock: StockEntity, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             val oldStock = db.stockDao().getStockById(stock.id)
             if (oldStock != null) {
                 if (oldStock.purchasePrice != stock.purchasePrice) {
@@ -506,9 +505,9 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun getCustomerByPhone(phone: String) = db.customerDao().getCustomerByPhone(phone)
 
     suspend fun addRepayment(customerId: Long, amount: Double, method: String, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             checkSubscription()
-            val customer = db.customerDao().getCustomerById(customerId) ?: return@withTransaction
+            val customer = db.customerDao().getCustomerById(customerId) ?: return@runInTransaction
             
             // Check if amount exceeds debt
             if (amount > customer.totalDebt) {
@@ -525,7 +524,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun processMoMoRepayment(phone: String, amount: Double, transactionId: String) {
-        db.withTransaction {
+        db.runInTransaction {
             val debtor = db.customerDao().getDebtorByPhone(phone)
             if (debtor != null) {
                 addRepayment(debtor.id, amount, "MOMO")
@@ -579,7 +578,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun updateSupplierDebt(supplierId: Long, amount: Double) = db.supplierDao().updateDebt(supplierId, amount)
 
     suspend fun addSupply(supply: SupplyEntity, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             checkSubscription()
             val currentStock = db.stockDao().getStockById(supply.productId)
             if (currentStock != null) {
@@ -611,7 +610,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun closeSession(balance: Double, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             val active = db.sessionDao().getActiveSession().first()
             if (active != null) {
                 val start = active.startTime
@@ -728,9 +727,9 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun returnVenteItem(venteId: Long, productId: Long, quantity: Double, refundAmount: Double, refundMethod: String = "AVOIR", role: String? = null) {
-        db.withTransaction {
-            val venteWithItems = db.venteDao().getVenteWithItemsById(venteId) ?: return@withTransaction
-            val item = venteWithItems.items.find { it.productId == productId } ?: return@withTransaction
+        db.runInTransaction {
+            val venteWithItems = db.venteDao().getVenteWithItemsById(venteId) ?: return@runInTransaction
+            val item = venteWithItems.items.find { it.productId == productId } ?: return@runInTransaction
             if (quantity > item.quantity) throw Exception("Quantité invalide")
             
             // 1. Stock Return
@@ -963,13 +962,15 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
             existing.copy(name = name.trim(), role = role, phone = phone?.trim())
         } else {
             require(pin.length == 4) { "Le code PIN doit comporter 4 chiffres" }
+            val iterations = 100_000
             val salt = sec.generateSalt()
-            val hash = sec.hashPinPbkdf2(pin, salt)
+            val hash = sec.hashPinPbkdf2(pin, salt, iterations)
+            val saltWithIterations = "$salt:$iterations"
             existing?.copy(
                 name = name.trim(), role = role, phone = phone?.trim(),
-                pinHash = hash, pinSalt = salt
+                pinHash = hash, pinSalt = saltWithIterations
             ) ?: StaffEntity(
-                name = name.trim(), pinHash = hash, pinSalt = salt,
+                name = name.trim(), pinHash = hash, pinSalt = saltWithIterations,
                 phone = phone?.trim(), role = role, isActive = true
             )
         }
@@ -1129,7 +1130,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun deleteStock(stock: StockEntity) {
-        db.withTransaction {
+        db.runInTransaction {
             if (db.venteDao().isProductUsed(stock.id)) throw Exception("Historique présent")
             db.stockDao().delete(stock)
         }
@@ -1144,7 +1145,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun deleteCategory(category: CategoryEntity) = db.categoryDao().delete(category)
 
     suspend fun performAudit(note: String?, items: List<AuditItemEntity>) {
-        db.withTransaction {
+        db.runInTransaction {
             checkSubscription()
             val totalDiscrepancy = items.sumOf { (it.physicalQuantity - it.systemQuantity) * it.purchasePrice }
             val auditId = db.auditDao().insertAudit(AuditEntity(date = Date(), note = note, totalDiscrepancy = totalDiscrepancy))
@@ -1167,7 +1168,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     suspend fun isSmsProcessed(transactionId: String) = db.processedSmsDao().exists(transactionId)
 
     suspend fun performClosure(closure: ClosureEntity, role: String? = null) {
-        db.withTransaction {
+        db.runInTransaction {
             checkSubscription()
             db.closureDao().insert(closure)
             lockSalesForToday()
@@ -1185,7 +1186,7 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
     }
 
     suspend fun purgeOldData(months: Int, role: String? = null): Int {
-        return db.withTransaction {
+        return db.runInTransaction {
             val calendar = Calendar.getInstance()
             calendar.add(Calendar.MONTH, -months)
             val beforeDate = calendar.time
@@ -1293,4 +1294,51 @@ class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDat
             null
         }
     }
+
+    /**
+     * Vérifie si la base de données existante est trop ancienne (< v18).
+     *
+     * Room ne permet pas de migrer depuis des versions très anciennes sans
+     * fournir toutes les migrations intermédiaires. Selon la décision D1,
+     * ces bases sont recréées après accord utilisateur.
+     *
+     * @throws ObsoleteDatabaseException si la version est comprise entre 1 et 17.
+     */
+    fun checkObsoleteDatabase(context: Context) {
+        val dbFile = context.getDatabasePath("caisse_database")
+        if (!dbFile.exists()) return
+
+        // Ouverture en SQLite brut (SQLCipher) pour lire la version sans Room.
+        // On utilise la clé legacy car une base < v18 utilise forcément celle-ci.
+        val keyBytes = com.reconsiliation.caisse.utils.SecurityUtil.getDatabaseKeyCompat(context)
+        var sqlDb: net.sqlcipher.database.SQLiteDatabase? = null
+        try {
+            // SQLCipher attend souvent la clé sous forme de String ou CharArray.
+            // Le format exact dépend de comment elle a été initialisée historiquement.
+            sqlDb = net.sqlcipher.database.SQLiteDatabase.openDatabase(
+                dbFile.absolutePath, keyBytes.joinToString("") { "%02x".format(it) }, 
+                null, net.sqlcipher.database.SQLiteDatabase.OPEN_READONLY
+            )
+            val version = sqlDb?.version ?: 0
+            if (version in 1..17) {
+                throw ObsoleteDatabaseException(version)
+            }
+        } catch (e: Exception) {
+            if (e is ObsoleteDatabaseException) throw e
+            // Les erreurs de déchiffrement (mauvaise clé) ou fichiers corrompus 
+            // sont ignorées ici car elles ne permettent pas d'affirmer que 
+            // la base est obsolète. Room les gérera ensuite.
+        } finally {
+            sqlDb?.close()
+        }
+    }
+
+    /** Supprime physiquement les fichiers de la base de données. */
+    fun deletePhysicalDatabase(context: Context) {
+        db.close()
+        context.deleteDatabase("caisse_database")
+    }
 }
+
+/** Exception levée lorsqu'une base de données est trop ancienne pour être migrée. */
+class ObsoleteDatabaseException(val version: Int) : Exception("Base de données obsolète (v$version)")

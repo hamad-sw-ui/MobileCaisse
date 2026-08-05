@@ -98,7 +98,10 @@ object BackupManager {
     private const val ENTRY_METADATA = "metadata.enc"
     private const val ENTRY_DATABASE = "database.enc"
 
-    private val json = Json { ignoreUnknownKeys = true }
+    private val json = Json { 
+        ignoreUnknownKeys = true
+        encodeDefaults = true
+    }
 
     // ==================== Export ====================
 

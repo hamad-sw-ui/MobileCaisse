@@ -163,12 +163,13 @@ d'abord les zones **pures et à fort risque financier**.
 
 | Ordre | Tâche | Réf. |
 |---|---|---|
-| 3.1 | Tests `SmsParser` (crée automatiquement des ventes → risque n°1) | B-090 |
-| 3.2 | Tests `FeeCalculator` (impacte directement les montants) | B-091 |
-| 3.3 | Tests `LicenseUtil` (valide / expirée / falsifiée) | B-092 |
-| 3.4 | Tests `AnomalyEngine` | B-093 |
-| 3.5 | Tests de repository sur base Room en mémoire (vente + stock + recette + dette) | B-094 |
-| 3.6 | Supprimer les tests générés vides | B-096 |
+| 3.1 | Tests `SmsParser` (crée automatiquement des ventes → risque n°1) | B-090 | ✅ |
+| 3.2 | Tests `FeeCalculator` (impacte directement les montants) | B-091 | ✅ |
+| 3.3 | Tests `LicenseUtil` (valide / expirée / falsifiée) | B-092 | ✅ |
+| 3.4 | Tests `AnomalyEngine` | B-093 | ✅ |
+| 3.5 | **Validation orchestration Repository (JVM)** | B-094A | ✅ |
+| 3.6 | Validation intégration Room/SQLCipher (Android) | B-094B | □ **wait env** |
+| 3.7 | Supprimer les tests générés vides | B-096 | ✅ |
 
 **Critère de sortie** : couverture significative sur `utils/` et `sms/` ;
 `REPORTS/rapport_couverture_<date>.md`.

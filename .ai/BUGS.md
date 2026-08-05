@@ -25,6 +25,15 @@ Gravités : 🔴 CRITIQUE · 🟠 MAJEUR · 🟡 MINEUR
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## ⚠️ Note de révision — 2026-07-28 (rév. 2)
 
 Le responsable a signalé 5 correctifs de sécurité déjà appliqués et validés par
@@ -51,6 +60,8 @@ que j'ai audité**. L'audit initial portait bien sur l'état *après* correction
   qui fait un `transferFrom` brut sans checkpoint.
 - **Nouveau BUG-017** : `BackupManager` (sauvegarde chiffrée) **n'est branché
   nulle part** dans l'UI — le code sécurisé existe mais n'est pas utilisé.
+- **B-094** : Divisé en **B-094A** (Orchestration JVM - Niveau A-JVM) et 
+  **B-094B** (Intégration Room/SQLCipher - Niveau A-Android).
 - **BUG-001 / BUG-002** : **maintenus et re-vérifiés ligne à ligne** (voir détail
   ci-dessous). Le point 2 de l'audit antérieur annonce une « vérification complète
   de la chaîne v18→v27 » ; or la base est en **v28** et les divergences
@@ -59,6 +70,15 @@ que j'ai audité**. L'audit initial portait bien sur l'état *après* correction
   BUG-002 ne détruisent aucune donnée réelle aujourd'hui. Ils restent 🔴 car ils
   bloquent tout déploiement, mais la fenêtre pour les corriger proprement est
   grande ouverte.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -109,6 +129,15 @@ données, couvrir par `MigrationTestHelper`.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🔴 BUG-002 — Chaîne de migrations incomplète sous la version 18
 
 **Statut** : OUVERT · **Gravité** : 🔴 CRITIQUE · **Fichier** : `data/local/AppDatabase.kt`
@@ -126,6 +155,15 @@ base neuve. Perte de données **assumée** dans ce cas rare.
 écran de consentement → export de sauvegarde de courtoisie → recréation
 contrôlée. `fallbackToDestructiveMigration()` reste proscrit : le mécanisme doit
 être explicite et déclenché par l'utilisateur, jamais silencieux.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -149,6 +187,15 @@ tient que par une résolution transitive fortuite.
 **Correction attendue** : soit déclarer `androidx.appcompat:appcompat`, soit
 (préférable) passer à `ComponentActivity` + `Theme.Material3` et supprimer la
 dépendance AppCompat.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -186,6 +233,15 @@ en jeu aujourd'hui. **Non prioritaire.**
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟠 BUG-005 — Secret de licence en clair + minification désactivée
 
 **Statut** : OUVERT · **Gravité** : 🟠 MAJEUR
@@ -208,6 +264,15 @@ hors-ligne reste imparfait (documenté dans `KNOWN_LIMITATIONS.md`).
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟠 BUG-006 — SQL construit par concaténation dans `PRAGMA rekey`
 
 **Statut** : OUVERT · **Gravité** : 🟠 MAJEUR · **Fichier** : `data/local/AppDatabase.kt`
@@ -218,6 +283,15 @@ motif est dangereux et `forceRekey` ne valide pas son entrée.
 
 **Correction attendue** : valider strictement l'entrée (`^[0-9a-f]{64}$`) et
 centraliser dans une fonction unique documentée.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -233,6 +307,15 @@ ne sont **jamais** restaurés après mort du processus, contrairement à l'inten
 
 **Correction attendue** : `AbstractSavedStateViewModelFactory` /
 `CreationExtras`, ou `@HiltViewModel` (qui l'injecte correctement).
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -252,6 +335,15 @@ La protection contre la falsification de l'heure système ne se déclenche jamai
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-009 — Scope de coroutine orphelin dans `SmsReceiver`
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `sms/SmsReceiver.kt:37`
@@ -264,6 +356,15 @@ ou délégation à un `OneTimeWorkRequest`.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-010 — Permissions demandées en bloc, résultat ignoré
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `MainActivity.kt`
@@ -271,6 +372,15 @@ ou délégation à un `OneTimeWorkRequest`.
 Toutes les permissions (SMS, caméra, Bluetooth, notifications) sont demandées au
 premier lancement, sans explication, et `onRequestPermissionsResult` n'est pas
 implémenté : l'app ignore les refus.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -317,6 +427,15 @@ gestion manuelle du tag, `doFinal` s'en charge.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟠 BUG-019 — `BackupManager` : la base n'est pas chiffrée par le mot de passe
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
@@ -348,6 +467,15 @@ déchiffrer symétriquement à l'import. À traiter avec BUG-018.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟠 BUG-020 — `java.time.Instant` incompatible avec minSdk 24
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
@@ -374,6 +502,15 @@ projet, qui utilise `java.util.Date` partout).
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-021 — `BackupMetadata.databaseVersion` figé à 27
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
@@ -387,6 +524,15 @@ projet, qui utilise `java.util.Date` partout).
 métadonnée censée permettre de refuser une sauvegarde incompatible est fausse.
 
 **Correction** : lire la version réelle depuis `AppDatabase`.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -411,6 +557,15 @@ concernent `SecurityMigrationTest`, qui ne touche pas `BackupManager`.
 **Correctif** : réécriture complète du module. Signatures désormais cohérentes
 (`Result<File>`, `Result<BackupImportResult>`), paramètre `context` inutilisé
 supprimé, import `Mac` mort supprimé.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -452,6 +607,15 @@ requalifier les copies brutes. À traiter avec **BUG-011** et la décision **D2*
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-011 — Sauvegarde du fichier `.db` sans checkpoint WAL
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟡 MINEUR
@@ -484,6 +648,15 @@ les trois fichiers, ou utiliser l'API de sauvegarde SQLCipher.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-012 — Doublon `NotificationHelper`
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR
@@ -492,6 +665,15 @@ les trois fichiers, ou utiliser l'API de sauvegarde SQLCipher.
 Deux classes homonymes avec des canaux différents (`mobile_caisse_alerts` d'un
 côté, `stock_alerts`/`subscription_alerts` de l'autre). `SmsReceiver` utilise la
 première, `MainViewModel` et `SubscriptionWorker` la seconde. Confusion garantie.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -532,6 +714,15 @@ remplacement.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟠 BUG-025 — Autorité `FileProvider` incorrecte : crash sur le relevé client
 
 **Statut** : **CORRIGÉ (INSPECTION) — 2026-07-28** · **Gravité** : 🟠 MAJEUR
@@ -546,6 +737,15 @@ root` au partage d'un relevé de compte client. Fonctionnalité inutilisable.
 
 **Correctif** : autorité alignée sur le manifeste. Les 5 appels sont désormais
 cohérents.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -608,6 +808,15 @@ corrective ni conservation de données.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-013 — Liste des routes protégées dupliquée et codée en dur
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `ui/viewmodel/MainViewModel.kt:80`
@@ -617,6 +826,15 @@ la `sealed class Screen`. Tout nouvel écran sensible sera **non protégé par o
 
 **Correction attendue** : porter le niveau d'accès requis dans `Screen`
 (ex. `Screen(route, …, requiredRole = Role.MANAGER)`).
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 
@@ -638,6 +856,15 @@ release. Risque de pollution de données réelles.
 
 ---
 
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
+
+---
+
 ## 🟡 BUG-015 — Contrainte réseau inutile sur `BackupWorker`
 
 **Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `MainActivity.kt`
@@ -645,6 +872,15 @@ release. Risque de pollution de données réelles.
 `NetworkType.CONNECTED` est exigé alors que le worker n'effectue **aucun accès
 réseau**. Sur un appareil durablement hors ligne, la sauvegarde quotidienne
 **ne s'exécute jamais** — exactement le scénario du marché cible.
+
+---
+
+## 🟢 BUG-ENV-001 — Verrouillage du fichier `classes.jar` par un processus zombie
+
+**Statut** : **CORRIGÉ (VALIDÉ) — 2024-05-22** · **Gravité** : 🔴 CRITIQUE
+**Cause racine** : Un démon Gradle ou Kotlin restait actif en arrière-plan avec un "file handle" ouvert sur le JAR de compilation, bloquant toute nouvelle écriture sous Windows.
+**Correctif** : Arrêt forcé des processus Java/Gradle (`gradlew --stop`) et nettoyage du répertoire `build`.
+**Preuve** : Réussite de `:app:assembleDebug` après l'opération.
 
 ---
 

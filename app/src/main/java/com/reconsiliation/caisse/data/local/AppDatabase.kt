@@ -7,6 +7,7 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import androidx.room.migration.Migration
+import androidx.room.withTransaction
 import androidx.sqlite.db.SupportSQLiteDatabase
 import com.reconsiliation.caisse.data.local.dao.*
 import com.reconsiliation.caisse.data.local.entity.*
@@ -24,8 +25,8 @@ import net.sqlcipher.database.SupportFactory
         StockMovementEntity::class, CategoryEntity::class, RecipeEntity::class, 
         StaffEntity::class
     ],
-    version = 28,
-    exportSchema = false
+    version = 30,
+    exportSchema = true
 )
 @TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
@@ -50,9 +51,75 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun recipeDao(): RecipeDao
     abstract fun staffDao(): StaffDao
 
+    /**
+     * Exécute un bloc de code dans une transaction Room.
+     * Cette méthode permet de mocker/faker le comportement des transactions dans les tests JVM (B-094A).
+     */
+    open suspend fun <R> runInTransaction(block: suspend () -> R): R {
+        return withTransaction { block() }
+    }
+
     companion object {
         @Volatile
         private var INSTANCE: AppDatabase? = null
+
+        val MIGRATION_29_30 = object : Migration(29, 30) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Index sur vente_items.venteId
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_vente_items_venteId` ON `vente_items` (`venteId`)")
+
+                // 2. AuditItemEntity (Ajout FK et Index via table temporaire)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `audit_items_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `auditId` INTEGER NOT NULL, `productId` INTEGER NOT NULL, `productName` TEXT NOT NULL, `systemQuantity` REAL NOT NULL, `physicalQuantity` REAL NOT NULL, `unitPrice` REAL NOT NULL, `purchasePrice` REAL NOT NULL, FOREIGN KEY(`auditId`) REFERENCES `audits`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+                db.execSQL("INSERT INTO audit_items_new SELECT * FROM audit_items")
+                db.execSQL("DROP TABLE audit_items")
+                db.execSQL("ALTER TABLE audit_items_new RENAME TO audit_items")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_audit_items_auditId` ON `audit_items` (`auditId`)")
+            }
+        }
+
+        val MIGRATION_28_29 = object : Migration(28, 29) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                // 1. Correction table 'boutique' (totalQuantityOnReceipt -> showTotalQuantityOnReceipt)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `boutique_new` (`id` INTEGER NOT NULL, `name` TEXT NOT NULL, `ownerName` TEXT NOT NULL, `phoneNumber` TEXT NOT NULL, `operator` TEXT NOT NULL, `momoNumber` TEXT NOT NULL, `currency` TEXT NOT NULL, `pinHash` TEXT, `pinSalt` TEXT, `isSetupComplete` INTEGER NOT NULL, `allowNegativeStock` INTEGER NOT NULL, `printerAddress` TEXT, `hideProfitsFromStaff` INTEGER NOT NULL, `managerPinHash` TEXT, `managerPinSalt` TEXT, `taxName` TEXT NOT NULL, `taxRate` REAL NOT NULL, `isTaxEnabled` INTEGER NOT NULL, `address` TEXT, `receiptFooter` TEXT, `showCustomerPhoneOnReceipt` INTEGER NOT NULL, `showTaxesOnReceipt` INTEGER NOT NULL, `showTotalQuantityOnReceipt` INTEGER NOT NULL, `printMerchantCopy` INTEGER NOT NULL, `managerCode` TEXT NOT NULL, PRIMARY KEY(`id`))")
+                db.execSQL("INSERT INTO boutique_new (id, name, ownerName, phoneNumber, operator, momoNumber, currency, pinHash, pinSalt, isSetupComplete, allowNegativeStock, printerAddress, hideProfitsFromStaff, managerPinHash, managerPinSalt, taxName, taxRate, isTaxEnabled, address, receiptFooter, showCustomerPhoneOnReceipt, showTaxesOnReceipt, showTotalQuantityOnReceipt, printMerchantCopy, managerCode) SELECT id, name, ownerName, phoneNumber, operator, momoNumber, currency, pinHash, pinSalt, isSetupComplete, allowNegativeStock, printerAddress, hideProfitsFromStaff, managerPinHash, managerPinSalt, taxName, taxRate, isTaxEnabled, address, receiptFooter, showCustomerPhoneOnReceipt, showTaxesOnReceipt, totalQuantityOnReceipt, printMerchantCopy, managerCode FROM boutique")
+                db.execSQL("DROP TABLE boutique")
+                db.execSQL("ALTER TABLE boutique_new RENAME TO boutique")
+
+                // 2. Correction table 'processed_sms' (Suppression colonnes en trop)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `processed_sms_new` (`transactionId` TEXT NOT NULL, `processedDate` INTEGER NOT NULL, PRIMARY KEY(`transactionId`))")
+                // On ne garde que les colonnes qui existent dans l'entité v29
+                db.execSQL("INSERT INTO processed_sms_new (transactionId, processedDate) SELECT transactionId, processedDate FROM processed_sms")
+                db.execSQL("DROP TABLE processed_sms")
+                db.execSQL("ALTER TABLE processed_sms_new RENAME TO processed_sms")
+
+                // 3. Correction table 'categories' (Ajout 'type', suppression autres)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `categories_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL)")
+                db.execSQL("INSERT INTO categories_new (id, name, type) SELECT id, name, 'PRODUCT' FROM categories")
+                db.execSQL("DROP TABLE categories")
+                db.execSQL("ALTER TABLE categories_new RENAME TO categories")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_categories_name` ON `categories` (`name`)")
+
+                // 4. Correction table 'suppliers' (Divergence totale)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `suppliers_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT, `address` TEXT, `totalDebt` REAL NOT NULL)")
+                db.execSQL("INSERT INTO suppliers_new (id, name, phone, address, totalDebt) SELECT id, name, phoneNumber, address, 0.0 FROM suppliers")
+                db.execSQL("DROP TABLE suppliers")
+                db.execSQL("ALTER TABLE suppliers_new RENAME TO suppliers")
+                db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_suppliers_name` ON `suppliers` (`name`)")
+
+                // 5. Correction table 'sessions' (Divergence totale)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `sessions_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `staffId` INTEGER, `sellerName` TEXT NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER, `openingBalance` REAL NOT NULL, `closingBalance` REAL, `expectedBalance` REAL, `totalCashSales` REAL NOT NULL, `totalMomoSales` REAL NOT NULL, `totalExpenses` REAL NOT NULL, `isActive` INTEGER NOT NULL)")
+                db.execSQL("INSERT INTO sessions_new (id, staffId, sellerName, startTime, endTime, openingBalance, closingBalance, expectedBalance, totalCashSales, totalMomoSales, totalExpenses, isActive) SELECT id, staffId, staffName, startTime, endTime, startCash, actualEndCash, expectedEndCash, 0.0, 0.0, 0.0, CASE WHEN status = 'OPEN' THEN 1 ELSE 0 END FROM sessions")
+                db.execSQL("DROP TABLE sessions")
+                db.execSQL("ALTER TABLE sessions_new RENAME TO sessions")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_staffId` ON `sessions` (`staffId`)")
+
+                // 6. Correction table 'staff' (pinSalt nullable, phone ajouté)
+                db.execSQL("CREATE TABLE IF NOT EXISTS `staff_new` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `pinHash` TEXT NOT NULL, `pinSalt` TEXT, `phone` TEXT, `isActive` INTEGER NOT NULL, `role` TEXT NOT NULL)")
+                db.execSQL("INSERT INTO staff_new (id, name, pinHash, pinSalt, phone, isActive, role) SELECT id, name, pinHash, pinSalt, NULL, isActive, role FROM staff")
+                db.execSQL("DROP TABLE staff")
+                db.execSQL("ALTER TABLE staff_new RENAME TO staff")
+            }
+        }
 
         val MIGRATION_27_28 = object : Migration(27, 28) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -101,7 +168,7 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("ALTER TABLE boutique ADD COLUMN receiptFooter TEXT")
                 db.execSQL("ALTER TABLE boutique ADD COLUMN showCustomerPhoneOnReceipt INTEGER NOT NULL DEFAULT 1")
                 db.execSQL("ALTER TABLE boutique ADD COLUMN showTaxesOnReceipt INTEGER NOT NULL DEFAULT 1")
-                db.execSQL("ALTER TABLE boutique ADD COLUMN totalQuantityOnReceipt INTEGER NOT NULL DEFAULT 0")
+                db.execSQL("ALTER TABLE boutique ADD COLUMN showTotalQuantityOnReceipt INTEGER NOT NULL DEFAULT 0")
                 db.execSQL("ALTER TABLE boutique ADD COLUMN printMerchantCopy INTEGER NOT NULL DEFAULT 0")
             }
         }
@@ -115,21 +182,21 @@ abstract class AppDatabase : RoomDatabase() {
 
         val MIGRATION_22_23 = object : Migration(22, 23) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `categories` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `description` TEXT, `color` INTEGER NOT NULL DEFAULT -1, `icon` TEXT)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `categories` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL)")
                 db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_categories_name` ON `categories` (`name`)")
             }
         }
 
         val MIGRATION_23_24 = object : Migration(23, 24) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `suppliers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phoneNumber` TEXT, `address` TEXT, `email` TEXT, `category` TEXT, `notes` TEXT)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `suppliers` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `phone` TEXT, `address` TEXT, `totalDebt` REAL NOT NULL)")
                 db.execSQL("CREATE UNIQUE INDEX IF NOT EXISTS `index_suppliers_name` ON `suppliers` (`name`)")
             }
         }
 
         val MIGRATION_24_25 = object : Migration(24, 25) {
             override fun migrate(db: SupportSQLiteDatabase) {
-                db.execSQL("CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `staffId` INTEGER NOT NULL, `staffName` TEXT NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER, `startCash` DOUBLE NOT NULL, `expectedEndCash` DOUBLE, `actualEndCash` DOUBLE, `status` TEXT NOT NULL, `notes` TEXT, FOREIGN KEY(`staffId`) REFERENCES `staff`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `staffId` INTEGER, `sellerName` TEXT NOT NULL, `startTime` INTEGER NOT NULL, `endTime` INTEGER, `openingBalance` REAL NOT NULL, `closingBalance` REAL, `expectedBalance` REAL, `totalCashSales` REAL NOT NULL, `totalMomoSales` REAL NOT NULL, `totalExpenses` REAL NOT NULL, `isActive` INTEGER NOT NULL, FOREIGN KEY(`staffId`) REFERENCES `staff`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_staffId` ON `sessions` (`staffId`)")
                 
                 db.execSQL("ALTER TABLE ventes ADD COLUMN sessionId INTEGER")
@@ -179,7 +246,7 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, 
                     MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24,
                     MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
-                    MIGRATION_27_28
+                    MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30
                 )
                 
                 try {
@@ -235,8 +302,8 @@ abstract class AppDatabase : RoomDatabase() {
                         val newKey = com.reconsiliation.caisse.utils.SecurityUtil.deriveNewKey(phone, managerCode)
                         val newKeyPassphrase = newKey.joinToString("") { "%02x".format(it) }
                         
-                        // Action de re-chiffrement standard (PBKDF2 appliqué sur la passphrase hex)
-                        db.execSQL("PRAGMA rekey = '$newKeyPassphrase'")
+                        // Action de re-chiffrement sécurisée (B-025)
+                        executeRekey(db, newKeyPassphrase)
                         
                         // Force le flush sur le disque en fermant
                         db.close()
@@ -271,7 +338,7 @@ abstract class AppDatabase : RoomDatabase() {
                         var db: SQLiteDatabase? = null
                         try {
                             db = SQLiteDatabase.openOrCreateDatabase(dbFile.absolutePath, currentKey, null)
-                            db.execSQL("PRAGMA rekey = '$newKeyPassphrase'")
+                            executeRekey(db, newKeyPassphrase)
                             com.reconsiliation.caisse.utils.SecurityUtil.saveMigratedKey(context, newKey)
                         } finally {
                             db?.close()
@@ -281,6 +348,18 @@ abstract class AppDatabase : RoomDatabase() {
                     getDatabase(context)
                 }
             }
+        }
+
+        /**
+         * Centralise et sécurise l'exécution de PRAGMA rekey (B-025).
+         * Valide que la passphrase est une chaîne hexadécimale de 64 caractères (256 bits).
+         */
+        private fun executeRekey(db: SQLiteDatabase?, hexPassphrase: String) {
+            requireNotNull(db) { "Base de données non initialisée" }
+            require(hexPassphrase.matches(Regex("^[0-9a-fA-F]{64}$"))) {
+                "Passphrase de re-chiffrement invalide (doit être 64 caractères hex)"
+            }
+            db.execSQL("PRAGMA rekey = '$hexPassphrase'")
         }
     }
 }

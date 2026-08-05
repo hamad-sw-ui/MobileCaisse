@@ -26,12 +26,24 @@ class SecurityUtilTest {
     }
 
     @Test
-    fun `verifyPin should pass with correct PBKDF2 hash and salt`() = runBlocking {
+    fun `verifyPin should pass with correct PBKDF2 hash and new format salt`() = runBlocking {
         val pin = "1234"
+        val iterations = 100_000
         val salt = SecurityUtil.generateSalt()
-        val hash = SecurityUtil.hashPinPbkdf2(pin, salt)
+        val hash = SecurityUtil.hashPinPbkdf2(pin, salt, iterations)
+        val saltWithIterations = "$salt:$iterations"
         
-        assertTrue("Correct PIN with salt should pass", SecurityUtil.verifyPin(pin, hash, salt))
+        assertTrue("Correct PIN with new format salt should pass", SecurityUtil.verifyPin(pin, hash, saltWithIterations))
+    }
+
+    @Test
+    fun `verifyPin should pass with correct PBKDF2 hash and legacy format salt`() = runBlocking {
+        val pin = "1234"
+        val iterations = 5000
+        val salt = SecurityUtil.generateSalt()
+        val hash = SecurityUtil.hashPinPbkdf2(pin, salt, iterations)
+        
+        assertTrue("Correct PIN with legacy salt should pass", SecurityUtil.verifyPin(pin, hash, salt))
     }
 
     @Test

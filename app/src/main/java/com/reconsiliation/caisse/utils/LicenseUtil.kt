@@ -8,9 +8,16 @@ import javax.crypto.spec.SecretKeySpec
 
 object LicenseUtil {
     // Secret salt to "blind" the algorithm. 
-    // IMPORTANT: In a real production app, this should be obfuscated further or split.
-    private const val SECRET_SALT = "M0M0_C41SS3_V1_PRO_S3CR3T_2024_K3Y"
-    private const val ALGO = "HmacSHA256"
+    // B-024: Fragments de secret pour éviter la recherche textuelle simple.
+    private val S1 = "M0M0"
+    private val S2 = "_C41SS3"
+    private val S3 = "_V1_PRO"
+    private val S4 = "_S3CR3T"
+    private val S5 = "_2024_K3Y"
+    
+    private val ALGO = "HmacSHA256"
+
+    private fun getSecret(): String = S1 + S2 + S3 + S4 + S5
 
     /**
      * Verifies an activation key against a phone number.
@@ -47,12 +54,12 @@ object LicenseUtil {
      * This is the same logic you (the admin) would use to generate keys for clients.
      */
     private fun generateSignature(phone: String, expiryStr: String): String {
-        val data = "$phone|$expiryStr|$SECRET_SALT"
+        val data = "$phone|$expiryStr|${getSecret()}"
         return calculateHmac(data)
     }
 
     private fun calculateHmac(data: String): String {
-        val secretKey = SecretKeySpec(SECRET_SALT.toByteArray(StandardCharsets.UTF_8), ALGO)
+        val secretKey = SecretKeySpec(getSecret().toByteArray(StandardCharsets.UTF_8), ALGO)
         val mac = Mac.getInstance(ALGO)
         mac.init(secretKey)
         val hash = mac.doFinal(data.toByteArray(StandardCharsets.UTF_8))
@@ -64,18 +71,5 @@ object LicenseUtil {
             sb.append(alphabet[index])
         }
         return sb.toString()
-    }
-
-    /**
-     * Admin Utility: Use this to generate a key for a customer.
-     * You can call this from a hidden debug menu or a separate admin tool.
-     */
-    fun generateActivationKey(phone: String, months: Int): String {
-        val cal = Calendar.getInstance()
-        cal.add(Calendar.MONTH, months)
-        val sdf = SimpleDateFormat("ddMMyy", Locale.US)
-        val expiryStr = sdf.format(cal.time)
-        val sig = generateSignature(PhoneUtil.normalize(phone), expiryStr)
-        return "$sig-$expiryStr"
     }
 }

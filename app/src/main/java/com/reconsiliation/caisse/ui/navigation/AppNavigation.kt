@@ -31,7 +31,12 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 
-sealed class Screen(val route: String, val title: String? = null, val icon: androidx.compose.ui.graphics.vector.ImageVector? = null) {
+sealed class Screen(
+    val route: String, 
+    val title: String? = null, 
+    val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
+    val isManagerOnly: Boolean = false
+) {
     data object Splash : Screen("splash")
     data object Onboarding : Screen("onboarding")
     data object Setup : Screen("setup")
@@ -46,22 +51,22 @@ sealed class Screen(val route: String, val title: String? = null, val icon: andr
     data object Closure : Screen("closure")
     data object Debts : Screen("debts")
     data object Expenses : Screen("expenses")
-    data object Settings : Screen("settings", "Paramètres", Icons.Default.Settings)
+    data object Settings : Screen("settings", "Paramètres", Icons.Default.Settings, isManagerOnly = true)
     data object Support : Screen("support")
-    data object Reports : Screen("reports", "Rapports", Icons.Default.BarChart)
-    data object EditBoutique : Screen("edit_boutique")
+    data object Reports : Screen("reports", "Rapports", Icons.Default.BarChart, isManagerOnly = true)
+    data object EditBoutique : Screen("edit_boutique", isManagerOnly = true)
     data object PrintSettings : Screen("print_settings")
-    data object RestorationWizard : Screen("restoration_wizard")
-    data object Audit : Screen("audit")
+    data object RestorationWizard : Screen("restoration_wizard", isManagerOnly = true)
+    data object Audit : Screen("audit", isManagerOnly = true)
     data object AuditHistory : Screen("audit_history")
     data object SessionHistory : Screen("session_history")
     data object SupplyHistory : Screen("supply_history")
-    data object ClosureHistory : Screen("closure_history")
-    data object ActionLogs : Screen("action_logs")
-    data object Suppliers : Screen("suppliers")
-    data object Categories : Screen("categories")
-    data object Staff : Screen("staff")
-    data object Maintenance : Screen("maintenance")
+    data object ClosureHistory : Screen("closure_history", isManagerOnly = true)
+    data object ActionLogs : Screen("action_logs", isManagerOnly = true)
+    data object Suppliers : Screen("suppliers", isManagerOnly = true)
+    data object Categories : Screen("categories", isManagerOnly = true)
+    data object Staff : Screen("staff", isManagerOnly = true)
+    data object Maintenance : Screen("maintenance", isManagerOnly = true)
     data object StockMovements : Screen("stock_movements/{productId}") {
         fun createRoute(productId: Long) = "stock_movements/$productId"
     }
@@ -75,6 +80,14 @@ sealed class Screen(val route: String, val title: String? = null, val icon: andr
         fun createRoute(venteId: Long) = "sale_detail/$venteId"
     }
     data object SupplierInflow : Screen("supplier_inflow")
+
+    companion object {
+        /** Liste des routes nécessitant le rôle MANAGER (B-027). */
+        val MANAGER_ROUTES = listOf(
+            Settings, Reports, EditBoutique, RestorationWizard, Audit,
+            ClosureHistory, ActionLogs, Suppliers, Categories, Staff, Maintenance
+        ).map { it.route }
+    }
 }
 
 @Composable

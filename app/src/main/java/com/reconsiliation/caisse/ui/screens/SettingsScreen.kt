@@ -40,6 +40,7 @@ fun SettingsScreen(navController: NavController) {
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val backupState by viewModel.backupState.collectAsState()
     val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
+    val contextForSync = androidx.compose.ui.platform.LocalContext.current
 
     Scaffold(
         snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
@@ -118,7 +119,6 @@ fun SettingsScreen(navController: NavController) {
             HorizontalDivider()
             
             Text("Sauvegarde & Export", style = MaterialTheme.typography.titleMedium, color = Primary)
-            val contextForSync = androidx.compose.ui.platform.LocalContext.current
             Button(
                 onClick = { showBackupPasswordDialog = true },
                 modifier = Modifier.fillMaxWidth(),

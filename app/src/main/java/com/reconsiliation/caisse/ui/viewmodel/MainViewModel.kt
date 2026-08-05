@@ -87,20 +87,8 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     }
 
     private fun isManagerPageRoute(route: String): Boolean {
-        // List of routes that strictly require MANAGER role
-        return route in listOf(
-            "settings",
-            "reports",
-            "audit",
-            "action_logs",
-            "maintenance",
-            "closure_history",
-            "edit_boutique",
-            "suppliers",
-            "categories",
-            "restoration_wizard",
-            "staff"
-        )
+        // Source de vérité centralisée dans Screen (B-027)
+        return route in com.reconsiliation.caisse.ui.navigation.Screen.MANAGER_ROUTES
     }
 
     suspend fun handlePinInput(pin: String): Boolean {
@@ -598,6 +586,11 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
     /** Injecte un jeu de données de démonstration. Réservé aux builds debug. */
     fun seedDemoData(onDone: () -> Unit = {}) = viewModelScope.launch(Dispatchers.IO) {
+        if (!com.reconsiliation.caisse.BuildConfig.DEBUG) {
+            _uiError.value = "Le mode démo est désactivé en production."
+            onDone()
+            return@launch
+        }
         try {
             com.reconsiliation.caisse.data.seed.DataSeeder(db).seedSampleData()
         } catch (e: Exception) {
@@ -614,14 +607,21 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
      * Resynchronise la préférence le cas échéant.
      *
      * Évite à `SplashScreen` d'ouvrir la base directement (§1 MVVM).
+     * 
+     * @throws com.reconsiliation.caisse.data.repository.ObsoleteDatabaseException 
+     *         si une base incompatible (< v18) est détectée.
      */
     suspend fun isSetupComplete(): Boolean = kotlinx.coroutines.withContext(Dispatchers.IO) {
+        // 1. Vérification préventive de la version physique (D1)
+        repository.checkObsoleteDatabase(getApplication())
+
         val prefs = com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
         val fromPrefs = prefs.isSetupComplete()
         val boutique = try {
             repository.getBoutiqueOnce()
         } catch (e: Exception) {
-            // Base absente ou illisible : on se rabat sur la préférence seule.
+            // Si checkObsoleteDatabase n'a pas levé d'exception mais que Room crash,
+            // c'est un échec d'initialisation normal (ex: mauvaise clé).
             android.util.Log.w("MainViewModel", "Lecture boutique impossible au démarrage", e)
             null
         }
@@ -688,15 +688,18 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
         val allStaff = db.staffDao().getAllActiveStaff().first()
         for (staff in allStaff) {
             if (sec.verifyPin(pin, staff.pinHash, staff.pinSalt)) {
-                // Migration paresseuse vers PBKDF2 si nécessaire
-                if (staff.pinSalt == null) {
+                // Migration paresseuse vers PBKDF2 (100k) si nécessaire.
+                // Se déclenche si pas de sel (legacy SHA-256) ou si sel sans itérations (PBKDF2 5k).
+                if (staff.pinSalt == null || !staff.pinSalt.contains(":")) {
                     viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                         try {
+                            val iterations = 100_000
                             val salt = sec.generateSalt()
-                            val newHash = sec.hashPinPbkdf2(pin, salt)
-                            db.staffDao().insertOrUpdate(staff.copy(pinHash = newHash, pinSalt = salt))
+                            val newHash = sec.hashPinPbkdf2(pin, salt, iterations)
+                            val saltWithIterations = "$salt:$iterations"
+                            db.staffDao().insertOrUpdate(staff.copy(pinHash = newHash, pinSalt = saltWithIterations))
                         } catch (e: Exception) {
-                            // Si interrompu, le login a quand même réussi, on retentera la migration plus tard
+                            // Migration silencieuse
                         }
                     }
                 }
@@ -706,16 +709,15 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
         // 2. Vérification Manager Boutique
         if (sec.verifyPin(pin, b.managerPinHash, b.managerPinSalt)) {
-            if (b.managerPinSalt == null && b.managerPinHash != null) {
+            if (b.managerPinSalt == null || !b.managerPinSalt.contains(":")) {
                 viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
+                        val iterations = 100_000
                         val salt = sec.generateSalt()
-                        val newHash = sec.hashPinPbkdf2(pin, salt)
-                        repository.updateBoutique(b.copy(managerPinHash = newHash, managerPinSalt = salt))
+                        val newHash = sec.hashPinPbkdf2(pin, salt, iterations)
+                        val saltWithIterations = "$salt:$iterations"
+                        repository.updateBoutique(b.copy(managerPinHash = newHash, managerPinSalt = saltWithIterations))
                     } catch (e: Exception) {
-                        // Le login a réussi : ne pas gêner l'utilisateur. Mais tracer,
-                        // car un échec répété signifie que le PIN manager reste en
-                        // SHA-256 legacy indéfiniment.
                         android.util.Log.w("MainViewModel", "Migration PBKDF2 du PIN manager échouée", e)
                     }
                 }
@@ -725,12 +727,14 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
         // 3. Vérification Staff Boutique (Legacy global)
         if (sec.verifyPin(pin, b.pinHash, b.pinSalt)) {
-            if (b.pinSalt == null && b.pinHash != null) {
+            if (b.pinSalt == null || !b.pinSalt.contains(":")) {
                 viewModelScope.launch(kotlinx.coroutines.Dispatchers.IO) {
                     try {
+                        val iterations = 100_000
                         val salt = sec.generateSalt()
-                        val newHash = sec.hashPinPbkdf2(pin, salt)
-                        repository.updateBoutique(b.copy(pinHash = newHash, pinSalt = salt))
+                        val newHash = sec.hashPinPbkdf2(pin, salt, iterations)
+                        val saltWithIterations = "$salt:$iterations"
+                        repository.updateBoutique(b.copy(pinHash = newHash, pinSalt = saltWithIterations))
                     } catch (e: Exception) {
                         android.util.Log.w("MainViewModel", "Migration PBKDF2 du PIN staff échouée", e)
                     }
@@ -768,7 +772,7 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
 
     fun resetApplicationData() = viewModelScope.launch(Dispatchers.IO) {
         try {
-            db.clearAllTables()
+            repository.deletePhysicalDatabase(getApplication())
             // Reset setup complete preference
             val prefs = com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
             prefs.setSetupComplete(false)
