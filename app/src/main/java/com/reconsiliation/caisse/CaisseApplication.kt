@@ -2,8 +2,10 @@ package com.reconsiliation.caisse
 
 import android.app.Application
 import android.util.Log
+import dagger.hilt.android.HiltAndroidApp
 import kotlin.system.exitProcess
 
+@HiltAndroidApp
 class CaisseApplication : Application() {
     override fun onCreate() {
         super.onCreate()
