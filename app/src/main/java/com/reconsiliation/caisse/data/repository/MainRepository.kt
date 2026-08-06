@@ -10,6 +10,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 import android.content.Context
 import android.net.Uri
 import android.provider.Settings
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -19,9 +20,13 @@ import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.Calendar
+import javax.inject.Inject
 import kotlin.math.abs
 
-class MainRepository(private val db: com.reconsiliation.caisse.data.local.AppDatabase, private val context: android.content.Context) {
+class MainRepository @Inject constructor(
+    private val db: com.reconsiliation.caisse.data.local.AppDatabase,
+    @ApplicationContext private val context: android.content.Context
+) {
 
     companion object {
         /**
