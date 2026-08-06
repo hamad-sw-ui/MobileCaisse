@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.CustomerEntity
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
@@ -29,7 +30,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @Composable
 fun CustomerProfileScreen(navController: NavController, customerId: Long) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val allCustomers by viewModel.allCustomers.collectAsState(initial = emptyList())
     val customer: CustomerEntity? = allCustomers.find { it.id == customerId }
     val currency by viewModel.currency.collectAsState()

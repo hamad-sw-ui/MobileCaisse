@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.reconsiliation.caisse.data.local.entity.AuditItemEntity
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
@@ -26,7 +27,7 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuditScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val stock by viewModel.allStock.collectAsState()
     
     // Local state for physical quantities

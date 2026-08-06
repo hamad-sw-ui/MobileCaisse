@@ -10,6 +10,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
@@ -17,7 +18,7 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrintSettingsScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     
     val pairedPrinters = viewModel.getPairedPrinters()

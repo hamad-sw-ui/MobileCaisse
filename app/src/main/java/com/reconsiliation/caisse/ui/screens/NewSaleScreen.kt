@@ -22,6 +22,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.StockEntity
 import com.reconsiliation.caisse.data.local.entity.VenteEntity
@@ -43,7 +44,7 @@ import java.util.*
 @Composable
 fun NewSaleScreen(navController: NavController) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = if (boutique?.operator == "MTN") "MTN/OM" else boutique?.operator ?: "MTN/OM"
     val stockItems by viewModel.allStock.collectAsState()
@@ -510,7 +511,7 @@ fun ProductPickerDialog(
     onDismiss: () -> Unit,
     onProductSelected: (StockEntity, Boolean) -> Unit
 ) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Tout") }
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())

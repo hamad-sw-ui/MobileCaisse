@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.core.content.FileProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -42,7 +43,7 @@ import java.util.*
 @Composable
 fun ClosureScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"

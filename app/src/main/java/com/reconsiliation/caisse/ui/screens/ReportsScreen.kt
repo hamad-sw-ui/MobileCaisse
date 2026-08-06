@@ -21,6 +21,7 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
@@ -30,7 +31,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @Composable
 fun ReportsScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val categorySales by viewModel.categorySales.collectAsState()
     val dailySales by viewModel.dailySales.collectAsState()
     val currency by viewModel.currency.collectAsState()

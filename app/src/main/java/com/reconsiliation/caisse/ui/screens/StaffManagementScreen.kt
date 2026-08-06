@@ -27,6 +27,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.StaffEntity
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -48,7 +49,7 @@ private const val ROLE_MANAGER = "MANAGER"
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StaffManagementScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val staff by viewModel.activeStaff.collectAsState()
 
     var editing by remember { mutableStateOf<StaffEntity?>(null) }

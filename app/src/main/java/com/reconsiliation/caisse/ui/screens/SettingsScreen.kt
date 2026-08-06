@@ -16,6 +16,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.rememberScrollState
@@ -30,7 +31,7 @@ import androidx.compose.runtime.setValue
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val allStock by viewModel.allStock.collectAsState()
     val allVentes by viewModel.allVentes.collectAsState()

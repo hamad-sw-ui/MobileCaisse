@@ -27,6 +27,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.reconsiliation.caisse.ui.screens.*
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
@@ -94,7 +95,7 @@ sealed class Screen(
 fun AppNavigation() {
     val navController = rememberNavController()
     // Use Activity-scoped ViewModel to share state (like showPinDialog) across screens
-    val viewModel: MainViewModel = viewModel(factory = com.reconsiliation.caisse.ui.viewmodel.MainViewModelFactory(androidx.compose.ui.platform.LocalContext.current.applicationContext as android.app.Application))
+    val viewModel: MainViewModel = hiltViewModel()
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
     val userRole by viewModel.userRole.collectAsState()

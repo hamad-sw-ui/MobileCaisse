@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -22,8 +23,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun SetupScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel()
+    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel = hiltViewModel()
 
     var name by remember { mutableStateOf("") }
     var owner by remember { mutableStateOf("") }

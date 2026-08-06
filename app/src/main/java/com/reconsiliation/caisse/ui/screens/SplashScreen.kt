@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -20,8 +21,7 @@ import kotlinx.coroutines.delay
 
 @Composable
 fun SplashScreen(navController: NavController) {
-    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel =
-        androidx.lifecycle.viewmodel.compose.viewModel()
+    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel = hiltViewModel()
     var showObsoleteDialog by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
 
     LaunchedEffect(Unit) {

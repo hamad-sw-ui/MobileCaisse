@@ -17,6 +17,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
@@ -28,7 +29,7 @@ import java.io.FileOutputStream
 @Composable
 fun RestorationWizardScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var step by remember { mutableStateOf(1) } // 1: choix du fichier, 2: confirmation
     var stagedFile by remember { mutableStateOf<File?>(null) }

@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.SessionEntity
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -26,7 +27,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClosureHistoryScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val closures by viewModel.allClosures.collectAsState()
 
     Scaffold(
@@ -86,7 +87,7 @@ fun ClosureHistoryScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionHistoryScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val sessions by viewModel.allSessions.collectAsState()
     
     var showCommissionDialog by remember { mutableStateOf<SessionEntity?>(null) }
@@ -156,7 +157,7 @@ fun SessionHistoryScreen(navController: NavController) {
 
 @Composable
 fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     var rate by remember { mutableStateOf("2") }
     val revenue = (session.closingBalance ?: 0.0) - session.openingBalance
     val commission = (revenue * (rate.toDoubleOrNull() ?: 0.0)) / 100.0
@@ -206,7 +207,7 @@ fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuditHistoryScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val audits by viewModel.allAudits.collectAsState()
 
     Scaffold(
@@ -258,7 +259,7 @@ fun AuditHistoryScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplyHistoryScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val supplies by viewModel.allSupplies.collectAsState()
 
     Scaffold(

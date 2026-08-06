@@ -17,6 +17,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -26,7 +27,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupportScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
     val deviceId = viewModel.getDeviceId()

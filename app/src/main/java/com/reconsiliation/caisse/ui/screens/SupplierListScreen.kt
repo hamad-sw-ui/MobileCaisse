@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.StockEntity
 import com.reconsiliation.caisse.data.local.entity.SupplierEntity
@@ -29,7 +30,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplierListScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val suppliers by viewModel.allSuppliers.collectAsState()
     
     var showAddDialog by remember { mutableStateOf(false) }
@@ -206,7 +207,7 @@ fun RepaySupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfi
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReturnToSupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfirm: (StockEntity, Double, Double) -> Unit) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val stockItems by viewModel.allStock.collectAsState()
     
     var selectedProduct by remember { mutableStateOf<StockEntity?>(null) }

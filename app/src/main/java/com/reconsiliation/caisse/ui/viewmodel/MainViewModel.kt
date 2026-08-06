@@ -7,11 +7,13 @@ import androidx.lifecycle.viewModelScope
 import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.data.repository.MainRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import java.util.*
 import java.io.File
+import javax.inject.Inject
 
 import java.io.Serializable
 import kotlinx.coroutines.flow.first
@@ -36,9 +38,13 @@ sealed interface BackupUiState {
     data class Error(val message: String) : BackupUiState
 }
 
-class MainViewModel(application: Application, private val savedStateHandle: SavedStateHandle) : AndroidViewModel(application) {
-    private val repository: MainRepository
-    private val db: AppDatabase = AppDatabase.getDatabase(application)
+@HiltViewModel
+class MainViewModel @Inject constructor(
+    application: Application,
+    private val repository: MainRepository,
+    private val db: AppDatabase,
+    private val savedStateHandle: SavedStateHandle
+) : AndroidViewModel(application) {
     
     // User Session (Persistent within app run)
     private val _userRole = savedStateHandle.getStateFlow<String?>("user_role", null)
@@ -155,8 +161,7 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
     val uiError = _uiError.asStateFlow()
 
     init {
-        repository = MainRepository(db, application)
-        val notificationHelper = com.reconsiliation.caisse.utils.NotificationHelper(application)
+        val notificationHelper = com.reconsiliation.caisse.utils.NotificationHelper(getApplication())
 
         // Auto-logout check every minute
         viewModelScope.launch {
@@ -780,15 +785,5 @@ class MainViewModel(application: Application, private val savedStateHandle: Save
         } catch (e: Exception) {
             _uiError.value = "Erreur lors de la réinitialisation: ${e.message}"
         }
-    }
-}
-
-class MainViewModelFactory(private val application: Application) : androidx.lifecycle.ViewModelProvider.Factory {
-    override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-        if (modelClass.isAssignableFrom(MainViewModel::class.java)) {
-            @Suppress("UNCHECKED_CAST")
-            return MainViewModel(application, androidx.lifecycle.SavedStateHandle()) as T
-        }
-        throw IllegalArgumentException("Unknown ViewModel class")
     }
 }

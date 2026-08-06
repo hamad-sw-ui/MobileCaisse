@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.dao.VenteWithItems
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -34,7 +35,7 @@ import android.content.Intent
 @Composable
 fun SaleDetailScreen(navController: NavController, venteId: Long) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val currency by viewModel.currency.collectAsState()

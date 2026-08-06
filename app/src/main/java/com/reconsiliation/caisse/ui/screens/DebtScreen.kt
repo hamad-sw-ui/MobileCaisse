@@ -21,6 +21,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.CustomerEntity
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -35,7 +36,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @Composable
 fun DebtScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val debtors by viewModel.debtors.collectAsState()

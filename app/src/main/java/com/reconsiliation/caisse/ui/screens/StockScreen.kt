@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
@@ -50,7 +51,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun StockScreen(navController: NavController, initialBarcode: String? = null) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val stockItems by viewModel.allStock.collectAsState()
     val isManager = viewModel.isManager()
@@ -334,7 +335,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
 
 @Composable
 fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, onDismiss: () -> Unit) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val recipeItems by viewModel.getRecipeForProduct(parentProduct.id).collectAsState(initial = emptyList())
     var showAddIngredient by remember { mutableStateOf(false) }
 
@@ -495,7 +496,7 @@ fun ReportLossDialog(productName: String, onDismiss: () -> Unit, onConfirm: (Dou
 
 @Composable
 fun AddProductDialog(initialItem: StockEntity? = null, onDismiss: () -> Unit, onConfirm: (StockEntity) -> Unit) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
 
     var name by remember { mutableStateOf(initialItem?.productName ?: "") }

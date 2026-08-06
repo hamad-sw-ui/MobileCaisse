@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.OrangeWarning
@@ -33,7 +34,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @Composable
 fun SmsErrorScreen(navController: NavController) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val errors by viewModel.smsErrors.collectAsState()

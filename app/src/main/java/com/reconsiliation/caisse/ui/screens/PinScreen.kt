@@ -15,6 +15,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -27,7 +28,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 @Composable
 fun PinScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     var pin by remember { mutableStateOf("") }
     var error by remember { mutableStateOf(false) }
 

@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import kotlinx.coroutines.launch
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
@@ -37,7 +38,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesListScreen(navController: NavController) {
-    val viewModel: MainViewModel = viewModel()
+    val viewModel: MainViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.selectedMonthVentes.collectAsState()
