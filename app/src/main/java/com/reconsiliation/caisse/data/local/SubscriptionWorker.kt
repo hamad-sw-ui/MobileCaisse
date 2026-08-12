@@ -2,25 +2,27 @@ package com.reconsiliation.caisse.data.local
 
 import android.content.Context
 import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.reconsiliation.caisse.data.repository.MainRepository
-import com.reconsiliation.caisse.utils.NotificationHelper
+import com.reconsiliation.caisse.notification.NotificationHelper
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-class SubscriptionWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class SubscriptionWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val repository: MainRepository,
+    private val notificationHelper: NotificationHelper
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
-            val db = AppDatabase.getDatabase(applicationContext)
-            val repository = MainRepository(db, applicationContext)
-            val notificationHelper = NotificationHelper(applicationContext)
-
             val subscription = repository.getSubscriptionStatus(applicationContext).first()
             
             if (subscription != null && subscription.isActive) {

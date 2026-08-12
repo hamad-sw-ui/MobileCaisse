@@ -13,7 +13,8 @@ navigation = "2.8.3"
 ksp = "2.1.0-1.0.29"
 work = "2.9.1"
 kotlinxSerialization = "1.7.3"
-hilt = "2.51.1"
+hilt = "2.54"
+hiltWork = "1.2.0"
 sqlcipherVersion = "4.5.4"
 sqliteVersion = "2.4.0"
 
@@ -49,6 +50,8 @@ kotlinx-serialization-json = { group = "org.jetbrains.kotlinx", name = "kotlinx-
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
 hilt-navigation-compose = { group = "androidx.hilt", name = "hilt-navigation-compose", version = "1.2.0" }
+androidx-hilt-work = { group = "androidx.hilt", name = "hilt-work", version.ref = "hiltWork" }
+androidx-hilt-compiler = { group = "androidx.hilt", name = "hilt-compiler", version.ref = "hiltWork" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

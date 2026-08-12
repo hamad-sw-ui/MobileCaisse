@@ -2,22 +2,25 @@ package com.reconsiliation.caisse.data.local
 
 import android.content.Context
 import android.util.Log
+import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.reconsiliation.caisse.data.repository.MainRepository
+import dagger.assisted.Assisted
+import dagger.assisted.AssistedInject
 import kotlinx.coroutines.flow.first
 import java.io.File
 
-class BackupWorker(
-    appContext: Context,
-    workerParams: WorkerParameters
+@HiltWorker
+class BackupWorker @AssistedInject constructor(
+    @Assisted appContext: Context,
+    @Assisted workerParams: WorkerParameters,
+    private val db: AppDatabase,
+    private val repository: MainRepository
 ) : CoroutineWorker(appContext, workerParams) {
 
     override suspend fun doWork(): Result {
         return try {
-            val db = AppDatabase.getDatabase(applicationContext)
-            val repository = MainRepository(db, applicationContext)
-            
             // 1. Internal Daily Backup
             val backupFile = File(applicationContext.filesDir, "daily_backup.db")
             val success = repository.backupDatabase(applicationContext, backupFile)
