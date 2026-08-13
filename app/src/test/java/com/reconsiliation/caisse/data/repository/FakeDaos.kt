@@ -4,6 +4,7 @@ import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.dao.*
 import com.reconsiliation.caisse.data.local.entity.*
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import java.util.Date
 
@@ -101,23 +102,45 @@ class FakeVenteDao : VenteDao {
         ventes.value.values.find { it.transactionId == transId }
 
     override suspend fun findPendingMomoSale(amount: Double) =
-        ventes.value.values.find { it.status == "PENDING" && it.amount == amount }
+        ventes.value.values
+            .filter { it.status == "PENDING" && (it.amount == amount || it.amountMomo == amount) && (it.paymentMethod == "MOMO" || it.paymentMethod == "MIXED") }
+            .sortedByDescending { it.date }
+            .firstOrNull()
 
     override suspend fun findPendingMomoSaleWithPhone(amount: Double, phone: String) =
-        ventes.value.values.find { it.status == "PENDING" && it.amount == amount && it.customerPhone == phone }
+        ventes.value.values
+            .filter { it.status == "PENDING" && (it.amount == amount || it.amountMomo == amount) && (it.customerPhone == phone || phone == "") && (it.paymentMethod == "MOMO" || it.paymentMethod == "MIXED") }
+            .sortedByDescending { it.date }
+            .firstOrNull()
 
     override fun getTotalByMethod(start: Date, end: Date, method: String) =
-        getVentesByDateRange(start, end).map {
-            it.filter { v -> v.paymentMethod == method }.sumOf { v -> v.amount }
+        getVentesByDateRange(start, end).map { list ->
+            val filtered = list.filter { v -> v.paymentMethod == method && v.status == "CONFIRMED" }
+            if (filtered.isEmpty()) null else filtered.sumOf { it.amount }
         }
 
     override fun getTotalCash(start: Date, end: Date) =
-        getVentesByDateRange(start, end).map { it.sumOf { v -> v.amountCash } }
+        getVentesByDateRange(start, end).map { list ->
+            val filtered = list.filter { it.status == "CONFIRMED" }
+            if (filtered.isEmpty()) null else filtered.sumOf { it.amountCash }
+        }
 
     override fun getTotalMomo(start: Date, end: Date) =
-        getVentesByDateRange(start, end).map { it.sumOf { v -> v.amountMomo } }
+        getVentesByDateRange(start, end).map { list ->
+            val filtered = list.filter { it.status == "CONFIRMED" }
+            if (filtered.isEmpty()) null else filtered.sumOf { it.amountMomo }
+        }
 
-    override fun getProfitForRange(start: Date, end: Date) = MutableStateFlow(0.0)
+    override fun getProfitForRange(start: Date, end: Date) =
+        combine(ventes, items) { vMap, itemList ->
+            val list = vMap.values.filter { v -> v.date in start..end && v.status == "CONFIRMED" }
+            if (list.isEmpty()) null
+            else list.sumOf { v ->
+                val itemsForVente = itemList.filter { it.venteId == v.id }
+                v.amount - v.fees - v.discount - itemsForVente.sumOf { it.quantity * it.purchasePrice }
+            }
+        }
+
     override fun getSalesByCategory(start: Date, end: Date) =
         MutableStateFlow(emptyList<CategoryReport>())
 
@@ -125,7 +148,19 @@ class FakeVenteDao : VenteDao {
     override fun getDailySales(start: Date, end: Date) = MutableStateFlow(emptyList<DailySales>())
     override fun getMonthlySales(start: Date, end: Date) = MutableStateFlow(emptyList<DailySales>())
     override fun getExpiringSupplies(limit: Date) = MutableStateFlow(emptyList<SupplyEntity>())
-    override suspend fun lockSalesForDateRange(start: Date, end: Date) = 0
+    override suspend fun lockSalesForDateRange(start: Date, end: Date): Int {
+        var count = 0
+        val current = ventes.value.toMutableMap()
+        current.forEach { (id, v) ->
+            if (v.date in start..end) {
+                current[id] = v.copy(isLocked = true)
+                count++
+            }
+        }
+        ventes.value = current
+        return count
+    }
+
     override suspend fun deleteOldLockedVentes(beforeDate: Date) = 0
     override suspend fun deleteOrphanVenteItems() = 0
     override suspend fun deleteItemsForVente(venteId: Long) {
@@ -135,7 +170,12 @@ class FakeVenteDao : VenteDao {
     override suspend fun getItemsForVente(venteId: Long) =
         items.value.filter { it.venteId == venteId }
 
-    override suspend fun getMaxInvoiceNumberForYear(yearPrefix: String) = null
+    override suspend fun getMaxInvoiceNumberForYear(yearPrefix: String): String? {
+        return ventes.value.values
+            .filter { it.invoiceNumber?.startsWith(yearPrefix) == true }
+            .mapNotNull { it.invoiceNumber }
+            .maxOrNull()
+    }
     override suspend fun getRecentVentes(limit: Int) = ventes.value.values.toList()
     override suspend fun isProductUsed(productId: Long) =
         items.value.any { it.productId == productId }
@@ -200,6 +240,102 @@ class FakeActionLogDao : ActionLogDao {
     override suspend fun clearLogs() {}
 }
 
+class FakeSessionDao : SessionDao {
+    val sessions = MutableStateFlow<Map<Long, SessionEntity>>(emptyMap())
+    override fun getActiveSession() = sessions.map { it.values.find { s -> s.isActive } }
+    override suspend fun openSession(session: SessionEntity): Long {
+        val id = (sessions.value.keys.maxOrNull() ?: 0L) + 1
+        sessions.value = sessions.value + (id to session.copy(id = id, isActive = true))
+        return id
+    }
+
+    override suspend fun closeSession(session: SessionEntity) {
+        sessions.value = sessions.value + (session.id to session.copy(isActive = false))
+    }
+
+    override fun getAllSessions() = sessions.map { it.values.toList() }
+}
+
+class FakeExpenseDao : ExpenseDao {
+    private val _expenses = MutableStateFlow<List<ExpenseEntity>>(emptyList())
+    override fun getAllExpenses() = _expenses
+    override fun getExpensesByDateRange(start: Date, end: Date) =
+        _expenses.map { it.filter { e -> e.date in start..end } }
+
+    override suspend fun insert(expense: ExpenseEntity) {
+        _expenses.value = _expenses.value + expense
+    }
+
+    override suspend fun delete(expense: ExpenseEntity) {
+        _expenses.value = _expenses.value.filter { it != expense }
+    }
+
+    override fun getTotalExpenses(start: Date, end: Date) =
+        getExpensesByDateRange(start, end).map { list ->
+            if (list.isEmpty()) null else list.sumOf { it.amount }
+        }
+
+    override fun getExpensesByCategory(start: Date, end: Date) =
+        getExpensesByDateRange(start, end).map { list ->
+            list.groupBy { it.category }.map { (cat, items) ->
+                com.reconsiliation.caisse.ui.viewmodel.CategoryTotal(cat, items.sumOf { it.amount })
+            }
+        }
+}
+
+class FakeSmsErrorDao : SmsErrorDao {
+    private val _errors = MutableStateFlow<List<SmsErrorEntity>>(emptyList())
+    override fun getUnresolvedErrors() = _errors.map { it.filter { e -> !e.isResolved } }
+    override suspend fun insert(error: SmsErrorEntity) {
+        val id = (_errors.value.maxOfOrNull { it.id } ?: 0L) + 1
+        _errors.value = _errors.value + error.copy(id = id)
+    }
+
+    override suspend fun delete(error: SmsErrorEntity) {
+        _errors.value = _errors.value.filter { it != error }
+    }
+
+    override suspend fun resolve(id: Long): Int {
+        _errors.value = _errors.value.map { if (it.id == id) it.copy(isResolved = true) else it }
+        return 1
+    }
+
+    override suspend fun update(error: SmsErrorEntity) {
+        _errors.value = _errors.value.map { if (it.id == error.id) error else it }
+    }
+}
+
+class FakeRepaymentDao : RepaymentDao {
+    private val _repayments = MutableStateFlow<List<RepaymentEntity>>(emptyList())
+    override suspend fun insert(repayment: RepaymentEntity) {
+        _repayments.value = _repayments.value + repayment
+    }
+
+    override fun getRepaymentsForCustomer(customerId: Long) =
+        _repayments.map { it.filter { r -> r.customerId == customerId } }
+}
+
+class FakeClosureDao : ClosureDao {
+    private val _closures = MutableStateFlow<List<ClosureEntity>>(emptyList())
+    override suspend fun insert(closure: ClosureEntity): Long {
+        val id = (_closures.value.maxOfOrNull { it.id } ?: 0L) + 1
+        _closures.value = _closures.value + closure.copy(id = id)
+        return id
+    }
+
+    override fun getAllClosures() = _closures
+}
+
+class FakeStockMovementDao : StockMovementDao {
+    private val _movements = MutableStateFlow<List<StockMovementEntity>>(emptyList())
+    override suspend fun insert(movement: StockMovementEntity) {
+        _movements.value = _movements.value + movement
+    }
+
+    override fun getMovementsForProduct(productId: Long) =
+        _movements.map { it.filter { m -> m.productId == productId } }
+}
+
 class FakeAppDatabase : AppDatabase() {
     private val _boutiqueDao = FakeBoutiqueDao()
     private val _venteDao = FakeVenteDao()
@@ -207,6 +343,12 @@ class FakeAppDatabase : AppDatabase() {
     private val _subscriptionDao = FakeSubscriptionDao()
     private val _customerDao = FakeCustomerDao()
     private val _actionLogDao = FakeActionLogDao()
+    private val _sessionDao = FakeSessionDao()
+    private val _expenseDao = FakeExpenseDao()
+    private val _smsErrorDao = FakeSmsErrorDao()
+    private val _repaymentDao = FakeRepaymentDao()
+    private val _closureDao = FakeClosureDao()
+    private val _movementDao = FakeStockMovementDao()
 
     override fun boutiqueDao() = _boutiqueDao
     override fun venteDao() = _venteDao
@@ -214,32 +356,12 @@ class FakeAppDatabase : AppDatabase() {
     override fun subscriptionDao() = _subscriptionDao
     override fun customerDao() = _customerDao
     override fun actionLogDao() = _actionLogDao
-
-    override fun smsErrorDao() = object : SmsErrorDao {
-        override fun getUnresolvedErrors() = MutableStateFlow(emptyList<SmsErrorEntity>())
-        override suspend fun insert(error: SmsErrorEntity) {}
-        override suspend fun delete(error: SmsErrorEntity) {}
-        override suspend fun resolve(id: Long) = 1
-        override suspend fun update(error: SmsErrorEntity) {}
-    }
-
-    override fun repaymentDao() = object : RepaymentDao {
-        override suspend fun insert(repayment: RepaymentEntity) {}
-        override fun getRepaymentsForCustomer(customerId: Long) =
-            MutableStateFlow(emptyList<RepaymentEntity>())
-    }
-
-    override fun expenseDao() = object : ExpenseDao {
-        override fun getAllExpenses() = MutableStateFlow(emptyList<ExpenseEntity>())
-        override fun getExpensesByDateRange(start: Date, end: Date) =
-            MutableStateFlow(emptyList<ExpenseEntity>())
-
-        override suspend fun insert(expense: ExpenseEntity) {}
-        override suspend fun delete(expense: ExpenseEntity) {}
-        override fun getTotalExpenses(start: Date, end: Date) = MutableStateFlow(0.0)
-        override fun getExpensesByCategory(start: Date, end: Date) =
-            MutableStateFlow(emptyList<com.reconsiliation.caisse.ui.viewmodel.CategoryTotal>())
-    }
+    override fun sessionDao() = _sessionDao
+    override fun expenseDao() = _expenseDao
+    override fun smsErrorDao() = _smsErrorDao
+    override fun repaymentDao() = _repaymentDao
+    override fun closureDao() = _closureDao
+    override fun stockMovementDao() = _movementDao
 
     override fun processedSmsDao() = object : ProcessedSmsDao {
         override suspend fun insert(sms: ProcessedSmsEntity) {}
@@ -269,29 +391,11 @@ class FakeAppDatabase : AppDatabase() {
             MutableStateFlow(emptyList<SupplyEntity>())
     }
 
-    override fun closureDao() = object : ClosureDao {
-        override suspend fun insert(closure: ClosureEntity) = 0L
-        override fun getAllClosures() = MutableStateFlow(emptyList<ClosureEntity>())
-    }
-
     override fun supplierDao() = object : SupplierDao {
         override fun getAllSuppliers() = MutableStateFlow(emptyList<SupplierEntity>())
         override suspend fun insert(supplier: SupplierEntity) = 0L
         override suspend fun updateDebt(id: Long, amount: Double) {}
         override suspend fun delete(supplier: SupplierEntity) {}
-    }
-
-    override fun sessionDao() = object : SessionDao {
-        override fun getActiveSession() = MutableStateFlow(null)
-        override suspend fun openSession(session: SessionEntity) = 0L
-        override suspend fun closeSession(session: SessionEntity) {}
-        override fun getAllSessions() = MutableStateFlow(emptyList<SessionEntity>())
-    }
-
-    override fun stockMovementDao() = object : StockMovementDao {
-        override suspend fun insert(movement: StockMovementEntity) {}
-        override fun getMovementsForProduct(productId: Long) =
-            MutableStateFlow(emptyList<StockMovementEntity>())
     }
 
     override fun categoryDao() = object : CategoryDao {
@@ -329,4 +433,16 @@ class FakeAppDatabase : AppDatabase() {
     override fun createInvalidationTracker() = throw UnsupportedOperationException()
     override fun createOpenHelper(config: androidx.room.DatabaseConfiguration) =
         throw UnsupportedOperationException()
+}
+
+/** Dummy Context for JVM tests */
+class FakeContext : android.content.ContextWrapper(null) {
+    private val tempDir = java.io.File(System.getProperty("java.io.tmpdir"), "fake_context_${System.nanoTime()}")
+    init { tempDir.mkdirs() }
+    override fun getCacheDir(): java.io.File = tempDir
+    override fun getFilesDir(): java.io.File = tempDir
+    override fun getDatabasePath(name: String): java.io.File = java.io.File(tempDir, name)
+    override fun getPackageName(): String = "com.reconsiliation.caisse"
+    override fun getExternalFilesDir(type: String?): java.io.File? = tempDir
+    override fun startActivity(intent: android.content.Intent?) {}
 }

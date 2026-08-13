@@ -4,9 +4,10 @@ import android.app.Application
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.data.repository.MainRepository
+import com.reconsiliation.caisse.data.repository.SalesRepository
+import com.reconsiliation.caisse.notification.NotificationHelper
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -42,8 +43,9 @@ sealed interface BackupUiState {
 class MainViewModel @Inject constructor(
     application: Application,
     private val repository: MainRepository,
-    private val db: AppDatabase,
-    private val savedStateHandle: SavedStateHandle
+    private val salesRepository: SalesRepository,
+    private val savedStateHandle: SavedStateHandle,
+    private val notificationHelper: NotificationHelper
 ) : AndroidViewModel(application) {
     
     // User Session (Persistent within app run)
@@ -161,8 +163,6 @@ class MainViewModel @Inject constructor(
     val uiError = _uiError.asStateFlow()
 
     init {
-        val notificationHelper = com.reconsiliation.caisse.utils.NotificationHelper(getApplication())
-
         // Auto-logout check every minute
         viewModelScope.launch {
             while (true) {
@@ -177,21 +177,21 @@ class MainViewModel @Inject constructor(
         boutique = repository.boutique.stateIn(viewModelScope, SharingStarted.Eagerly, null)
         currency = boutique.map { it?.currency ?: "FCFA" }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "FCFA")
 
-        allVentes = repository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allVentesWithItems = db.venteDao().getAllVentesWithItems().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        allVentes = salesRepository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        allVentesWithItems = salesRepository.allVentesWithItems.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allStock = repository.allStock.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        smsErrors = repository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        debtors = repository.debtors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allCustomers = repository.allCustomers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        smsErrors = salesRepository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        debtors = salesRepository.debtors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        allCustomers = salesRepository.allCustomers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allExpenses = repository.allExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         lowStockAlerts = repository.lowStockAlerts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         stockValuation = repository.getStockValuation().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(0.0, 0.0))
         topProducts = repository.getTopProfitableProducts(5).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
-        allClosures = repository.allClosures.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        recentLogs = db.actionLogDao().getRecentLogs().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        activeSession = repository.activeSession.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-        allSessions = db.sessionDao().getAllSessions().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        allClosures = salesRepository.allClosures.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        recentLogs = repository.recentLogs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+        activeSession = salesRepository.activeSession.stateIn(viewModelScope, SharingStarted.Eagerly, null)
+        allSessions = salesRepository.allSessions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allSuppliers = repository.allSuppliers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allSupplies = repository.allSupplies.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allAudits = repository.allAudits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -204,11 +204,11 @@ class MainViewModel @Inject constructor(
         calendar.set(Calendar.MINUTE, 59)
         val end = calendar.time
 
-        todayProfit = combine(repository.getProfitFlow(start, end), userRole, boutique) { profit, role, b ->
+        todayProfit = combine(salesRepository.getProfitFlow(start, end), userRole, boutique) { profit, role, b ->
             if (role == "MANAGER" || b?.hideProfitsFromStaff == false) profit else 0.0
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
-        todayRevenue = combine(db.venteDao().getTotalCash(start, end), db.venteDao().getTotalMomo(start, end)) { cash, momo ->
+        todayRevenue = combine(salesRepository.getTotalCash(start, end), salesRepository.getTotalMomo(start, end)) { cash, momo ->
             (cash ?: 0.0) + (momo ?: 0.0)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
@@ -248,20 +248,20 @@ class MainViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            repository.getSalesByCategory(start, end).collect { _categorySales.value = it }
+            salesRepository.getSalesByCategory(start, end).collect { _categorySales.value = it }
         }
         viewModelScope.launch {
             if (rangeType == "YEAR") {
-                repository.getMonthlySales(start, end).collect { _dailySales.value = it }
+                salesRepository.getMonthlySales(start, end).collect { _dailySales.value = it }
             } else {
-                repository.getDailySales(start, end).collect { _dailySales.value = it }
+                salesRepository.getDailySales(start, end).collect { _dailySales.value = it }
             }
         }
         viewModelScope.launch {
-            repository.getHourlySales(start, end).collect { _hourlySales.value = it }
+            salesRepository.getHourlySales(start, end).collect { _hourlySales.value = it }
         }
         viewModelScope.launch {
-            db.expenseDao().getExpensesByCategory(start, end).collect { _expenseBreakdown.value = it }
+            repository.getExpensesByCategory(start, end).collect { _expenseBreakdown.value = it }
         }
     }
 
@@ -277,7 +277,7 @@ class MainViewModel @Inject constructor(
         val end = calendar.time
         
         viewModelScope.launch {
-            repository.getVentesByDateRange(start, end).collect { _selectedMonthVentes.value = it }
+            salesRepository.getVentesByDateRange(start, end).collect { _selectedMonthVentes.value = it }
         }
     }
     fun catchUpSms(application: Application) {
@@ -365,7 +365,7 @@ class MainViewModel @Inject constructor(
                 }
             }
 
-            val venteId = repository.insertVenteWithItems(finalVente, processedItems, userRole.value)
+            val venteId = salesRepository.insertVenteWithItems(finalVente, processedItems, userRole.value)
             clearCart()
             _lastConfirmedVenteId.value = venteId
         } catch (e: Exception) {
@@ -378,12 +378,12 @@ class MainViewModel @Inject constructor(
 
     fun clearLastVenteId() { _lastConfirmedVenteId.value = null }
     fun updateVente(vente: VenteEntity, items: List<VenteItemEntity>? = null) = viewModelScope.launch {
-        try { repository.updateVente(vente, items, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
+        try { salesRepository.updateVente(vente, items, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
-    fun deleteVente(vente: VenteEntity) = viewModelScope.launch { try { repository.deleteVente(vente, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    fun cancelVente(vente: VenteEntity) = viewModelScope.launch { try { repository.cancelVente(vente) } catch (e: Exception) { _uiError.value = e.message } }
-    fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { repository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { repository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
+    fun deleteVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.deleteVente(vente, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
+    fun cancelVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.cancelVente(vente) } catch (e: Exception) { _uiError.value = e.message } }
+    fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
+    fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { salesRepository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     
     fun adjustStock(stock: StockEntity, newQuantity: Double, reason: String) = viewModelScope.launch { try { repository.adjustStock(stock, newQuantity, reason, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun updateStock(stock: StockEntity) = viewModelScope.launch { try { repository.updateStock(stock, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
@@ -395,31 +395,31 @@ class MainViewModel @Inject constructor(
     fun addSupplier(supplier: SupplierEntity) = viewModelScope.launch { try { repository.addSupplier(supplier) } catch (e: Exception) { _uiError.value = e.message } }
     fun deleteSupplier(supplier: SupplierEntity) = viewModelScope.launch { try { repository.deleteSupplier(supplier) } catch (e: Exception) { _uiError.value = e.message } }
     fun updateSupplierDebt(supplierId: Long, delta: Double) = viewModelScope.launch { try { repository.updateSupplierDebt(supplierId, delta) } catch (e: Exception) { _uiError.value = e.message } }
-    fun getExpiringSoon() = repository.getExpiringSoon()
+    fun getExpiringSoon() = salesRepository.getExpiringSoon()
 
     fun performAudit(note: String?, items: List<AuditItemEntity>) = viewModelScope.launch { try { repository.performAudit(note, items) } catch (e: Exception) { _uiError.value = e.message } }
-    fun performClosure(closure: ClosureEntity) = viewModelScope.launch { try { repository.performClosure(closure, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
+    fun performClosure(closure: ClosureEntity) = viewModelScope.launch { try { salesRepository.performClosure(closure, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     
     fun openSession(seller: String, balance: Double) = viewModelScope.launch {
-        try { repository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message }
+        try { salesRepository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message }
     }
     fun closeSession(balance: Double) = viewModelScope.launch {
-        try { repository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
+        try { salesRepository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
 
-    fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { repository.addRepayment(customerId, amount, method, userRole.value) }
+    fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { salesRepository.addRepayment(customerId, amount, method, userRole.value) }
     fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
     fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
     fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) = repository.sendDebtReminder(context, customer)
-    suspend fun getCustomerByPhone(phone: String) = repository.getCustomerByPhone(phone)
-    suspend fun findOrCreateCustomer(name: String, phone: String) = repository.findOrCreateCustomer(name, phone)
+    suspend fun getCustomerByPhone(phone: String) = salesRepository.getCustomerByPhone(phone)
+    suspend fun findOrCreateCustomer(name: String, phone: String) = salesRepository.findOrCreateCustomer(name, phone)
 
-    fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) { repository.printTicket(venteId, printerAddress) }
+    fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) { salesRepository.printTicket(venteId, printerAddress) }
     fun testPrint(address: String) = viewModelScope.launch(Dispatchers.IO) { repository.testPrint(getApplication(), address) }
     
     fun exportSalesData(context: android.content.Context) = viewModelScope.launch {
         try {
-            val ventes = db.venteDao().getAllVentesWithItems().first()
+            val ventes = salesRepository.allVentesWithItems.first()
             val file = com.reconsiliation.caisse.utils.ExportUtil.exportSalesToCsv(context, ventes)
             if (file != null) {
                 com.reconsiliation.caisse.utils.ExportUtil.shareFile(context, file)
@@ -430,7 +430,7 @@ class MainViewModel @Inject constructor(
             _uiError.value = "Erreur d'exportation: ${e.message}"
         }
     }
-    fun shareDailySummary(context: android.content.Context) = viewModelScope.launch { repository.shareDailySummary(context) }
+    fun shareDailySummary(context: android.content.Context) = viewModelScope.launch { salesRepository.shareDailySummary(context) }
     
     fun backupDatabase(file: File) = repository.backupDatabase(getApplication(), file)
     fun restoreDatabase(file: File) = repository.restoreDatabase(getApplication(), file)
@@ -597,7 +597,7 @@ class MainViewModel @Inject constructor(
             return@launch
         }
         try {
-            com.reconsiliation.caisse.data.seed.DataSeeder(db).seedSampleData()
+            repository.seedDemoData()
         } catch (e: Exception) {
             _uiError.value = "Injection des données de démo impossible : ${e.message}"
         }
@@ -644,8 +644,8 @@ class MainViewModel @Inject constructor(
     fun isStaffRestricted() = boutique.value?.hideProfitsFromStaff == true
     fun generateCustomerStatement(context: android.content.Context, customer: CustomerEntity) = viewModelScope.launch {
         try {
-            val ventes = repository.getVentesByCustomer(customer.id).first()
-            val file = repository.generateCustomerStatementPdf(context, customer, ventes)
+            val ventes = salesRepository.getVentesByCustomer(customer.id).first()
+            val file = salesRepository.generateCustomerStatementPdf(context, customer, ventes)
             if (file != null) {
                 val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
@@ -660,10 +660,10 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getPriceHistory(productId: Long) = db.priceHistoryDao().getHistoryForProduct(productId)
-    fun getStockMovements(productId: Long) = db.stockMovementDao().getMovementsForProduct(productId)
+    fun getPriceHistory(productId: Long) = repository.getPriceHistory(productId)
+    fun getStockMovements(productId: Long) = repository.getStockMovements(productId)
     fun resolveSmsError(error: SmsErrorEntity, venteId: Long) = viewModelScope.launch {
-        try { repository.resolveSmsError(error, venteId) } catch (e: Exception) { _uiError.value = e.message }
+        try { salesRepository.resolveSmsError(error, venteId) } catch (e: Exception) { _uiError.value = e.message }
     }
 
     // Category Management
@@ -679,18 +679,18 @@ class MainViewModel @Inject constructor(
         return repository.purgeOldData(months, userRole.value)
     }
 
-    suspend fun getVenteWithItems(venteId: Long) = repository.getVenteWithItems(venteId)
-    fun getVentesByCustomer(customerId: Long) = repository.getVentesByCustomer(customerId)
-    fun lockSalesForToday() = viewModelScope.launch { repository.lockSalesForToday() }
+    suspend fun getVenteWithItems(venteId: Long) = salesRepository.getVenteWithItems(venteId)
+    fun getVentesByCustomer(customerId: Long) = salesRepository.getVentesByCustomer(customerId)
+    fun lockSalesForToday() = viewModelScope.launch { salesRepository.lockSalesForToday() }
     fun returnVenteItem(venteId: Long, productId: Long, quantity: Double, refundAmount: Double, method: String = "AVOIR") = viewModelScope.launch {
-        try { repository.returnVenteItem(venteId, productId, quantity, refundAmount, method, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
+        try { salesRepository.returnVenteItem(venteId, productId, quantity, refundAmount, method, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
     suspend fun checkPin(pin: String): Pair<String, Long?>? = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
         val b = boutique.value ?: return@withContext null
         val sec = com.reconsiliation.caisse.utils.SecurityUtil
 
         // 1. Vérification Staff
-        val allStaff = db.staffDao().getAllActiveStaff().first()
+        val allStaff = repository.getAllActiveStaffOnce()
         for (staff in allStaff) {
             if (sec.verifyPin(pin, staff.pinHash, staff.pinSalt)) {
                 // Migration paresseuse vers PBKDF2 (100k) si nécessaire.
@@ -702,7 +702,7 @@ class MainViewModel @Inject constructor(
                             val salt = sec.generateSalt()
                             val newHash = sec.hashPinPbkdf2(pin, salt, iterations)
                             val saltWithIterations = "$salt:$iterations"
-                            db.staffDao().insertOrUpdate(staff.copy(pinHash = newHash, pinSalt = saltWithIterations))
+                            repository.updateStaffSecurityInfo(staff.copy(pinHash = newHash, pinSalt = saltWithIterations))
                         } catch (e: Exception) {
                             // Migration silencieuse
                         }
@@ -752,7 +752,7 @@ class MainViewModel @Inject constructor(
     }
     fun updateBoutique(boutique: BoutiqueEntity) = viewModelScope.launch { repository.updateBoutique(boutique) }
     fun updateVipStatus(customerId: Long, isVip: Boolean) = viewModelScope.launch {
-        db.customerDao().updateVipStatus(customerId, isVip)
+        repository.updateCustomerVipStatus(customerId, isVip)
     }
     @android.annotation.SuppressLint("MissingPermission")
     fun getPairedPrinters(): List<android.bluetooth.BluetoothDevice> {
