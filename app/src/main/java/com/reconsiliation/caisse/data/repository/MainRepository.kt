@@ -22,7 +22,8 @@ import kotlin.math.abs
 
 class MainRepository @Inject constructor(
     private val db: com.reconsiliation.caisse.data.local.AppDatabase,
-    @ApplicationContext private val context: android.content.Context
+    @ApplicationContext private val context: android.content.Context,
+    private val inventoryRepository: InventoryRepository
 ) {
 
     companion object {
@@ -33,7 +34,7 @@ class MainRepository @Inject constructor(
         const val DATABASE_VERSION = 28
     }
     val boutique: Flow<BoutiqueEntity?> = db.boutiqueDao().getBoutique()
-    val allStock: Flow<List<StockEntity>> = db.stockDao().getAllStock()
+    val allStock: Flow<List<StockEntity>> get() = inventoryRepository.allStock
     
     fun getSubscriptionStatus(context: Context): Flow<SubscriptionEntity?> {
         return db.subscriptionDao().getSubscription().map { sub ->
@@ -46,7 +47,7 @@ class MainRepository @Inject constructor(
     }
     
     val allExpenses: Flow<List<ExpenseEntity>> = db.expenseDao().getAllExpenses()
-    val lowStockAlerts: Flow<List<StockEntity>> = db.stockDao().getLowStockAlerts()
+    val lowStockAlerts: Flow<List<StockEntity>> get() = inventoryRepository.lowStockAlerts
     val allAudits: Flow<List<AuditWithItems>> = db.auditDao().getAllAudits()
     val allSupplies: Flow<List<SupplyEntity>> = db.supplyDao().getAllSupplies()
     val allSuppliers: Flow<List<SupplierEntity>> = db.supplierDao().getAllSuppliers()
@@ -127,59 +128,13 @@ class MainRepository @Inject constructor(
     }
 
     suspend fun adjustStock(stock: StockEntity, newQuantity: Double, reason: String, role: String? = null) {
-        db.runInTransaction {
-            val diff = newQuantity - stock.quantity
-            if (diff == 0.0) return@runInTransaction
-            db.stockDao().updateQuantity(stock.id, diff)
-            if (diff < 0) {
-                val lossAmount = abs(diff) * stock.purchasePrice
-                db.expenseDao().insert(ExpenseEntity(
-                    label = "Perte/Casse: ${stock.productName} ($reason)",
-                    amount = lossAmount,
-                    date = Date(),
-                    category = "Pertes"
-                ))
-            }
-            db.stockMovementDao().insert(StockMovementEntity(
-                productId = stock.id,
-                date = Date(),
-                type = if (diff > 0) "IN" else "LOSS",
-                quantity = abs(diff),
-                reason = "Ajustement: $reason",
-                balanceAfter = newQuantity
-            ))
-            logAction("STOCK_ADJUST", "Ajustement: ${stock.productName} de ${stock.quantity} à $newQuantity ($reason)", role)
-        }
+        inventoryRepository.adjustStock(stock, newQuantity, reason, role)
     }
 
-    fun getStockValuation(): Flow<Pair<Double, Double>> {
-        return allStock.map { list ->
-            val purchaseVal = list.sumOf { it.quantity * it.purchasePrice }
-            val saleVal = list.sumOf { it.quantity * it.unitPrice }
-            Pair(purchaseVal, saleVal)
-        }
-    }
+    fun getStockValuation(): Flow<Pair<Double, Double>> = inventoryRepository.getStockValuation()
 
     suspend fun updateStock(stock: StockEntity, role: String? = null) {
-        db.runInTransaction {
-            val oldStock = db.stockDao().getStockById(stock.id)
-            if (oldStock != null) {
-                if (oldStock.purchasePrice != stock.purchasePrice) {
-                    db.priceHistoryDao().insert(PriceHistoryEntity(productId = stock.id, oldPrice = oldStock.purchasePrice, newPrice = stock.purchasePrice, date = Date(), type = "PURCHASE"))
-                }
-                if (oldStock.unitPrice != stock.unitPrice) {
-                    db.priceHistoryDao().insert(PriceHistoryEntity(productId = stock.id, oldPrice = oldStock.unitPrice, newPrice = stock.unitPrice, date = Date(), type = "SALE"))
-                    logAction("PRICE_CHANGE", "Prix de vente changé pour ${stock.productName}: ${oldStock.unitPrice} -> ${stock.unitPrice}", role)
-                }
-            }
-            if (stock.barcode != null) {
-                val existing = db.stockDao().getProductByBarcode(stock.barcode)
-                if (existing != null && existing.id != stock.id) {
-                    throw Exception("Ce code-barres est déjà utilisé par le produit: ${existing.productName}")
-                }
-            }
-            db.stockDao().insertOrUpdate(stock)
-        }
+        inventoryRepository.updateStock(stock, role)
     }
 
     suspend fun updateStockQuantity(id: Long, delta: Double) = db.stockDao().updateQuantity(id, delta)
@@ -630,8 +585,8 @@ class MainRepository @Inject constructor(
         }
     }
 
-    fun searchStock(query: String) = db.stockDao().searchStock(query)
-    fun getTopProfitableProducts(limit: Int) = db.stockDao().getTopProfitableProducts(limit)
+    fun searchStock(query: String) = inventoryRepository.searchStock(query)
+    fun getTopProfitableProducts(limit: Int) = inventoryRepository.getTopProfitableProducts(limit)
 
     // Category Management
     fun getCategories(type: String) = db.categoryDao().getCategoriesByType(type)

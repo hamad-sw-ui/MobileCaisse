@@ -18,7 +18,16 @@ class SalesRepositoryTest {
     fun setup() {
         db = FakeAppDatabase()
         val context = FakeContext()
-        mainRepository = MainRepository(db, context)
+        val inventoryRepository = InventoryRepository(
+            db,
+            db.stockDao(),
+            db.priceHistoryDao(),
+            db.stockMovementDao(),
+            db.expenseDao(),
+            db.actionLogDao(),
+            db.subscriptionDao()
+        )
+        mainRepository = MainRepository(db, context, inventoryRepository)
         salesRepository = SalesRepository(
             db = db,
             mainRepository = mainRepository,

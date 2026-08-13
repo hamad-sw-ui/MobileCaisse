@@ -17,9 +17,18 @@ class MainRepositoryTest {
     @Before
     fun setup() {
         db = FakeAppDatabase()
+        val inventoryRepository = InventoryRepository(
+            db,
+            db.stockDao(),
+            db.priceHistoryDao(),
+            db.stockMovementDao(),
+            db.expenseDao(),
+            db.actionLogDao(),
+            db.subscriptionDao()
+        )
         // MainRepository needs a Context. We provide a dummy one.
         // In J3.1 (B-094A), we use JVM only.
-        repository = MainRepository(db, FakeContext())
+        repository = MainRepository(db, FakeContext(), inventoryRepository)
     }
 
     @Test
