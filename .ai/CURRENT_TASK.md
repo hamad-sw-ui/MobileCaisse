@@ -1,6 +1,6 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** Clôture du Jalon 3 et Préparation du Jalon 4 (Hilt).
+**Tâche :** Synchronisation documentaire post-B-050c (Commit 1).
 
 ## État de la Roadmap
 
@@ -10,15 +10,17 @@
 | J1 | Intégrité des données | ✅ VALIDÉ |
 | J2 | Sécurité | ✅ VALIDÉ |
 | J3 | Filet de tests | ✅ VALIDÉ |
-| J4 | Hilt + Assainissement | ⏳ À démarrer |
+| J4 | Hilt + Assainissement | ✅ VALIDÉ |
+| B-050b | Extraction SalesRepository | ✅ VALIDÉ (c8dfdb6) |
+| B-050c | Extraction InventoryRepository (Cœur) | ✅ SÉCURISÉ (8812490) |
 
 ## Objectif du cycle
-1. Certifier la baseline technique (SUCCESS).
-2. Synchroniser la documentation AI-DOS (TERMINÉ).
-3. Ouvrir le Jalon 4.1 (Mise en place de Hilt).
+1. Documenter la réussite du Commit 1 Inventory (TERMINÉ).
+2. Clôturer la session de synchronisation documentaire (EN COURS).
+3. Préparer le périmètre du futur Commit 2 (À FAIRE).
 
 ## Prochaine étape
-- Jalon 4.1 : Configuration de Hilt (plugin, application, activity).
+- ⏸ **À PLANIFIER / EN ATTENTE D\u0027AUTORISATION** : B-050c Commit 2 (Supply/Audit/Supplier).
 
 ---
-*Mis à jour le 2026-08-05 (Audit Final).*
+*Mis à jour le 2026-08-13 (Post-Commit 1).*

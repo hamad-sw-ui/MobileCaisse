@@ -5,41 +5,43 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit analysé** : a3a5bfd866af8dc1e5181084920f81f1a8381b1d
+- **Dernier commit analysé** : 8812490f19d2c4bca03b9667119c8258000bc5cd
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-08-05 (SUCCESS)
-- **Dernière exécution des tests** : 2026-08-05 (65/65 SUCCESS)
+- **Dernière compilation** : 2026-08-13 (SUCCESS)
+- **Dernière exécution des tests** : 2026-08-13 (70/70 SUCCESS)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
     - FeeCalculator (100% logique calculs MoMo)
     - LicenseUtil (100% logique HMAC)
     - AnomalyEngine (100% logique détection fraude)
-    - MainRepository (Orchestration validée sur JVM - Niveau A)
-    - Restauration physique (Validée)
+    - MainRepository (Délégation Stock/Sales)
+    - SalesRepository (Domaine Sales complet)
+    - InventoryRepository (Cœur Stock extrait - Commit 1)
 - **Dette technique** :
-    - Repository "God Object" (MainRepository > 1300 l.)
-    - Pas d'injection de dépendances (Hilt manquant)
-    - Intégration Room/SQLCipher réelle non testée sur Runtime (B-094B en attente)
+    - `MainRepository` contient encore des méthodes "proxy" déléguant à `InventoryRepository` et `SalesRepository`.
+    - `MainViewModel` appelle encore `MainRepository` pour le stock (raccordement direct à `InventoryRepository` prévu au Commit 4).
+    - Logique PDF/Ticket dans `SalesRepository` (dépendance Android dans data).
 
 ## 📋 Progression
-- **Dernière tâche terminée** : Jalon 3 - Filet de tests (CLÔTURÉ).
-- **Tâche en cours** : Synchronisation documentaire post-J3.
-- **Prochaine tâche prévue** : Jalon 4.1 - Mise en place de Hilt.
+- **Dernière tâche terminée** : B-050c - Extraction Inventory (Commit 1 : Cœur Stock) (CLÔTURÉ).
+- **Tâche en cours** : Synchronisation documentaire post-B-050c.
+- **Prochaine tâche prévue** : B-050c - Commit 2 (Extraction Supply / Audit / Supplier).
 
 ## 🐞 Bugs & Défauts
-- **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-007, BUG-008, BUG-009, BUG-010, BUG-012, BUG-013.
+- **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-007 (partiellement résolu par Hilt), BUG-008, BUG-009, BUG-010, BUG-012, BUG-013.
 - **Bugs Corrigés (VALIDÉ)** : BUG-001, BUG-002, BUG-003, BUG-005, BUG-006, BUG-011, BUG-014, BUG-015, BUG-016, BUG-017, BUG-018, BUG-019, BUG-020, BUG-021, BUG-022, BUG-023, BUG-024, BUG-025, BUG-090, BUG-091, BUG-092, BUG-093, B-094A, BUG-ENV-001.
 
 ## 🏛️ Décisions & Risques
 - **Décisions d'architecture** : 
     - ADR-002 : Restauration physique sécurisée.
-    - B-094 split : Séparation de l'orchestration (JVM) et de l'intégration (Android Runtime).
+    - Fragmentation de `MainRepository` par domaines fonctionnels (Sales, Inventory).
 - **Risques connus** : 
-    - Divergence possible entre les Fake DAOs et le comportement réel de Room/SQLCipher (sera levé par B-094B).
+    - Risque de circularité lors des extractions complexes (évité pour le moment).
+    - Intégrité transactionnelle lors du déplacement de méthodes multi-DAOs (sécurisé par injection `AppDatabase`).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-08-05
+- **Date** : 2026-08-13
 - **Agent** : AI-DOS Independent Auditor
