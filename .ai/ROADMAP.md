@@ -63,21 +63,33 @@ J7 Industrialisation (CI, release)
 
 | Ordre | Tâche | Réf. | Statut |
 |---|---|---|---|
-| 4.1 | Mise en place de Hilt | B-030 | ✅ |
-| 4.2 | `DatabaseModule` | B-031 | ✅ |
-| 4.4 | `@HiltViewModel` | B-033 | ✅ |
-| 4.5 | `@HiltWorker` | B-034 | ✅ |
+| 4.1 | Mise en place de Hilt (plugin + application + activity) | B-030 | ✅ |
+| 4.2 | `DatabaseModule` (base + 20 DAO) | B-031 | ✅ |
+| 4.3 | `RepositoryModule` avec `@ApplicationContext` | B-032 | ✅ |
+| 4.4 | `@HiltViewModel` ; suppression de la factory manuelle | B-033 | ✅ |
+| 4.5 | `@HiltWorker` pour les deux workers | B-034 | ✅ |
+| 4.6 | `EntryPointAccessors` for `SmsReceiver` | B-035, B-038 | ✅ |
+| 4.7 | Fusionner les `NotificationHelper` | B-036 | ✅ |
+| 4.8 | Supprimer les accès base depuis `ui/` | B-037 | ✅ |
+| 4.9 | Sortir permissions et WorkManager de `MainActivity` | B-039 | ✅ |
+| 4.10 | Supprimer le code mort identifié | B-040, B-041 | ✅ |
 
 ---
 
 ## Jalon 5 — Découpage architectural ⏳
 
+**Objectif** : Découpage de `MainRepository` et `MainViewModel` (Incrémental).
+
 | Ordre | Tâche | Réf. | Statut |
 |---|---|---|---|
 | 5.1 | Extraire `SalesRepository` | B-050b | ✅ |
-| 5.2 | Extraire `StockRepository` (Inventory) | B-050c | ⏳ Cœur Stock OK / Commit 2 ⏸ |
-| 5.3 | Extraire `CustomerRepository` | B-050 | □ |
-| 5.4 | Extraire `CashRepository` | B-050 | □ |
+| 5.2 | Extraire `StockRepository` (InventoryRepository) | B-050c | ⏳ Commit 1 OK / Commit 2 ⏸ |
+| 5.3 | Extraire `CustomerRepository` / `SupplierRepository` | B-050 | □ |
+| 5.4 | Extraire `CashRepository` (sessions, clôtures, audits) | B-050 | □ |
+| 5.5 | Sortir la génération PDF/ticket du repository | B-051 | □ |
+| 5.6 | Sortir les `Intent` Android vers `platform/` | B-052 | □ |
+| 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | □ |
+| 5.8 | Étendre le motif aux écrans restants, un par un | B-054 | □ |
 
 ---
 
@@ -85,9 +97,52 @@ J7 Industrialisation (CI, release)
 
 | Ordre | Tâche | Réf. | Statut |
 |---|---|---|---|
-| 6.1 | Écran personnel | B-070 | □ |
-| 6.2 | Sessions de caisse | B-071 | □ |
+| 6.1 | Écran de gestion du personnel (débloque réellement les rôles) | B-070 | □ |
+| 6.2 | Pilotage complet des sessions de caisse | B-071 | □ |
+| 6.3 | Refonte du parcours de permissions | B-078 | □ |
+| 6.4 | Externalisation des textes + `values-en/` | B-073, B-074 | □ |
+| 6.5 | Snackbars cohérents | B-076 | □ |
+| 6.6 | Alertes d\u0027anomalie visibles dans l\u0027UI | B-072 | □ |
+| 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | □ |
+| 6.7b | Implémenter la sauvegarde automatique distante retenue | B-112 | □ |
+| 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
+
+**✅ D2 tranchée — les deux volets en parallèle** :
+- **Volet 1 (immédiat, J0/J1)** — B-110 : renommer « Synchronisation cloud » en
+  **« Exporter et partager »** dans l\u0027UI, sans toucher à la logique existante.
+- **Volet 2 (J6)** — B-111 puis B-112 : analyse comparative Google Drive vs
+  Dropbox, puis implémentation d\u0027une vraie sauvegarde automatique distante.
+  Dépend de **B-101** : on ne téléverse que des archives chiffrées `BackupManager`.
 
 ---
 
-*Document mis à jour le 2026-08-13 (Post-Commit 1 Inventory).*
+## Jalon 7 — Industrialisation □
+
+| Ordre | Tâche | Réf. | Statut |
+|---|---|---|---|
+| 7.1 | ktlint ou detekt | B-097 | □ |
+| 7.2 | CI GitHub Actions (build + test + lint sur PR) | B-098 | □ |
+| 7.3 | Couverture JaCoCo publiée | B-099 | □ |
+| 7.4 | Tests Compose des parcours critiques | B-095 | □ |
+| 7.5 | Configuration de signature et de release |  | □ |
+
+---
+
+## Séquencement proposé
+
+| Jalon | Contenu | Charge indicative |
+|---|---|---|
+| J0 | Build vérifiable | 1 session |
+| J1 | Intégrité des données | 2–3 sessions |
+| J2 | Sécurité | 2 sessions |
+| J3 | Filet de tests | 2 sessions |
+| J4 | Hilt + assainissement | 2–3 sessions |
+| J5 | Découpage | 4–6 sessions (incrémental) |
+| J6 | Fonctionnalités | 3–4 sessions |
+| J7 | Industrialisation | 1–2 sessions |
+
+*Une « session » \u003d une tâche `CURRENT_TASK.md` menée à terme, vérifiée et documentée.*
+
+---
+
+*Document mis à jour le 2026-08-13 (Restauration complète J0-J7).*

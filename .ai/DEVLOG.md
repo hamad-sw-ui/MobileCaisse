@@ -24,7 +24,7 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 - `SalesRepositoryTest.kt` (Setup)
 
 **Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 70/70 SUCCESS.
+**Résultats des tests** : 70/70 SUCCESS. Commit fonctionnel `8812490`.
 
 ---
 
@@ -48,11 +48,19 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 **Objectif** : Lever le verrou sur `classes.jar` et valider les tests unitaires du Repository pour clôturer le Jalon 3.
 
-**Fichiers modifiés** :
-- `app/src/test/java/com/reconsiliation/caisse/data/repository/FakeDaos.kt` (Correction technique du Fake)
+**Analyses réalisées** :
+- Diagnostic du verrouillage fichier via PowerShell et tests de manipulation directe.
+- Identification d\u0027une faille structurelle dans `FakeAppDatabase`.
 
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : Unit tests 65/65 SUCCESS.
+**Décisions prises** :
+- Surcharge de `runInTransaction` pour bypasser le mécanisme Room en tests JVM.
+- Levée du verrou par nettoyage Gradle forcé.
+
+**Fichiers modifiés** :
+- `app/src/test/java/com/reconsiliation/caisse/data/repository/FakeDaos.kt`
+
+**Résultats de compilation** : SUCCESS (:app:assembleDebug).
+**Résultats des tests** : Unit tests 65/65 SUCCESS (Niveau A).
 
 ---
 

@@ -1,6 +1,6 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** Synchronisation documentaire post-B-050c (Commit 1).
+**Tâche :** Restauration de la cohérence documentaire après B-050c (Commit 1).
 
 ## État de la Roadmap
 
@@ -16,8 +16,9 @@
 
 ## Objectif du cycle
 1. Documenter la réussite du Commit 1 Inventory (TERMINÉ).
-2. Clôturer la session de synchronisation documentaire (EN COURS).
-3. Préparer le périmètre du futur Commit 2 (À FAIRE).
+2. Restaurer la structure J0-J7 complète de la Roadmap (EN COURS).
+3. Nettoyer les duplications du DEVLOG (TERMINÉ).
+4. Préparer le périmètre du futur Commit 2 (À FAIRE).
 
 ## Prochaine étape
 - ⏸ **À PLANIFIER / EN ATTENTE D\u0027AUTORISATION** : B-050c Commit 2 (Supply/Audit/Supplier).
