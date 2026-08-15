@@ -19,13 +19,20 @@ class SalesRepositoryTest {
         db = FakeAppDatabase()
         val context = FakeContext()
         val inventoryRepository = InventoryRepository(
-            db,
-            db.stockDao(),
-            db.priceHistoryDao(),
-            db.stockMovementDao(),
-            db.expenseDao(),
-            db.actionLogDao(),
-            db.subscriptionDao()
+            db = db,
+            stockDao = db.stockDao(),
+            priceHistoryDao = db.priceHistoryDao(),
+            movementDao = db.stockMovementDao(),
+            expenseDao = db.expenseDao(),
+            actionLogDao = db.actionLogDao(),
+            subscriptionDao = db.subscriptionDao(),
+            auditDao = db.auditDao(),
+            supplyDao = db.supplyDao(),
+            supplierDao = db.supplierDao(),
+            categoryDao = db.categoryDao(),
+            recipeDao = db.recipeDao(),
+            venteDao = db.venteDao(),
+            boutiqueDao = db.boutiqueDao()
         )
         mainRepository = MainRepository(db, context, inventoryRepository)
         salesRepository = SalesRepository(
@@ -47,16 +54,16 @@ class SalesRepositoryTest {
     private suspend fun setupBasicData() {
         db.boutiqueDao().insertOrUpdate(BoutiqueEntity(id = 1, name = "Test", ownerName = "Owner", phoneNumber = "677112233", operator = "MTN", momoNumber = "677112233"))
         db.subscriptionDao().insertOrUpdate(SubscriptionEntity(id = 1, startDate = Date(), endDate = Date(System.currentTimeMillis() + 86400000), isActive = true, deviceId = "TEST"))
-        db.sessionDao().openSession(SessionEntity(sellerName = "Test", startTime = Date(), openingBalance = 0.0))
     }
 
     @Test
     fun `inserting a sale should work`() = runBlocking {
         setupBasicData()
-        val product = StockEntity(id = 1, productName = "Pain", quantity = 10.0, unitPrice = 100.0, purchasePrice = 80.0, alertThreshold = 2.0)
+        db.sessionDao().openSession(SessionEntity(sellerName = "Test", startTime = Date(), openingBalance = 0.0))
+        val product = StockEntity(id = 1, productName = "Pain", quantity = 10.0, unitPrice = 100.0, purchasePrice = 80.0, alertThreshold = 2.0, category = "Divers")
         db.stockDao().insertOrUpdate(product)
         val vente = VenteEntity(amount = 200.0, description = "Test", date = Date(), paymentMethod = "CASH", status = "CONFIRMED")
-        val items = listOf(VenteItemEntity(venteId = 0, productId = 1, productName = "Pain", quantity = 2.0, unitPrice = 100.0, purchasePrice = 80.0))
+        val items = listOf(VenteItemEntity(id = 0, venteId = 0, productId = 1, productName = "Pain", quantity = 2.0, unitPrice = 100.0, purchasePrice = 80.0))
         val venteId = salesRepository.insertVenteWithItems(vente, items)
         assertTrue(venteId > 0)
         assertEquals(8.0, db.stockDao().getStockById(1)!!.quantity, 0.0)
@@ -102,9 +109,7 @@ class SalesRepositoryTest {
 
     @Test
     fun `closing session should calculate expected balance correctly`() = runBlocking {
-        // Setup boutique and sub
-        db.boutiqueDao().insertOrUpdate(BoutiqueEntity(id = 1, name = "Test", ownerName = "Owner", phoneNumber = "677112233", operator = "MTN", momoNumber = "677112233"))
-        db.subscriptionDao().insertOrUpdate(SubscriptionEntity(id = 1, startDate = Date(), endDate = Date(System.currentTimeMillis() + 86400000), isActive = true, deviceId = "TEST"))
+        setupBasicData()
         
         // Open Alice session
         db.sessionDao().openSession(SessionEntity(sellerName = "Alice", startTime = Date(), openingBalance = 5000.0))

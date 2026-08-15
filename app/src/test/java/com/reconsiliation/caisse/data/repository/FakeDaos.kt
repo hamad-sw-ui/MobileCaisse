@@ -234,10 +234,19 @@ class FakeSubscriptionDao : SubscriptionDao {
 }
 
 class FakeActionLogDao : ActionLogDao {
-    override suspend fun insert(log: ActionLogEntity) {}
-    override fun getRecentLogs() = MutableStateFlow(emptyList<ActionLogEntity>())
-    override suspend fun deleteOldInfoLogs(beforeDate: Date) = 0
-    override suspend fun clearLogs() {}
+    private val _logs = MutableStateFlow<List<ActionLogEntity>>(emptyList())
+    override suspend fun insert(log: ActionLogEntity) {
+        _logs.value = _logs.value + log
+    }
+    override fun getRecentLogs() = _logs
+    override suspend fun deleteOldInfoLogs(beforeDate: Date): Int {
+        val oldSize = _logs.value.size
+        _logs.value = _logs.value.filter { it.date >= beforeDate || it.severity != "INFO" }
+        return oldSize - _logs.value.size
+    }
+    override suspend fun clearLogs() {
+        _logs.value = emptyList()
+    }
 }
 
 class FakeSessionDao : SessionDao {
@@ -336,6 +345,120 @@ class FakeStockMovementDao : StockMovementDao {
         _movements.map { it.filter { m -> m.productId == productId } }
 }
 
+class FakeAuditDao : AuditDao {
+    private val _audits = MutableStateFlow<List<AuditWithItems>>(emptyList())
+    override suspend fun insertAudit(audit: AuditEntity): Long {
+        val id = (_audits.value.size + 1).toLong()
+        _audits.value = _audits.value + AuditWithItems(audit.copy(id = id), emptyList())
+        return id
+    }
+    override suspend fun insertAuditItems(items: List<AuditItemEntity>) {
+        if (items.isEmpty()) return
+        val auditId = items[0].auditId
+        _audits.value = _audits.value.map {
+            if (it.audit.id == auditId) it.copy(items = it.items + items) else it
+        }
+    }
+    override fun getAllAudits() = _audits
+    override suspend fun getAuditById(id: Long) = _audits.value.find { it.audit.id == id }
+}
+
+class FakePriceHistoryDao : PriceHistoryDao {
+    private val _history = MutableStateFlow<List<PriceHistoryEntity>>(emptyList())
+    override suspend fun insert(history: PriceHistoryEntity) {
+        _history.value = _history.value + history
+    }
+    override fun getHistoryForProduct(productId: Long) =
+        _history.map { it.filter { h -> h.productId == productId } }
+    override fun getHistoryByType(type: String) =
+        _history.map { it.filter { h -> h.type == type } }
+}
+
+class FakeSupplyDao : SupplyDao {
+    private val _supplies = MutableStateFlow<List<SupplyEntity>>(emptyList())
+    override suspend fun insert(supply: SupplyEntity): Long {
+        val id = (_supplies.value.size + 1).toLong()
+        _supplies.value = _supplies.value + supply.copy(id = id)
+        return id
+    }
+    override fun getAllSupplies() = _supplies
+    override fun getSuppliesForProduct(productId: Long) =
+        _supplies.map { it.filter { s -> s.productId == productId } }
+}
+
+class FakeSupplierDao : SupplierDao {
+    private val _suppliers = MutableStateFlow<List<SupplierEntity>>(emptyList())
+    override fun getAllSuppliers() = _suppliers
+    override suspend fun insert(supplier: SupplierEntity): Long {
+        val id = (_suppliers.value.size + 1).toLong()
+        _suppliers.value = _suppliers.value + supplier.copy(id = id)
+        return id
+    }
+    override suspend fun updateDebt(id: Long, amount: Double) {
+        _suppliers.value = _suppliers.value.map {
+            if (it.id == id) it.copy(totalDebt = it.totalDebt + amount) else it
+        }
+    }
+    override suspend fun delete(supplier: SupplierEntity) {
+        _suppliers.value = _suppliers.value.filter { it.id != supplier.id }
+    }
+}
+
+class FakeCategoryDao : CategoryDao {
+    private val _categories = MutableStateFlow<List<CategoryEntity>>(emptyList())
+    override fun getCategoriesByType(type: String) =
+        _categories.map { it.filter { c -> c.type == type } }
+    override suspend fun insert(category: CategoryEntity): Long {
+        val id = (_categories.value.size + 1).toLong()
+        _categories.value = _categories.value + category.copy(id = id)
+        return id
+    }
+    override suspend fun delete(category: CategoryEntity) {
+        _categories.value = _categories.value.filter { it.id != category.id }
+    }
+    override suspend fun exists(name: String, type: String) =
+        _categories.value.any { it.name == name && it.type == type }
+}
+
+class FakeRecipeDao : RecipeDao {
+    private val _recipes = MutableStateFlow<List<RecipeEntity>>(emptyList())
+    override fun getRecipeForProduct(parentId: Long) = MutableStateFlow(emptyList<RecipeWithIngredient>()) // Simple mock
+    override suspend fun getRecipeForProductOnce(parentId: Long) =
+        _recipes.value.filter { it.parentProductId == parentId }
+    override suspend fun insert(recipe: RecipeEntity) {
+        _recipes.value = _recipes.value + recipe
+    }
+    override suspend fun delete(recipe: RecipeEntity) {
+        _recipes.value = _recipes.value.filter { it != recipe }
+    }
+    override suspend fun deleteRecipeForProduct(parentId: Long) {
+        _recipes.value = _recipes.value.filter { it.parentProductId != parentId }
+    }
+}
+
+class FakeStaffDao : StaffDao {
+    private val _staff = MutableStateFlow<List<StaffEntity>>(emptyList())
+    override fun getAllActiveStaff() = _staff.map { it.filter { s -> s.isActive } }
+    override suspend fun getStaffById(id: Long) = _staff.value.find { it.id == id }
+    override suspend fun getStaffByPin(pinHash: String) = _staff.value.find { it.pinHash == pinHash }
+    override suspend fun insertOrUpdate(staff: StaffEntity): Long {
+        val id = if (staff.id == 0L) (_staff.value.size + 1).toLong() else staff.id
+        _staff.value = _staff.value.filter { it.id != id } + staff.copy(id = id)
+        return id
+    }
+    override suspend fun delete(staff: StaffEntity) {
+        _staff.value = _staff.value.filter { it.id != staff.id }
+    }
+}
+
+class FakeProcessedSmsDao : ProcessedSmsDao {
+    private val _sms = MutableStateFlow<Set<String>>(emptySet())
+    override suspend fun insert(sms: ProcessedSmsEntity) {
+        _sms.value = _sms.value + sms.transactionId
+    }
+    override suspend fun exists(id: String) = _sms.value.contains(id)
+}
+
 class FakeAppDatabase : AppDatabase() {
     private val _boutiqueDao = FakeBoutiqueDao()
     private val _venteDao = FakeVenteDao()
@@ -349,6 +472,14 @@ class FakeAppDatabase : AppDatabase() {
     private val _repaymentDao = FakeRepaymentDao()
     private val _closureDao = FakeClosureDao()
     private val _movementDao = FakeStockMovementDao()
+    private val _auditDao = FakeAuditDao()
+    private val _priceHistoryDao = FakePriceHistoryDao()
+    private val _supplyDao = FakeSupplyDao()
+    private val _supplierDao = FakeSupplierDao()
+    private val _categoryDao = FakeCategoryDao()
+    private val _recipeDao = FakeRecipeDao()
+    private val _staffDao = FakeStaffDao()
+    private val _processedSmsDao = FakeProcessedSmsDao()
 
     override fun boutiqueDao() = _boutiqueDao
     override fun venteDao() = _venteDao
@@ -362,68 +493,14 @@ class FakeAppDatabase : AppDatabase() {
     override fun repaymentDao() = _repaymentDao
     override fun closureDao() = _closureDao
     override fun stockMovementDao() = _movementDao
-
-    override fun processedSmsDao() = object : ProcessedSmsDao {
-        override suspend fun insert(sms: ProcessedSmsEntity) {}
-        override suspend fun exists(id: String) = false
-    }
-
-    override fun auditDao() = object : AuditDao {
-        override suspend fun insertAudit(audit: AuditEntity) = 0L
-        override suspend fun insertAuditItems(items: List<AuditItemEntity>) {}
-        override fun getAllAudits() = MutableStateFlow(emptyList<AuditWithItems>())
-        override suspend fun getAuditById(id: Long) = null
-    }
-
-    override fun priceHistoryDao() = object : PriceHistoryDao {
-        override suspend fun insert(history: PriceHistoryEntity) {}
-        override fun getHistoryForProduct(productId: Long) =
-            MutableStateFlow(emptyList<PriceHistoryEntity>())
-
-        override fun getHistoryByType(type: String) =
-            MutableStateFlow(emptyList<PriceHistoryEntity>())
-    }
-
-    override fun supplyDao() = object : SupplyDao {
-        override suspend fun insert(supply: SupplyEntity) = 0L
-        override fun getAllSupplies() = MutableStateFlow(emptyList<SupplyEntity>())
-        override fun getSuppliesForProduct(productId: Long) =
-            MutableStateFlow(emptyList<SupplyEntity>())
-    }
-
-    override fun supplierDao() = object : SupplierDao {
-        override fun getAllSuppliers() = MutableStateFlow(emptyList<SupplierEntity>())
-        override suspend fun insert(supplier: SupplierEntity) = 0L
-        override suspend fun updateDebt(id: Long, amount: Double) {}
-        override suspend fun delete(supplier: SupplierEntity) {}
-    }
-
-    override fun categoryDao() = object : CategoryDao {
-        override fun getCategoriesByType(type: String) =
-            MutableStateFlow(emptyList<CategoryEntity>())
-
-        override suspend fun insert(category: CategoryEntity) = 0L
-        override suspend fun delete(category: CategoryEntity) {}
-        override suspend fun exists(name: String, type: String) = false
-    }
-
-    override fun recipeDao() = object : RecipeDao {
-        override fun getRecipeForProduct(parentId: Long) =
-            MutableStateFlow(emptyList<RecipeWithIngredient>())
-
-        override suspend fun getRecipeForProductOnce(parentId: Long) = emptyList<RecipeEntity>()
-        override suspend fun insert(recipe: RecipeEntity) {}
-        override suspend fun delete(recipe: RecipeEntity) {}
-        override suspend fun deleteRecipeForProduct(parentId: Long) {}
-    }
-
-    override fun staffDao() = object : StaffDao {
-        override fun getAllActiveStaff() = MutableStateFlow(emptyList<StaffEntity>())
-        override suspend fun getStaffById(id: Long) = null
-        override suspend fun getStaffByPin(pinHash: String) = null
-        override suspend fun insertOrUpdate(staff: StaffEntity) = 0L
-        override suspend fun delete(staff: StaffEntity) {}
-    }
+    override fun auditDao() = _auditDao
+    override fun priceHistoryDao() = _priceHistoryDao
+    override fun supplyDao() = _supplyDao
+    override fun supplierDao() = _supplierDao
+    override fun categoryDao() = _categoryDao
+    override fun recipeDao() = _recipeDao
+    override fun staffDao() = _staffDao
+    override fun processedSmsDao() = _processedSmsDao
 
     override suspend fun <R> runInTransaction(block: suspend () -> R): R {
         return block()

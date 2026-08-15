@@ -19,8 +19,17 @@ class InventoryRepository @Inject constructor(
     private val movementDao: StockMovementDao,
     private val expenseDao: ExpenseDao,
     private val actionLogDao: ActionLogDao,
-    private val subscriptionDao: SubscriptionDao
+    private val subscriptionDao: SubscriptionDao,
+    private val auditDao: AuditDao,
+    private val supplyDao: SupplyDao,
+    private val supplierDao: SupplierDao,
+    private val categoryDao: CategoryDao,
+    private val recipeDao: RecipeDao,
+    private val venteDao: VenteDao,
+    private val boutiqueDao: BoutiqueDao
 ) {
+
+    // --- Stock Core ---
 
     val allStock: Flow<List<StockEntity>> = stockDao.getAllStock()
     val lowStockAlerts: Flow<List<StockEntity>> = stockDao.getLowStockAlerts()
@@ -84,7 +93,105 @@ class InventoryRepository @Inject constructor(
         }
     }
 
-    suspend fun logAction(type: String, details: String, role: String? = null, severity: String = "INFO") {
+    suspend fun updateStockQuantity(id: Long, delta: Double) = stockDao.updateQuantity(id, delta)
+    suspend fun getProductByBarcode(barcode: String) = stockDao.getProductByBarcode(barcode)
+
+    suspend fun deleteStock(stock: StockEntity) {
+        db.runInTransaction {
+            if (venteDao.isProductUsed(stock.id)) throw Exception("Historique présent")
+            stockDao.delete(stock)
+        }
+    }
+
+    fun getPriceHistory(productId: Long): Flow<List<PriceHistoryEntity>> = priceHistoryDao.getHistoryForProduct(productId)
+    fun getStockMovements(productId: Long): Flow<List<StockMovementEntity>> = movementDao.getMovementsForProduct(productId)
+
+    // --- Supply / Arrivages ---
+
+    val allSupplies: Flow<List<SupplyEntity>> = supplyDao.getAllSupplies()
+
+    suspend fun addSupply(supply: SupplyEntity, role: String? = null) {
+        db.runInTransaction {
+            checkSubscription()
+            val currentStock = stockDao.getStockById(supply.productId)
+            if (currentStock != null) {
+                val totalQty = currentStock.quantity + supply.quantity
+                if (totalQty > 0) {
+                    val newPmp = ((currentStock.quantity * currentStock.purchasePrice) + (supply.quantity * supply.purchasePrice)) / totalQty
+                    stockDao.insertOrUpdate(currentStock.copy(purchasePrice = newPmp))
+                }
+            }
+            supplyDao.insert(supply)
+            stockDao.updateQuantity(supply.productId, supply.quantity)
+            val after = (stockDao.getStockById(supply.productId)?.quantity ?: 0.0)
+            movementDao.insert(StockMovementEntity(
+                productId = supply.productId,
+                date = Date(),
+                type = "IN",
+                quantity = supply.quantity,
+                reason = "Arrivage ${supply.supplierName ?: ""}",
+                balanceAfter = after
+            ))
+
+            if (!supply.isPaid && supply.supplierId != null) {
+                supplierDao.updateDebt(supply.supplierId, supply.quantity * supply.purchasePrice)
+            }
+
+            logAction("STOCK_SUPPLY", "Approvisionnement: ${supply.productName} +${supply.quantity}", role)
+        }
+    }
+
+    // --- Suppliers ---
+
+    val allSuppliers: Flow<List<SupplierEntity>> = supplierDao.getAllSuppliers()
+    suspend fun addSupplier(supplier: SupplierEntity) = supplierDao.insert(supplier)
+    suspend fun deleteSupplier(supplier: SupplierEntity) = supplierDao.delete(supplier)
+    suspend fun updateSupplierDebt(supplierId: Long, amount: Double) = supplierDao.updateDebt(supplierId, amount)
+
+    // --- Audit ---
+
+    val allAudits: Flow<List<AuditWithItems>> = auditDao.getAllAudits()
+
+    suspend fun performAudit(note: String?, items: List<AuditItemEntity>) {
+        db.runInTransaction {
+            checkSubscription()
+            val totalDiscrepancy = items.sumOf { (it.physicalQuantity - it.systemQuantity) * it.purchasePrice }
+            val auditId = auditDao.insertAudit(AuditEntity(date = Date(), note = note, totalDiscrepancy = totalDiscrepancy))
+            val itemsWithId = items.map { it.copy(auditId = auditId) }
+            auditDao.insertAuditItems(itemsWithId)
+            items.forEach { item ->
+                val diff = item.physicalQuantity - item.systemQuantity
+                if (diff != 0.0) {
+                    stockDao.updateQuantity(item.productId, diff)
+                    if (diff < 0) {
+                        expenseDao.insert(ExpenseEntity(
+                            label = "Écart audit: ${item.productName}",
+                            amount = abs(diff) * item.purchasePrice,
+                            date = Date(),
+                            category = "Pertes"
+                        ))
+                    }
+                }
+            }
+        }
+    }
+
+    // --- Categories ---
+
+    fun getCategories(type: String) = categoryDao.getCategoriesByType(type)
+    suspend fun addCategory(category: CategoryEntity) = categoryDao.insert(category)
+    suspend fun deleteCategory(category: CategoryEntity) = categoryDao.delete(category)
+
+    // --- Recipes ---
+
+    fun getRecipeForProduct(parentId: Long) = recipeDao.getRecipeForProduct(parentId)
+    suspend fun addRecipeComponent(recipe: RecipeEntity) = recipeDao.insert(recipe)
+    suspend fun deleteRecipeComponent(recipe: RecipeEntity) = recipeDao.delete(recipe)
+    suspend fun deleteRecipeForProduct(parentId: Long) = recipeDao.deleteRecipeForProduct(parentId)
+
+    // --- Helpers ---
+
+    internal suspend fun logAction(type: String, details: String, role: String? = null, severity: String = "INFO") {
         actionLogDao.insert(ActionLogEntity(date = Date(), actionType = type, details = details, userRole = role ?: "SYSTEM", severity = severity))
     }
 

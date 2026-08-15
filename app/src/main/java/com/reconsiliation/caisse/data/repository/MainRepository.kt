@@ -48,9 +48,9 @@ class MainRepository @Inject constructor(
     
     val allExpenses: Flow<List<ExpenseEntity>> = db.expenseDao().getAllExpenses()
     val lowStockAlerts: Flow<List<StockEntity>> get() = inventoryRepository.lowStockAlerts
-    val allAudits: Flow<List<AuditWithItems>> = db.auditDao().getAllAudits()
-    val allSupplies: Flow<List<SupplyEntity>> = db.supplyDao().getAllSupplies()
-    val allSuppliers: Flow<List<SupplierEntity>> = db.supplierDao().getAllSuppliers()
+    val allAudits: Flow<List<AuditWithItems>> get() = inventoryRepository.allAudits
+    val allSupplies: Flow<List<SupplyEntity>> get() = inventoryRepository.allSupplies
+    val allSuppliers: Flow<List<SupplierEntity>> get() = inventoryRepository.allSuppliers
     val recentLogs: Flow<List<ActionLogEntity>> = db.actionLogDao().getRecentLogs()
 
     fun getExpensesByCategory(start: Date, end: Date): Flow<List<com.reconsiliation.caisse.ui.viewmodel.CategoryTotal>> = db.expenseDao().getExpensesByCategory(start, end)
@@ -137,8 +137,8 @@ class MainRepository @Inject constructor(
         inventoryRepository.updateStock(stock, role)
     }
 
-    suspend fun updateStockQuantity(id: Long, delta: Double) = db.stockDao().updateQuantity(id, delta)
-    suspend fun getProductByBarcode(barcode: String) = db.stockDao().getProductByBarcode(barcode)
+    suspend fun updateStockQuantity(id: Long, delta: Double) = inventoryRepository.updateStockQuantity(id, delta)
+    suspend fun getProductByBarcode(barcode: String) = inventoryRepository.getProductByBarcode(barcode)
     suspend fun updateBoutique(boutique: BoutiqueEntity) = db.boutiqueDao().insertOrUpdate(boutique)
 
     fun getExpensesByDateRange(start: Date, end: Date) = db.expenseDao().getExpensesByDateRange(start, end)
@@ -151,40 +151,12 @@ class MainRepository @Inject constructor(
 
     suspend fun insertSmsError(body: String, sender: String?) = db.smsErrorDao().insert(SmsErrorEntity(body = body, date = Date(), sender = sender))
 
-    suspend fun addSupplier(supplier: SupplierEntity) = db.supplierDao().insert(supplier)
-    suspend fun deleteSupplier(supplier: SupplierEntity) = db.supplierDao().delete(supplier)
-    suspend fun updateSupplierDebt(supplierId: Long, amount: Double) = db.supplierDao().updateDebt(supplierId, amount)
+    suspend fun addSupplier(supplier: SupplierEntity) = inventoryRepository.addSupplier(supplier)
+    suspend fun deleteSupplier(supplier: SupplierEntity) = inventoryRepository.deleteSupplier(supplier)
+    suspend fun updateSupplierDebt(supplierId: Long, amount: Double) = inventoryRepository.updateSupplierDebt(supplierId, amount)
 
     suspend fun addSupply(supply: SupplyEntity, role: String? = null) {
-        db.runInTransaction {
-            checkSubscription()
-            val currentStock = db.stockDao().getStockById(supply.productId)
-            if (currentStock != null) {
-                val totalQty = currentStock.quantity + supply.quantity
-                if (totalQty > 0) {
-                    val newPmp = ((currentStock.quantity * currentStock.purchasePrice) + (supply.quantity * supply.purchasePrice)) / totalQty
-                    db.stockDao().insertOrUpdate(currentStock.copy(purchasePrice = newPmp))
-                }
-            }
-            db.supplyDao().insert(supply)
-            db.stockDao().updateQuantity(supply.productId, supply.quantity)
-            val after = (db.stockDao().getStockById(supply.productId)?.quantity ?: 0.0)
-            db.stockMovementDao().insert(StockMovementEntity(
-                productId = supply.productId,
-                date = Date(),
-                type = "IN",
-                quantity = supply.quantity,
-                reason = "Arrivage ${supply.supplierName ?: ""}",
-                balanceAfter = after
-            ))
-            
-            // Handle Supplier Debt (Point 4)
-            if (!supply.isPaid && supply.supplierId != null) {
-                db.supplierDao().updateDebt(supply.supplierId, supply.quantity * supply.purchasePrice)
-            }
-
-            logAction("STOCK_SUPPLY", "Approvisionnement: ${supply.productName} +${supply.quantity}", role)
-        }
+        inventoryRepository.addSupply(supply, role)
     }
 
 
@@ -226,10 +198,10 @@ class MainRepository @Inject constructor(
     }
 
     // Recipe Management
-    fun getRecipeForProduct(parentId: Long) = db.recipeDao().getRecipeForProduct(parentId)
-    suspend fun addRecipeComponent(recipe: RecipeEntity) = db.recipeDao().insert(recipe)
-    suspend fun deleteRecipeComponent(recipe: RecipeEntity) = db.recipeDao().delete(recipe)
-    suspend fun deleteRecipeForProduct(parentId: Long) = db.recipeDao().deleteRecipeForProduct(parentId)
+    fun getRecipeForProduct(parentId: Long) = inventoryRepository.getRecipeForProduct(parentId)
+    suspend fun addRecipeComponent(recipe: RecipeEntity) = inventoryRepository.addRecipeComponent(recipe)
+    suspend fun deleteRecipeComponent(recipe: RecipeEntity) = inventoryRepository.deleteRecipeComponent(recipe)
+    suspend fun deleteRecipeForProduct(parentId: Long) = inventoryRepository.deleteRecipeForProduct(parentId)
 
     // ==================== Sauvegarde chiffrée (BackupManager) ====================
 
@@ -575,41 +547,23 @@ class MainRepository @Inject constructor(
         }
     }
 
-    fun getPriceHistory(productId: Long): Flow<List<PriceHistoryEntity>> = db.priceHistoryDao().getHistoryForProduct(productId)
-    fun getStockMovements(productId: Long): Flow<List<StockMovementEntity>> = db.stockMovementDao().getMovementsForProduct(productId)
+    fun getPriceHistory(productId: Long): Flow<List<PriceHistoryEntity>> = inventoryRepository.getPriceHistory(productId)
+    fun getStockMovements(productId: Long): Flow<List<StockMovementEntity>> = inventoryRepository.getStockMovements(productId)
 
     suspend fun deleteStock(stock: StockEntity) {
-        db.runInTransaction {
-            if (db.venteDao().isProductUsed(stock.id)) throw Exception("Historique présent")
-            db.stockDao().delete(stock)
-        }
+        inventoryRepository.deleteStock(stock)
     }
 
     fun searchStock(query: String) = inventoryRepository.searchStock(query)
     fun getTopProfitableProducts(limit: Int) = inventoryRepository.getTopProfitableProducts(limit)
 
     // Category Management
-    fun getCategories(type: String) = db.categoryDao().getCategoriesByType(type)
-    suspend fun addCategory(category: CategoryEntity) = db.categoryDao().insert(category)
-    suspend fun deleteCategory(category: CategoryEntity) = db.categoryDao().delete(category)
+    fun getCategories(type: String) = inventoryRepository.getCategories(type)
+    suspend fun addCategory(category: CategoryEntity) = inventoryRepository.addCategory(category)
+    suspend fun deleteCategory(category: CategoryEntity) = inventoryRepository.deleteCategory(category)
 
     suspend fun performAudit(note: String?, items: List<AuditItemEntity>) {
-        db.runInTransaction {
-            checkSubscription()
-            val totalDiscrepancy = items.sumOf { (it.physicalQuantity - it.systemQuantity) * it.purchasePrice }
-            val auditId = db.auditDao().insertAudit(AuditEntity(date = Date(), note = note, totalDiscrepancy = totalDiscrepancy))
-            val itemsWithId = items.map { it.copy(auditId = auditId) }
-            db.auditDao().insertAuditItems(itemsWithId)
-            items.forEach { item ->
-                val diff = item.physicalQuantity - item.systemQuantity
-                if (diff != 0.0) {
-                    db.stockDao().updateQuantity(item.productId, diff)
-                    if (diff < 0) {
-                        db.expenseDao().insert(ExpenseEntity(label = "Écart audit: ${item.productName}", amount = abs(diff) * item.purchasePrice, date = Date(), category = "Pertes"))
-                    }
-                }
-            }
-        }
+        inventoryRepository.performAudit(note, items)
     }
 
     suspend fun markSmsAsProcessed(transactionId: String) = db.processedSmsDao().insert(ProcessedSmsEntity(transactionId))

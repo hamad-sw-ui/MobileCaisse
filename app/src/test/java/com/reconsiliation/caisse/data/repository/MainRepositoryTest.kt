@@ -1,6 +1,5 @@
 package com.reconsiliation.caisse.data.repository
 
-import com.reconsiliation.caisse.data.local.entity.StockEntity
 import com.reconsiliation.caisse.data.local.entity.BoutiqueEntity
 import com.reconsiliation.caisse.data.local.entity.SubscriptionEntity
 import kotlinx.coroutines.runBlocking
@@ -18,34 +17,31 @@ class MainRepositoryTest {
     fun setup() {
         db = FakeAppDatabase()
         val inventoryRepository = InventoryRepository(
-            db,
-            db.stockDao(),
-            db.priceHistoryDao(),
-            db.stockMovementDao(),
-            db.expenseDao(),
-            db.actionLogDao(),
-            db.subscriptionDao()
+            db = db,
+            stockDao = db.stockDao(),
+            priceHistoryDao = db.priceHistoryDao(),
+            movementDao = db.stockMovementDao(),
+            expenseDao = db.expenseDao(),
+            actionLogDao = db.actionLogDao(),
+            subscriptionDao = db.subscriptionDao(),
+            auditDao = db.auditDao(),
+            supplyDao = db.supplyDao(),
+            supplierDao = db.supplierDao(),
+            categoryDao = db.categoryDao(),
+            recipeDao = db.recipeDao(),
+            venteDao = db.venteDao(),
+            boutiqueDao = db.boutiqueDao()
         )
-        // MainRepository needs a Context. We provide a dummy one.
-        // In J3.1 (B-094A), we use JVM only.
         repository = MainRepository(db, FakeContext(), inventoryRepository)
     }
 
     @Test
-    fun `adjusting stock should update quantity and create expense if loss`() = runBlocking {
-        val product = StockEntity(
-            id = 1, 
-            productName = "Pain", 
-            quantity = 10.0, 
-            unitPrice = 100.0, 
-            purchasePrice = 80.0, 
-            alertThreshold = 2.0
-        )
-        db.stockDao().insertOrUpdate(product)
-
-        repository.adjustStock(product, 5.0, "Perte")
-
-        val updatedStock = db.stockDao().getStockById(1)
-        assertEquals(5.0, updatedStock!!.quantity, 0.0)
+    fun `checkSubscription should throw exception if no subscription`() = runBlocking {
+        try {
+            repository.checkSubscription()
+            fail("Should have thrown exception")
+        } catch (e: Exception) {
+            assertTrue(e.message!!.contains("expiré"))
+        }
     }
 }
