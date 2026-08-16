@@ -5,13 +5,13 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 8812490f19d2c4bca03b9667119c8258000bc5cd (B-050c Commit 1)
-- **HEAD actuel** : 210f0b38ed50dff3dd099913768f156a79505b0e
+- **Dernier commit fonctionnel** : 563eee301a44eacdaed537d7b0e7ae5794991e5d
+- **HEAD actuel** : 563eee301a44eacdaed537d7b0e7ae5794991e5d
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
 - **Dernière compilation** : 2026-08-13 (SUCCESS)
-- **Dernière exécution des tests** : 2026-08-13 (70/70 SUCCESS)
+- **Dernière exécution des tests** : 2026-08-13 (75/75 SUCCESS)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -19,17 +19,17 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - LicenseUtil (100% logique HMAC)
     - AnomalyEngine (100% logique détection fraude)
     - MainRepository (Délégation Stock/Sales)
-    - SalesRepository (Domaine Sales complet)
-    - InventoryRepository (Cœur Stock extrait - Commit 1)
+    - SalesRepository (Domaine Sales complet + Clients + Sessions)
+    - InventoryRepository (Domaine Inventory complet + Fournisseurs + Audits + Recettes)
 - **Dette technique** :
-    - `MainRepository` (618 lignes) contient encore des méthodes "proxy".
-    - `MainViewModel` appelle encore `MainRepository` pour le stock (raccordement direct à `InventoryRepository` prévu au Commit 4).
+    - `MainRepository` (645 lignes) contient encore des méthodes "proxy".
+    - `MainViewModel` (717 lignes) centralise encore la logique de tous les écrans.
     - Logique PDF/Ticket dans `SalesRepository` (dépendance Android dans data).
 
 ## 📋 Progression
-- **Dernière tâche terminée** : B-050c - Extraction Inventory (Commit 1 : Cœur Stock) (CLÔTURÉ).
-- **Tâche en cours** : Restauration de la cohérence documentaire.
-- **Prochaine tâche prévue** : B-050c - Commit 2 (Extraction Supply / Audit / Supplier).
+- **Dernière tâche terminée** : B-050c - Extraction Inventory (CLÔTURÉ).
+- **Tâche en cours** : Synchronisation documentaire.
+- **Prochaine tâche prévue** : B-051 - Extraction Génération PDF/Ticket.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-007, BUG-008, BUG-009, BUG-010, BUG-012, BUG-013.
@@ -38,9 +38,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 🏛️ Décisions & Risques
 - **Décisions d'architecture** : 
     - ADR-002 : Restauration physique sécurisée.
-    - Fragmentation de `MainRepository` par domaines fonctionnels (Sales, Inventory).
+    - fragmentation de `MainRepository` par domaines fonctionnels (Sales, Inventory).
+    - Regroupement des domaines satellites (Clients/Sessions -> Sales, Fournisseurs/Audits -> Inventory) par cohérence technique.
 - **Risques connus** : 
-    - Risque de circularité lors des extractions complexes.
+    - Risque de circularité lors des extractions complexes (sécurisé par le plan J5).
     - Intégrité transactionnelle (sécurisée par injection `AppDatabase`).
 
 ## 🕒 Dernière Mise à jour

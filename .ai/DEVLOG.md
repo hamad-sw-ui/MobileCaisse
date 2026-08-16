@@ -4,27 +4,35 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 ---
 
+## [2026-08-13] - B-050c : Finalisation de InventoryRepository (Commit 2)
+
+**Objectif** : Achever l\u0027extraction du domaine inventaire vers `InventoryRepository`.
+
+**Analyses réalisées** :
+- Audit des transactions complexes : `addSupply` (PMP), `performAudit` (discrepancies) et `deleteStock` (integrity check).
+- Identification des domaines satellites : Supplier, Recipe, Category.
+
+**Décisions prises** :
+- Intégration de `Supplier` et `Audit` dans `InventoryRepository` pour réduire la dispersion architecturale.
+- Maintien des proxys dans `MainRepository` pour assurer la compatibilité ascendante avec le ViewModel unique.
+- Sécurisation du `deleteStock` via l\u0027accès lecture seule à `VenteDao`.
+
+**Fichiers modifiés** :
+- `InventoryRepository.kt` (Enrichissement)
+- `MainRepository.kt` (Allègement massif)
+- `InventoryRepositoryTest.kt` (Création)
+- `FakeDaos.kt` (Implémentation des mocks Inventory)
+
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : 75/75 SUCCESS. Commit final `563eee3`.
+
+---
+
 ## [2026-08-13] - B-050c : Extraction du cœur Stock (Commit 1)
 
 **Objectif** : Isoler la logique de stock de `MainRepository` vers `InventoryRepository`.
 
-**Analyses réalisées** :
-- Identification des méthodes cœurs : `allStock`, `lowStockAlerts`, `getStockValuation`, `adjustStock`, `updateStock`.
-- Analyse des transactions multi-DAOs (Stock + Expense + Movement).
-
-**Décisions prises** :
-- Injection de `AppDatabase` dans `InventoryRepository` pour conserver `runInTransaction`.
-- Maintien temporaire de `deleteStock` dans `MainRepository` (dépendance `VenteDao`).
-- Utilisation de proxys dans `MainRepository` pour éviter de casser le `MainViewModel` immédiatement.
-
-**Fichiers modifiés** :
-- `InventoryRepository.kt` (Création)
-- `MainRepository.kt` (Refactor)
-- `MainRepositoryTest.kt` (Setup)
-- `SalesRepositoryTest.kt` (Setup)
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 70/70 SUCCESS. Commit fonctionnel `8812490`.
+**Résultats** : Cœur Stock extrait, atomicité préservée. Commit `8812490`.
 
 ---
 
@@ -48,19 +56,11 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 **Objectif** : Lever le verrou sur `classes.jar` et valider les tests unitaires du Repository pour clôturer le Jalon 3.
 
-**Analyses réalisées** :
-- Diagnostic du verrouillage fichier via PowerShell et tests de manipulation directe.
-- Identification d\u0027une faille structurelle dans `FakeAppDatabase`.
-
-**Décisions prises** :
-- Surcharge de `runInTransaction` pour bypasser le mécanisme Room en tests JVM.
-- Levée du verrou par nettoyage Gradle forcé.
-
 **Fichiers modifiés** :
 - `app/src/test/java/com/reconsiliation/caisse/data/repository/FakeDaos.kt`
 
-**Résultats de compilation** : SUCCESS (:app:assembleDebug).
-**Résultats des tests** : Unit tests 65/65 SUCCESS (Niveau A).
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : Unit tests 65/65 SUCCESS.
 
 ---
 
