@@ -4,27 +4,38 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 ---
 
+## [2026-08-17] - J5.7 : Découpage structurel du ViewModel (NewSaleScreen)
+
+**Objectif** : Extraire la logique de l\u0027écran de vente du `MainViewModel` monolithique.
+
+**Analyses réalisées** :
+- Cartographie des dépendances du `NewSaleScreen`.
+- Analyse du mécanisme de persistance `"cart_items"` dans le `SavedStateHandle`.
+- Identification du couplage `userRole`.
+
+**Décisions prises** :
+- Création de `NewSaleViewModel` et `NewSaleUiState`.
+- Transfert de la clé `"cart_items"` vers le nouveau ViewModel pour préserver la protection contre le process death.
+- Transmission explicite du rôle utilisateur depuis l\u0027UI pour éviter la dépendance circulaire vers `MainViewModel`.
+- Suppression de la fuite d\u0027Intent WhatsApp dans `NewSaleScreen` via `ShareManager`.
+- Maintien de `addVenteWithItems` dans `MainViewModel` uniquement pour les "Ventes Rapides" du StockScreen (évite la duplication).
+
+**Fichiers modifiés** :
+- `NewSaleViewModel.kt` (Création)
+- `NewSaleUiState.kt` (Création)
+- `NewSaleViewModelTest.kt` (Création)
+- `MainViewModel.kt` (Allégement du panier)
+- `NewSaleScreen.kt` (Raccordement)
+- `BigButton.kt` (Support enabled)
+
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : 79/79 SUCCESS. Commit final `66c4285`.
+
+---
+
 ## [2026-08-17] - B-052 : Extraction des Intent et Share vers la couche Platform
 
 **Objectif** : Purger les Repositories des dépendances de communication Android (Intents, FileProvider, Uri).
-
-**Analyses réalisées** :
-- Identification de la dispersion des `ACTION_SEND` dans `MainRepository`, `SalesRepository` et le ViewModel.
-- Risque lié à l\u0027autorité `FileProvider` en dur identifié (BUG-025).
-
-**Décisions prises** :
-- Création de `platform.ShareManager` pour encapsuler toute la logique d\u0027interaction externe (Texte, Fichiers, WhatsApp).
-- Utilisation systématique de `context.packageName` pour l\u0027autorité `FileProvider`.
-- Purification complète de `SalesRepository` (0 import Intent, 0 import Context).
-- Centralisation de l\u0027orchestration dans `MainViewModel`.
-
-**Fichiers modifiés** :
-- `SalesRepository.kt` (Purge Context/Intent)
-- `MainRepository.kt` (Purge Intent/Share)
-- `MainViewModel.kt` (Orchestration ShareManager)
-- `ShareManager.kt` (Création)
-- `PlatformModule.kt` (Raccordement Hilt)
-- `SalesRepositoryTest.kt` (Setup)
 
 **Résultats de compilation** : SUCCESS.
 **Résultats des tests** : 75/75 SUCCESS. Commit final `056be5b`.

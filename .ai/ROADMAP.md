@@ -88,8 +88,8 @@ J7 Industrialisation (CI, release)
 | 5.4 | Extraire `CashRepository` (sessions, clôtures, audits) | B-050 | 🟠 RESPONSABILITÉS ABSORBÉES/RÉPARTIES — CASHREPOSITORY AUTONOME NON RÉALISÉ |
 | 5.5 | Sortir la génération PDF/ticket du repository | B-051 | ✅ (a457eda) |
 | 5.6 | Sortir les `Intent` Android vers `platform/` | B-052 | ✅ (056be5b) |
-| 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | □ |
-| 5.8 | Étendre le motif aux écrans restants, un par un | B-054 | □ |
+| 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | ✅ (66c4285) |
+| 5.8 | Étendre le motif aux écrans restants, un par un | B-054 | ⏭ PROCHAINE ÉTAPE |
 
 *Note sur 5.3/5.4 : Customer est dans SalesRepo, Supplier/Audit dans InventoryRepo. Le plan de découpage vers des repositories autonomes a été redéfini par absorption fonctionnelle.*
 
@@ -147,4 +147,4 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-08-17 (B-052 Intents/Share TERMINÉ).*
+*Document mis à jour le 2026-08-17 (J5.7 NewSaleViewModel TERMINÉ).*
