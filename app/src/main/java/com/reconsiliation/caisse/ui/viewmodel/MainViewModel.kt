@@ -23,15 +23,6 @@ import javax.inject.Inject
 import java.io.Serializable
 import kotlinx.coroutines.flow.first
 
-data class CartItem(
-    val product: StockEntity,
-    val quantity: Double,
-    val priceAtSale: Double,
-    val isRetail: Boolean = false,
-    val parentId: Long? = null,
-    val conversionFactor: Double = 1.0
-) : Serializable
-
 data class CategoryTotal(val category: String, val total: Double)
 
 /** État des opérations de sauvegarde et de restauration. */
@@ -293,97 +284,19 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    // Cart Management (Point 3: Process Death Protection)
-    private val _cart = savedStateHandle.getStateFlow<List<CartItem>>("cart_items", emptyList())
-    val cart = _cart
-
-    fun addToCart(product: StockEntity, price: Double, isRetail: Boolean = false, parentId: Long? = null, factor: Double = 1.0) {
-        val current = _cart.value.toMutableList()
-        val existing = current.find { it.product.id == product.id && it.isRetail == isRetail }
-        if (existing != null) {
-            val updatedList = current.map {
-                if (it.product.id == product.id && it.isRetail == isRetail)
-                    it.copy(quantity = it.quantity + 1, priceAtSale = price)
-                else it
-            }
-            savedStateHandle["cart_items"] = updatedList
-        } else {
-            val newList = current + CartItem(product, 1.0, price, isRetail, parentId, factor)
-            savedStateHandle["cart_items"] = newList
-        }
-    }
-
-    fun removeFromCart(item: CartItem) {
-        val current = _cart.value.toMutableList()
-        current.remove(item)
-        savedStateHandle["cart_items"] = current
-    }
-
-    fun updateCartItemQuantity(item: CartItem, newQuantity: Double) {
-        val current = _cart.value.toMutableList()
-        val updatedList = current.map {
-            if (it.product.id == item.product.id && it.isRetail == item.isRetail)
-                it.copy(quantity = newQuantity)
-            else it
-        }
-        savedStateHandle["cart_items"] = updatedList
-    }
-
-    fun clearCart() {
-        savedStateHandle["cart_items"] = emptyList<CartItem>()
-    }
-
-    fun updateCartPrices(isVip: Boolean) {
-        val current = _cart.value
-        val updated = current.map { item ->
-            val price = if (isVip && item.product.vipPrice > 0) item.product.vipPrice else item.product.unitPrice
-            item.copy(priceAtSale = price)
-        }
-        savedStateHandle["cart_items"] = updated
-    }
-
     fun addVenteWithItems(vente: VenteEntity, items: List<VenteItemEntity>) = viewModelScope.launch {
         try {
-            // ... (keeping existing logic for finalVente calculation)
             val finalVente = if (boutique.value?.isTaxEnabled == true) {
                 val tax = vente.amount * (boutique.value?.taxRate ?: 0.0) / 100.0
                 vente.copy(taxAmount = tax, amount = vente.amount + tax)
             } else vente
 
-            val processedItems = _cart.value.map { cartItem ->
-                if (cartItem.isRetail && cartItem.parentId != null) {
-                    VenteItemEntity(
-                        venteId = 0,
-                        productId = cartItem.parentId,
-                        productName = cartItem.product.productName,
-                        quantity = cartItem.quantity / cartItem.conversionFactor,
-                        unitPrice = cartItem.priceAtSale,
-                        purchasePrice = cartItem.product.purchasePrice / cartItem.conversionFactor
-                    )
-                } else {
-                    VenteItemEntity(
-                        venteId = 0,
-                        productId = cartItem.product.id,
-                        productName = cartItem.product.productName,
-                        quantity = cartItem.quantity,
-                        unitPrice = cartItem.priceAtSale,
-                        purchasePrice = cartItem.product.purchasePrice
-                    )
-                }
-            }
-
-            val venteId = salesRepository.insertVenteWithItems(finalVente, processedItems, userRole.value)
-            clearCart()
-            _lastConfirmedVenteId.value = venteId
+            salesRepository.insertVenteWithItems(finalVente, items, userRole.value)
         } catch (e: Exception) {
             _uiError.value = e.message
         }
     }
 
-    private val _lastConfirmedVenteId = MutableStateFlow<Long?>(null)
-    val lastConfirmedVenteId = _lastConfirmedVenteId.asStateFlow()
-
-    fun clearLastVenteId() { _lastConfirmedVenteId.value = null }
     fun updateVente(vente: VenteEntity, items: List<VenteItemEntity>? = null) = viewModelScope.launch {
         try { salesRepository.updateVente(vente, items, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
@@ -391,7 +304,7 @@ class MainViewModel @Inject constructor(
     fun cancelVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.cancelVente(vente) } catch (e: Exception) { _uiError.value = e.message } }
     fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { salesRepository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    
+
     fun adjustStock(stock: StockEntity, newQuantity: Double, reason: String) = viewModelScope.launch { try { repository.adjustStock(stock, newQuantity, reason, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun updateStock(stock: StockEntity) = viewModelScope.launch { try { repository.updateStock(stock, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun updateStockQuantity(id: Long, delta: Double) = viewModelScope.launch { repository.updateStockQuantity(id, delta) }

@@ -34,6 +34,8 @@ import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.NewSaleViewModel
+import com.reconsiliation.caisse.ui.state.NewSaleUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
@@ -44,16 +46,20 @@ import java.util.*
 @Composable
 fun NewSaleScreen(navController: NavController) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    val viewModel: MainViewModel = hiltViewModel()
-    val boutique by viewModel.boutique.collectAsState()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: NewSaleViewModel = hiltViewModel()
+    
+    val boutique by mainViewModel.boutique.collectAsState()
     val operatorName = if (boutique?.operator == "MTN") "MTN/OM" else boutique?.operator ?: "MTN/OM"
-    val stockItems by viewModel.allStock.collectAsState()
+    val stockItems by viewModel.allStock.collectAsState(initial = emptyList())
     val cart by viewModel.cart.collectAsState()
-    val currency by viewModel.currency.collectAsState()
+    val currency by mainViewModel.currency.collectAsState()
     val lastVenteId by viewModel.lastConfirmedVenteId.collectAsState()
+    val userRole by mainViewModel.userRole.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
 
-    val isDataLoaded by viewModel.isDataLoaded.collectAsState()
-    val activeSession by viewModel.activeSession.collectAsState()
+    val isDataLoaded by mainViewModel.isDataLoaded.collectAsState()
+    val activeSession by mainViewModel.activeSession.collectAsState()
 
     LaunchedEffect(activeSession, isDataLoaded) {
         if (isDataLoaded && activeSession == null) {
@@ -63,6 +69,12 @@ fun NewSaleScreen(navController: NavController) {
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState) {
+        if (uiState is NewSaleUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as NewSaleUiState.Error).message)
+        }
+    }
 
     var customerPhone by remember { mutableStateOf("") }
     var paymentMethod by remember { mutableStateOf("CASH") }
@@ -181,7 +193,7 @@ fun NewSaleScreen(navController: NavController) {
                 
                 IconButton(
                     onClick = {
-                        viewModel.recordActivity()
+                        mainViewModel.recordActivity()
                         showScanner = true
                     },
                     modifier = Modifier.size(48.dp).background(Primary, RoundedCornerShape(12.dp)),
@@ -203,12 +215,12 @@ fun NewSaleScreen(navController: NavController) {
                         CartRow(
                             item = item,
                             onUpdateQuantity = { newQty ->
-                                viewModel.recordActivity()
+                                mainViewModel.recordActivity()
                                 if (newQty > 0) viewModel.updateCartItemQuantity(item, newQty)
                                 else viewModel.removeFromCart(item)
                             },
                             onRemove = {
-                                viewModel.recordActivity()
+                                mainViewModel.recordActivity()
                                 viewModel.removeFromCart(item)
                             }
                         )
@@ -334,8 +346,9 @@ fun NewSaleScreen(navController: NavController) {
 
                 BigButton(
                     text = "VALIDER LA VENTE",
+                    enabled = uiState !is NewSaleUiState.Processing,
                     onClick = {
-                        viewModel.recordActivity()
+                        mainViewModel.recordActivity()
                         if (cart.isNotEmpty()) {
                             val invalidItem = cart.find { it.product.unit == "pcs" && it.quantity % 1.0 != 0.0 }
                             if (invalidItem != null) {
@@ -390,7 +403,11 @@ fun NewSaleScreen(navController: NavController) {
                             val items = cart.map {
                                 VenteItemEntity(venteId = 0, productId = it.product.id, productName = it.product.productName, quantity = it.quantity, unitPrice = it.priceAtSale, purchasePrice = it.product.purchasePrice)
                             }
-                            viewModel.addVenteWithItems(vente, items)
+                            viewModel.addVenteWithItems(
+                                vente, items, userRole, 
+                                boutique?.isTaxEnabled == true, 
+                                boutique?.taxRate ?: 0.0
+                            )
                         }
                     },
                     containerColor = GreenSuccess
@@ -428,16 +445,7 @@ fun NewSaleScreen(navController: NavController) {
                                             venteWithItems.items,
                                             currency
                                         )
-                                        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(android.content.Intent.EXTRA_TEXT, text)
-                                            `package` = "com.whatsapp"
-                                        }
-                                        try {
-                                            context.startActivity(intent)
-                                        } catch (e: Exception) {
-                                            context.startActivity(android.content.Intent.createChooser(intent, "Partager via"))
-                                        }
+                                        viewModel.shareReceipt(text)
                                     }
                                     viewModel.clearLastVenteId()
                                     navController.popBackStack()
@@ -511,7 +519,7 @@ fun ProductPickerDialog(
     onDismiss: () -> Unit,
     onProductSelected: (StockEntity, Boolean) -> Unit
 ) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: NewSaleViewModel = hiltViewModel()
     var searchQuery by remember { mutableStateOf("") }
     var selectedCategory by remember { mutableStateOf("Tout") }
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
