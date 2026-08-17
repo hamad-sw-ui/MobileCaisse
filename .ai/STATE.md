@@ -5,13 +5,13 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : a457eda851dd08c567a63f40e1aded41e1e7e4b8
-- **HEAD actuel** : a457eda851dd08c567a63f40e1aded41e1e7e4b8
+- **Dernier commit fonctionnel** : 056be5bd042a5ad721c768672c5474075aa7036c
+- **HEAD actuel** : 056be5bd042a5ad721c768672c5474075aa7036c
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-08-16 (SUCCESS)
-- **Dernière exécution des tests** : 2026-08-16 (75/75 SUCCESS)
+- **Dernière compilation** : 2026-08-17 (SUCCESS)
+- **Dernière exécution des tests** : 2026-08-17 (75/75 SUCCESS)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -19,15 +19,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - LicenseUtil (100% logique HMAC)
     - AnomalyEngine (100% logique détection fraude)
     - Repositories (Data pure : Sales, Inventory, Main)
-    - Platform (Services Framework : ReportManager, PrinterManager)
+    - Platform (Services Framework : ReportManager, PrinterManager, ShareManager)
 - **Dette technique** :
-    - `MainViewModel` (717 lignes) centralise encore la logique de tous les écrans.
-    - Méthodes `Intent/Share` encore présentes dans les Repositories (périmètre B-052).
+    - `MainViewModel` (~750 lignes) centralise encore la logique de tous les écrans.
+    - Orchestration monolithique du ViewModel à découper (J5.7/J5.8).
 
 ## 📋 Progression
-- **Dernière tâche terminée** : B-051 - Extraction PDF/Ticket (CLÔTURÉ).
+- **Dernière tâche terminée** : B-052 - Extraction Intents/Share (CLÔTURÉ).
 - **Tâche en cours** : Synchronisation documentaire.
-- **Prochaine tâche prévue** : B-052 - Extraction des Intent/Share vers `platform/`.
+- **Prochaine tâche prévue** : B-053/B-054 - Découpage structurel du ViewModel.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-007, BUG-008, BUG-009, BUG-010, BUG-012, BUG-013.
@@ -35,11 +35,11 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 
 ## 🏛️ Décisions & Risques
 - **Décisions d'architecture** : 
-    - Isolation des Repositories : Les Repositories ne doivent plus dépendre de `Context`, `File`, `PdfDocument` ou `Bluetooth`.
+    - Isolation des Repositories : Les Repositories ne doivent plus dépendre de `Context`, `Intent`, `File`, `PdfDocument` ou `Bluetooth`.
     - Orchestration par le ViewModel : Le ViewModel coordonne les données (Repositories) et les effets système (Platform Managers).
 - **Risques connus** : 
-    - Intégrité transactionnelle préservée par injection `AppDatabase` dans les Repositories.
+    - Dette de test (Platform) : Les propriétés internes des Intent ne sont pas inspectées en JVM pure.
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-08-16
+- **Date** : 2026-08-17
 - **Agent** : AI-DOS Independent Auditor

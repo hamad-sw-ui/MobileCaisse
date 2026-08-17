@@ -14,13 +14,15 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 | **B-050b** (Sales Repository) | ✅ B050b | — | `SalesRepository.kt`, `MainRepository.kt`, `MainViewModel.kt` | `SalesRepositoryTest` | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **B-050c** (Inventory Repo) | ✅ B050c | — | `InventoryRepository.kt`, `MainRepository.kt`, etc. | 75 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **B-051** (PDF/Ticket logic) | ✅ B051 | — | `SalesRepository.kt`, `ReportManager.kt`, etc. | 75 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
+| **B-052** (Intents/Share) | ✅ B052 | — | `MainRepository.kt`, `SalesRepository.kt`, `MainViewModel.kt`, `ShareManager.kt`, `PlatformModule.kt`, `SalesRepositoryTest.kt` | 75 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 
 ---
 
 ## 🧪 Détail des Tests (Validations AI-DOS 3.0)
 
-### 1. `Platform Isolation` (B-051)
-- **Preuve (a457eda) :** Extraction de la génération PDF vers `ReportManager` et de l\u0027impression vers `PrinterManager`. `SalesRepository` et `MainRepository` sont désormais des sources de données pures. L\u0027orchestration est centralisée dans `MainViewModel`.
+### 1. `Platform Isolation` (B-051, B-052)
+- **Preuve (056be5b) :** Extraction totale des `Intent`, `Uri` et `FileProvider` vers `platform.ShareManager`. Les Repositories sont désormais des sources de données pures. L\u0027orchestration est centralisée dans `MainViewModel`.
+- **Dette de test :** Les propriétés internes des `Intent` ne sont pas inspectées en JVM pure (Dette acceptée).
 
 ### 2. `InventoryRepository` (B-050c)
 - **Preuve (563eee3) :** Finalisation de l\u0027extraction. Migration des arrivages (Supply), fournisseurs (Supplier), Audits, Recettes (Recipe) et Catégories. 75 tests unitaires SUCCESS.
@@ -31,8 +33,8 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Date | Commande | Résultat | Git Hash | Branche | Tâches | Durée |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-08-16 | `./gradlew :app:assembleDebug` | **SUCCESS** | `a457eda` | `arena/...` | 42 | 3m 51s |
-| 2026-08-16 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `a457eda` | `arena/...` | 33 | 2m 20s |
+| 2026-08-17 | `./gradlew :app:assembleDebug` | **SUCCESS** | `056be5b` | `arena/...` | 51 | 6m 50s |
+| 2026-08-17 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `056be5b` | `arena/...` | 33 | 3m 31s |
 
 ---
 
@@ -40,4 +42,4 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Branche | Commit Initial | Commit Final | État |
 | :--- | :--- | :--- | :--- |
-| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `a457eda` | **Working tree clean** |
+| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `056be5b` | **Working tree clean** |

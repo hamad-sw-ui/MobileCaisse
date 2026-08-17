@@ -4,27 +4,36 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 ---
 
+## [2026-08-17] - B-052 : Extraction des Intent et Share vers la couche Platform
+
+**Objectif** : Purger les Repositories des dépendances de communication Android (Intents, FileProvider, Uri).
+
+**Analyses réalisées** :
+- Identification de la dispersion des `ACTION_SEND` dans `MainRepository`, `SalesRepository` et le ViewModel.
+- Risque lié à l\u0027autorité `FileProvider` en dur identifié (BUG-025).
+
+**Décisions prises** :
+- Création de `platform.ShareManager` pour encapsuler toute la logique d\u0027interaction externe (Texte, Fichiers, WhatsApp).
+- Utilisation systématique de `context.packageName` pour l\u0027autorité `FileProvider`.
+- Purification complète de `SalesRepository` (0 import Intent, 0 import Context).
+- Centralisation de l\u0027orchestration dans `MainViewModel`.
+
+**Fichiers modifiés** :
+- `SalesRepository.kt` (Purge Context/Intent)
+- `MainRepository.kt` (Purge Intent/Share)
+- `MainViewModel.kt` (Orchestration ShareManager)
+- `ShareManager.kt` (Création)
+- `PlatformModule.kt` (Raccordement Hilt)
+- `SalesRepositoryTest.kt` (Setup)
+
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : 75/75 SUCCESS. Commit final `056be5b`.
+
+---
+
 ## [2026-08-16] - B-051 : Extraction PDF et Ticket vers la couche Platform
 
 **Objectif** : Purger les Repositories des dépendances au Framework Android (PdfDocument, Bluetooth).
-
-**Analyses réalisées** :
-- Identification des fuites architecturales dans `SalesRepository` et `MainRepository`.
-- Analyse des dépendances graphiques (`Canvas`, `Paint`) et matérielles.
-
-**Décisions prises** :
-- Création du package `platform/` regroupant `ReportManager` et `PrinterManager`.
-- Déplacement de `EscPosPrinter` vers `platform/` pour unifier les services de bas niveau.
-- Centralisation de l\u0027orchestration dans `MainViewModel` (Récupération des données -> Appel du service Platform).
-- Purification totale des imports `android.graphics.pdf` et `java.io.File` dans `SalesRepository`.
-
-**Fichiers modifiés** :
-- `SalesRepository.kt` (Purge)
-- `MainRepository.kt` (Purge)
-- `MainViewModel.kt` (Orchestration)
-- `ReportManager.kt` (Création)
-- `PrinterManager.kt` (Création)
-- `PlatformModule.kt` (Injection Hilt)
 
 **Résultats de compilation** : SUCCESS.
 **Résultats des tests** : 75/75 SUCCESS. Commit final `a457eda`.

@@ -1,6 +1,6 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** Synchronisation documentaire post-B-051 (Extraction PDF/Ticket).
+**Tâche :** Synchronisation documentaire post-B-052 (Extraction Intents/Share).
 
 ## État de la Roadmap
 
@@ -14,14 +14,15 @@
 | B-050b | Extraction SalesRepository | ✅ VALIDÉ (c8dfdb6) |
 | B-050c | Extraction InventoryRepository | ✅ VALIDÉ (563eee3) |
 | B-051 | Extraction PDF/Ticket | ✅ TERMINÉ (a457eda) |
+| B-052 | Extraction Intents/Share | ✅ TERMINÉ (056be5b) |
 
 ## Objectif du cycle
-1. Clôturer l\u0027assainissement des Repositories vis-à-vis du PDF et de l\u0027impression (TERMINÉ).
-2. Valider la nouvelle architecture d\u0027orchestration dans MainViewModel (TERMINÉ).
-3. Documenter la séparation Platform / Data (TERMINÉ).
+1. Clôturer l\u0027extraction des Intent/Share vers `platform/` (TERMINÉ).
+2. Purifier les Repositories (TERMINÉ).
+3. Documenter la purification Android des Repositories (TERMINÉ).
 
 ## Prochaine étape
-- ⏸ **À PLANIFIER / EN ATTENTE D\u0027AUTORISATION** : B-052 (Sortir les Intent Android vers `platform/`).
+- ⏸ **À PLANIFIER / EN ATTENTE D\u0027AUTORISATION** : J5.7 (Découpage structurel du ViewModel - NewSaleScreen).
 
 ---
-*Mis à jour le 2026-08-16 (Post-B-051).*
+*Mis à jour le 2026-08-17 (Post-B-052).*
