@@ -46,8 +46,7 @@ class SalesRepositoryTest {
             recipeDao = db.recipeDao(),
             movementDao = db.stockMovementDao(),
             smsErrorDao = db.smsErrorDao(),
-            expenseDao = db.expenseDao(),
-            context = context
+            expenseDao = db.expenseDao()
         )
     }
 

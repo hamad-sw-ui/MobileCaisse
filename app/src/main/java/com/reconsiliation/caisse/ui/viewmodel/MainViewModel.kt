@@ -10,6 +10,8 @@ import com.reconsiliation.caisse.data.repository.SalesRepository
 import com.reconsiliation.caisse.notification.NotificationHelper
 import com.reconsiliation.caisse.platform.PrinterManager
 import com.reconsiliation.caisse.platform.ReportManager
+import com.reconsiliation.caisse.platform.ShareManager
+import com.reconsiliation.caisse.utils.FormatUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -48,6 +50,7 @@ class MainViewModel @Inject constructor(
     private val salesRepository: SalesRepository,
     private val reportManager: ReportManager,
     private val printerManager: PrinterManager,
+    private val shareManager: ShareManager,
     private val savedStateHandle: SavedStateHandle,
     private val notificationHelper: NotificationHelper
 ) : AndroidViewModel(application) {
@@ -414,7 +417,11 @@ class MainViewModel @Inject constructor(
     fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { salesRepository.addRepayment(customerId, amount, method, userRole.value) }
     fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
     fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
-    fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) = repository.sendDebtReminder(context, customer)
+    fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) {
+        val boutiqueName = boutique.value?.name ?: "votre boutique"
+        val message = "Bonjour ${customer.name}, un petit rappel concernant votre dette de ${FormatUtil.formatCurrency(customer.totalDebt)} chez $boutiqueName. Merci de régulariser dès que possible."
+        shareManager.shareText(message, "Envoyer le rappel", "com.whatsapp")
+    }
     suspend fun getCustomerByPhone(phone: String) = salesRepository.getCustomerByPhone(phone)
     suspend fun findOrCreateCustomer(name: String, phone: String) = salesRepository.findOrCreateCustomer(name, phone)
 
@@ -438,7 +445,36 @@ class MainViewModel @Inject constructor(
             _uiError.value = "Erreur d'exportation: ${e.message}"
         }
     }
-    fun shareDailySummary(context: android.content.Context) = viewModelScope.launch { salesRepository.shareDailySummary(context) }
+    fun shareDailySummary(context: android.content.Context) = viewModelScope.launch {
+        val calendar = Calendar.getInstance().apply {
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 0)
+            set(Calendar.SECOND, 0)
+        }
+        val start = calendar.time
+        calendar.set(Calendar.HOUR_OF_DAY, 23)
+        calendar.set(Calendar.MINUTE, 59)
+        val end = calendar.time
+
+        val b = boutique.value
+        val cash = salesRepository.getTotalCash(start, end).first() ?: 0.0
+        val momo = salesRepository.getTotalMomo(start, end).first() ?: 0.0
+        val expenses = repository.getTotalExpenses(start, end).first() ?: 0.0
+        val profit = salesRepository.getProfitFlow(start, end).first()
+
+        val text = FormatUtil.generateDailySummary(
+            boutiqueName = b?.name ?: "Boutique",
+            date = Date(),
+            totalSales = cash + momo,
+            cashSales = cash,
+            momoSales = momo,
+            debtsCreated = 0.0,
+            expenses = expenses,
+            netProfit = profit,
+            currency = b?.currency ?: "FCFA"
+        )
+        shareManager.shareText(text, "Partager le résumé")
+    }
     
     fun backupDatabase(file: File) = repository.backupDatabase(getApplication(), file)
     fun restoreDatabase(file: File) = repository.restoreDatabase(getApplication(), file)
@@ -464,7 +500,7 @@ class MainViewModel @Inject constructor(
             }
             _backupState.value = result.fold(
                 onSuccess = { file ->
-                    repository.shareBackupFile(context, file)
+                    shareManager.shareFile(file, "application/zip", "Exporter et partager")
                     BackupUiState.Success(
                         "Sauvegarde créée (${file.length() / 1024} Ko). " +
                             "Conservez précieusement votre mot de passe : il est indispensable " +
@@ -655,13 +691,7 @@ class MainViewModel @Inject constructor(
             val ventes = salesRepository.getVentesByCustomer(customer.id).first()
             val file = reportManager.generateCustomerStatementPdf(customer, ventes)
             if (file != null) {
-                val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-                val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                    type = "application/pdf"
-                    putExtra(android.content.Intent.EXTRA_STREAM, uri)
-                    addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                }
-                context.startActivity(android.content.Intent.createChooser(intent, "Partager le relevé"))
+                shareManager.shareFile(file, "application/pdf", "Partager le relevé")
             }
         } catch (e: Exception) {
             _uiError.value = "Erreur PDF: ${e.message}"

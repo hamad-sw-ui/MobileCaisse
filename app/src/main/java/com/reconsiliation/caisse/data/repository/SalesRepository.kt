@@ -1,13 +1,11 @@
 package com.reconsiliation.caisse.data.repository
 
-import android.content.Context
 import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.dao.*
 import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.sms.SmsParser
 import com.reconsiliation.caisse.utils.FormatUtil
 import com.reconsiliation.caisse.utils.PhoneUtil
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -15,7 +13,6 @@ import kotlinx.coroutines.flow.combine
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
-import kotlin.math.abs
 
 @Singleton
 class SalesRepository @Inject constructor(
@@ -29,8 +26,7 @@ class SalesRepository @Inject constructor(
     private val recipeDao: RecipeDao,
     private val movementDao: StockMovementDao,
     private val smsErrorDao: SmsErrorDao,
-    private val expenseDao: ExpenseDao,
-    @ApplicationContext private val context: Context
+    private val expenseDao: ExpenseDao
 ) {
     // 1. Core Sales Flows
     val allVentes: Flow<List<VenteEntity>> = venteDao.getAllVentes()
@@ -460,44 +456,6 @@ class SalesRepository @Inject constructor(
     }
 
     fun getRepayments(customerId: Long) = db.repaymentDao().getRepaymentsForCustomer(customerId)
-
-    // 6. Printing & Sharing
-    suspend fun shareDailySummary(context: Context) {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-        }
-        val start = calendar.time
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        val end = calendar.time
-
-        val boutique = boutiqueDao.getBoutique().first()
-        val cash = venteDao.getTotalCash(start, end).first() ?: 0.0
-        val momo = venteDao.getTotalMomo(start, end).first() ?: 0.0
-        val expenses = expenseDao.getTotalExpenses(start, end).first() ?: 0.0
-        val profit = getProfitFlow(start, end).first()
-
-        val text = FormatUtil.generateDailySummary(
-            boutiqueName = boutique?.name ?: "Boutique",
-            date = Date(),
-            totalSales = cash + momo,
-            cashSales = cash,
-            momoSales = momo,
-            debtsCreated = 0.0,
-            expenses = expenses,
-            netProfit = profit,
-            currency = boutique?.currency ?: "FCFA"
-        )
-
-        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(android.content.Intent.EXTRA_TEXT, text)
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(android.content.Intent.createChooser(intent, "Partager le résumé"))
-    }
 
     // 7. SMS Reconciliation
     suspend fun resolveSmsError(error: SmsErrorEntity, venteId: Long, role: String? = null) {

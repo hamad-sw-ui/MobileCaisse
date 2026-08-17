@@ -11,14 +11,12 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.combine
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.util.Date
 import java.util.Calendar
 import javax.inject.Inject
-import kotlin.math.abs
 
 class MainRepository @Inject constructor(
     private val db: com.reconsiliation.caisse.data.local.AppDatabase,
@@ -159,32 +157,6 @@ class MainRepository @Inject constructor(
         inventoryRepository.addSupply(supply, role)
     }
 
-
-    fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) {
-        val boutiqueName = "votre boutique" // In a real case, fetch from db.boutiqueDao().getBoutique().first()
-        val message = "Bonjour ${customer.name}, un petit rappel concernant votre dette de ${FormatUtil.formatCurrency(customer.totalDebt)} chez $boutiqueName. Merci de régulariser dès que possible."
-        
-        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-            type = "text/plain"
-            putExtra(android.content.Intent.EXTRA_TEXT, message)
-            // Optionally target WhatsApp if installed
-            `package` = "com.whatsapp"
-        }
-        
-        try {
-            val chooser = android.content.Intent.createChooser(intent, "Envoyer le rappel")
-            chooser.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(chooser)
-        } catch (e: Exception) {
-            // Fallback to generic SMS/Share if WhatsApp not found or failed
-            val genericIntent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-                type = "text/plain"
-                putExtra(android.content.Intent.EXTRA_TEXT, message)
-                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            context.startActivity(android.content.Intent.createChooser(genericIntent, "Envoyer via"))
-        }
-    }
     suspend fun logAction(type: String, details: String, role: String? = null, severity: String = "INFO") {
         db.actionLogDao().insert(ActionLogEntity(date = Date(), actionType = type, details = details, userRole = role ?: "SYSTEM", severity = severity))
     }
@@ -402,22 +374,6 @@ class MainRepository @Inject constructor(
     suspend fun getAllActiveStaffOnce(): List<StaffEntity> = db.staffDao().getAllActiveStaff().first()
     suspend fun updateStaffSecurityInfo(staff: StaffEntity) = db.staffDao().insertOrUpdate(staff)
     suspend fun updateCustomerVipStatus(customerId: Long, isVip: Boolean) = db.customerDao().updateVipStatus(customerId, isVip)
-
-    fun shareBackupFile(context: Context, file: File) {
-        val uri = androidx.core.content.FileProvider.getUriForFile(
-            context, "${context.packageName}.fileprovider", file
-        )
-        val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
-            type = "application/zip"
-            putExtra(android.content.Intent.EXTRA_STREAM, uri)
-            addFlags(android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-        context.startActivity(
-            android.content.Intent.createChooser(intent, "Exporter et partager")
-                .addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-        )
-    }
 
     /** Format d'un fichier de sauvegarde, pour adapter l'interface. */
     fun detectBackupFormat(file: File): com.reconsiliation.caisse.utils.BackupFormat =
