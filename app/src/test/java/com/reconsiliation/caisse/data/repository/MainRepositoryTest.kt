@@ -32,7 +32,8 @@ class MainRepositoryTest {
             venteDao = db.venteDao(),
             boutiqueDao = db.boutiqueDao()
         )
-        repository = MainRepository(db, FakeContext(), inventoryRepository)
+        val context = FakeContext()
+        repository = MainRepository(db, context, inventoryRepository)
     }
 
     @Test

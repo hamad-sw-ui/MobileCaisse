@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
 import java.util.*
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.abs
@@ -463,100 +462,6 @@ class SalesRepository @Inject constructor(
     fun getRepayments(customerId: Long) = db.repaymentDao().getRepaymentsForCustomer(customerId)
 
     // 6. Printing & Sharing
-    suspend fun printTicket(venteId: Long, printerAddress: String) {
-        val venteWithItems = venteDao.getVenteWithItemsById(venteId) ?: return
-        val boutique = boutiqueDao.getBoutique().first() ?: return
-        
-        if (printerAddress.isBlank() || printerAddress == "NONE") return
-
-        val printer = com.reconsiliation.caisse.printing.EscPosPrinter(context)
-        
-        if (printer.connect(printerAddress)) {
-            val text = com.reconsiliation.caisse.utils.FormatUtil.generateReceiptText(boutique, venteWithItems.vente, venteWithItems.items, boutique.currency)
-            printer.printText(text)
-            printer.feed(3)
-            printer.disconnect()
-        }
-    }
-
-    fun generateCustomerStatementPdf(context: Context, customer: CustomerEntity, ventes: List<VenteWithItems>): File? {
-        val fileName = "Releve_${customer.name}_${System.currentTimeMillis()}.pdf"
-        val file = File(context.cacheDir, fileName)
-        
-        return try {
-            val pdfDocument = android.graphics.pdf.PdfDocument()
-            val titlePaint = android.graphics.Paint().apply {
-                textSize = 18f
-                isFakeBoldText = true
-            }
-            val textPaint = android.graphics.Paint().apply {
-                textSize = 12f
-            }
-            val headerPaint = android.graphics.Paint().apply {
-                textSize = 12f
-                isFakeBoldText = true
-            }
-
-            var currentPageNumber = 1
-            var y = 50f
-            val margin = 50f
-            val pageWidth = 595
-            val pageHeight = 842
-
-            fun createNewPage(): android.graphics.pdf.PdfDocument.Page {
-                val pageInfo = android.graphics.pdf.PdfDocument.PageInfo.Builder(pageWidth, pageHeight, currentPageNumber++).create()
-                val page = pdfDocument.startPage(pageInfo)
-                y = 50f
-                return page
-            }
-
-            var page = createNewPage()
-            var canvas = page.canvas
-
-            canvas.drawText("RELEVÉ DE COMPTE CLIENT", 180f, y, titlePaint)
-            y += 40f
-            canvas.drawText("Client: ${customer.name}", margin, y, textPaint)
-            y += 20f
-            canvas.drawText("Téléphone: ${customer.phone}", margin, y, textPaint)
-            y += 20f
-            canvas.drawText("Dette Totale: ${FormatUtil.formatCurrency(customer.totalDebt)}", margin, y, textPaint)
-            y += 40f
-
-            canvas.drawText("Date", margin, y, headerPaint)
-            canvas.drawText("Détail", 150f, y, headerPaint)
-            canvas.drawText("Montant", 450f, y, headerPaint)
-            y += 10f
-            canvas.drawLine(margin, y, pageWidth - margin, y, textPaint)
-            y += 25f
-
-            ventes.forEach { v ->
-                if (y > pageHeight - 50) {
-                    pdfDocument.finishPage(page)
-                    page = createNewPage()
-                    canvas = page.canvas
-                    canvas.drawText("Date", margin, y, headerPaint)
-                    canvas.drawText("Détail", 150f, y, headerPaint)
-                    canvas.drawText("Montant", 450f, y, headerPaint)
-                    y += 30f
-                }
-
-                canvas.drawText(FormatUtil.formatShortDate(v.vente.date), margin, y, textPaint)
-                val desc = if (v.vente.description.length > 35) v.vente.description.take(32) + "..." else v.vente.description
-                canvas.drawText(desc, 150f, y, textPaint)
-                canvas.drawText(FormatUtil.formatCurrency(v.vente.amount), 450f, y, textPaint)
-                y += 25f
-            }
-
-            pdfDocument.finishPage(page)
-            java.io.FileOutputStream(file).use { pdfDocument.writeTo(it) }
-            pdfDocument.close()
-            file
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
     suspend fun shareDailySummary(context: Context) {
         val calendar = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 0)

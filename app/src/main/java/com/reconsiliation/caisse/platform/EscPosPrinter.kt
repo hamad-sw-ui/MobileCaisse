@@ -1,4 +1,4 @@
-package com.reconsiliation.caisse.printing
+package com.reconsiliation.caisse.platform
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager

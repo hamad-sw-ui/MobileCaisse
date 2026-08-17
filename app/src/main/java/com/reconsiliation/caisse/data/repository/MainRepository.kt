@@ -185,14 +185,6 @@ class MainRepository @Inject constructor(
             context.startActivity(android.content.Intent.createChooser(genericIntent, "Envoyer via"))
         }
     }
-    suspend fun testPrint(context: android.content.Context, address: String) {
-        if (address.isBlank() || address == "NONE") return
-        val printer = com.reconsiliation.caisse.printing.EscPosPrinter(context)
-        if (printer.connect(address)) {
-            printer.testPrint()
-            printer.disconnect()
-        }
-    }
     suspend fun logAction(type: String, details: String, role: String? = null, severity: String = "INFO") {
         db.actionLogDao().insert(ActionLogEntity(date = Date(), actionType = type, details = details, userRole = role ?: "SYSTEM", severity = severity))
     }

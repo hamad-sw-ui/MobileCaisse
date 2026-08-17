@@ -8,6 +8,8 @@ import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
 import com.reconsiliation.caisse.notification.NotificationHelper
+import com.reconsiliation.caisse.platform.PrinterManager
+import com.reconsiliation.caisse.platform.ReportManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -44,6 +46,8 @@ class MainViewModel @Inject constructor(
     application: Application,
     private val repository: MainRepository,
     private val salesRepository: SalesRepository,
+    private val reportManager: ReportManager,
+    private val printerManager: PrinterManager,
     private val savedStateHandle: SavedStateHandle,
     private val notificationHelper: NotificationHelper
 ) : AndroidViewModel(application) {
@@ -414,8 +418,12 @@ class MainViewModel @Inject constructor(
     suspend fun getCustomerByPhone(phone: String) = salesRepository.getCustomerByPhone(phone)
     suspend fun findOrCreateCustomer(name: String, phone: String) = salesRepository.findOrCreateCustomer(name, phone)
 
-    fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) { salesRepository.printTicket(venteId, printerAddress) }
-    fun testPrint(address: String) = viewModelScope.launch(Dispatchers.IO) { repository.testPrint(getApplication(), address) }
+    fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) {
+        val venteWithItems = salesRepository.getVenteWithItems(venteId) ?: return@launch
+        val boutique = repository.getBoutiqueOnce() ?: return@launch
+        printerManager.printReceipt(boutique, venteWithItems.vente, venteWithItems.items, printerAddress)
+    }
+    fun testPrint(address: String) = viewModelScope.launch(Dispatchers.IO) { printerManager.testConnection(address) }
     
     fun exportSalesData(context: android.content.Context) = viewModelScope.launch {
         try {
@@ -645,7 +653,7 @@ class MainViewModel @Inject constructor(
     fun generateCustomerStatement(context: android.content.Context, customer: CustomerEntity) = viewModelScope.launch {
         try {
             val ventes = salesRepository.getVentesByCustomer(customer.id).first()
-            val file = salesRepository.generateCustomerStatementPdf(context, customer, ventes)
+            val file = reportManager.generateCustomerStatementPdf(customer, ventes)
             if (file != null) {
                 val uri = androidx.core.content.FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).apply {
