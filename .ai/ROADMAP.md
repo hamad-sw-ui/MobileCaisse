@@ -86,8 +86,8 @@ J7 Industrialisation (CI, release)
 | 5.2 | Extraire `StockRepository` (InventoryRepository) | B-050c | ✅ (563eee3) |
 | 5.3 | Extraire `CustomerRepository` / `SupplierRepository` | B-050 | 🟠 ABSORBÉ / RATTACHÉ — NON CERTIFIÉ COMME EXTRACTION AUTONOME |
 | 5.4 | Extraire `CashRepository` (sessions, clôtures, audits) | B-050 | 🟠 RESPONSABILITÉS ABSORBÉES/RÉPARTIES — CASHREPOSITORY AUTONOME NON RÉALISÉ |
-| 5.5 | Sortir la génération PDF/ticket du repository | B-051 | ⏭ PRÊT À COMMENCER |
-| 5.6 | Sortir les `Intent` Android vers `platform/` | B-052 | □ |
+| 5.5 | Sortir la génération PDF/ticket du repository | B-051 | ✅ (a457eda) |
+| 5.6 | Sortir les `Intent` Android vers `platform/` | B-052 | ⏭ PRÊT À COMMENCER |
 | 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | □ |
 | 5.8 | Étendre le motif aux écrans restants, un par un | B-054 | □ |
 
@@ -147,4 +147,4 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-08-13 (B-050c Inventory Repository TERMINÉ).*
+*Document mis à jour le 2026-08-16 (B-051 PDF/Ticket TERMINÉ).*

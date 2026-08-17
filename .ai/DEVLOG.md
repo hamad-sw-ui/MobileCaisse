@@ -4,27 +4,38 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 ---
 
+## [2026-08-16] - B-051 : Extraction PDF et Ticket vers la couche Platform
+
+**Objectif** : Purger les Repositories des dépendances au Framework Android (PdfDocument, Bluetooth).
+
+**Analyses réalisées** :
+- Identification des fuites architecturales dans `SalesRepository` et `MainRepository`.
+- Analyse des dépendances graphiques (`Canvas`, `Paint`) et matérielles.
+
+**Décisions prises** :
+- Création du package `platform/` regroupant `ReportManager` et `PrinterManager`.
+- Déplacement de `EscPosPrinter` vers `platform/` pour unifier les services de bas niveau.
+- Centralisation de l\u0027orchestration dans `MainViewModel` (Récupération des données -> Appel du service Platform).
+- Purification totale des imports `android.graphics.pdf` et `java.io.File` dans `SalesRepository`.
+
+**Fichiers modifiés** :
+- `SalesRepository.kt` (Purge)
+- `MainRepository.kt` (Purge)
+- `MainViewModel.kt` (Orchestration)
+- `ReportManager.kt` (Création)
+- `PrinterManager.kt` (Création)
+- `PlatformModule.kt` (Injection Hilt)
+
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : 75/75 SUCCESS. Commit final `a457eda`.
+
+---
+
 ## [2026-08-13] - B-050c : Finalisation de InventoryRepository (Commit 2)
 
 **Objectif** : Achever l\u0027extraction du domaine inventaire vers `InventoryRepository`.
 
-**Analyses réalisées** :
-- Audit des transactions complexes : `addSupply` (PMP), `performAudit` (discrepancies) et `deleteStock` (integrity check).
-- Identification des domaines satellites : Supplier, Recipe, Category.
-
-**Décisions prises** :
-- Intégration de `Supplier` et `Audit` dans `InventoryRepository` pour réduire la dispersion architecturale.
-- Maintien des proxys dans `MainRepository` pour assurer la compatibilité ascendante avec le ViewModel unique.
-- Sécurisation du `deleteStock` via l\u0027accès lecture seule à `VenteDao`.
-
-**Fichiers modifiés** :
-- `InventoryRepository.kt` (Enrichissement)
-- `MainRepository.kt` (Allègement massif)
-- `InventoryRepositoryTest.kt` (Création)
-- `FakeDaos.kt` (Implémentation des mocks Inventory)
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 75/75 SUCCESS. Commit final `563eee3`.
+**Résultats** : InventoryRepository complet, 75 tests SUCCESS. Commit `563eee3`.
 
 ---
 
