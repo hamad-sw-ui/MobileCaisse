@@ -27,14 +27,25 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.state.InventoryUiState
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplierInflowScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: InventoryViewModel = hiltViewModel()
     val allStock by viewModel.allStock.collectAsState()
     val allSuppliers by viewModel.allSuppliers.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Success) {
+            viewModel.clearUiState()
+            navController.popBackStack()
+        }
+    }
     
     var selectedSupplier by remember { mutableStateOf<SupplierEntity?>(null) }
     var selectedProduct by remember { mutableStateOf<StockEntity?>(null) }
@@ -214,12 +225,11 @@ fun SupplierInflowScreen(navController: NavController) {
                                 date = Date(),
                                 expiryDate = expiry,
                                 isPaid = isPaid
-                            ))
-                            navController.popBackStack()
+                            ), mainViewModel.userRole.value)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    enabled = selectedProduct != null && quantity.isNotEmpty() && (isPaid || selectedSupplier != null)
+                    enabled = selectedProduct != null && quantity.isNotEmpty() && (isPaid || selectedSupplier != null) && uiState !is InventoryUiState.Processing
                 ) {
                     Icon(Icons.Default.Add, null)
                     Spacer(modifier = Modifier.width(8.dp))

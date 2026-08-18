@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -32,12 +33,13 @@ import com.reconsiliation.caisse.utils.FormatUtil
 fun ReportsScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: MainViewModel = hiltViewModel()
+    val inventoryViewModel: InventoryViewModel = hiltViewModel()
     val categorySales by viewModel.categorySales.collectAsState()
     val dailySales by viewModel.dailySales.collectAsState()
     val currency by viewModel.currency.collectAsState()
     val userRole by viewModel.userRole.collectAsState()
-    val valuation by viewModel.stockValuation.collectAsState()
-    val topProducts by viewModel.topProducts.collectAsState()
+    val valuation = inventoryViewModel.stockValuation.collectAsState().value
+    val topProducts = inventoryViewModel.topProducts.collectAsState().value
     
     var period by remember { mutableStateOf("MONTH") } // MONTH, YEAR, CUSTOM
 

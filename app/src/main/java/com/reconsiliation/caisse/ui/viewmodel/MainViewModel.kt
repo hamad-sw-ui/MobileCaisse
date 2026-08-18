@@ -123,22 +123,15 @@ class MainViewModel @Inject constructor(
 
     val allVentes: StateFlow<List<VenteEntity>>
     val allVentesWithItems: StateFlow<List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>>
-    val allStock: StateFlow<List<StockEntity>>
     val smsErrors: StateFlow<List<SmsErrorEntity>>
     val debtors: StateFlow<List<CustomerEntity>>
     val allCustomers: StateFlow<List<CustomerEntity>>
     val allExpenses: StateFlow<List<ExpenseEntity>>
-    val lowStockAlerts: StateFlow<List<StockEntity>>
-    val stockValuation: StateFlow<Pair<Double, Double>>
-    val topProducts: StateFlow<List<StockEntity>>
     val subscription: StateFlow<SubscriptionEntity?>
     val allClosures: StateFlow<List<ClosureEntity>>
     val recentLogs: StateFlow<List<ActionLogEntity>>
     val activeSession: StateFlow<SessionEntity?>
     val allSessions: StateFlow<List<SessionEntity>>
-    val allSuppliers: StateFlow<List<SupplierEntity>>
-    val allSupplies: StateFlow<List<SupplyEntity>>
-    val allAudits: StateFlow<List<com.reconsiliation.caisse.data.local.dao.AuditWithItems>>
     val todayProfit: StateFlow<Double>
     val todayRevenue: StateFlow<Double>
     
@@ -177,22 +170,15 @@ class MainViewModel @Inject constructor(
 
         allVentes = salesRepository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allVentesWithItems = salesRepository.allVentesWithItems.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allStock = repository.allStock.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         smsErrors = salesRepository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         debtors = salesRepository.debtors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allCustomers = salesRepository.allCustomers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allExpenses = repository.allExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        lowStockAlerts = repository.lowStockAlerts.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        stockValuation = repository.getStockValuation().stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), Pair(0.0, 0.0))
-        topProducts = repository.getTopProfitableProducts(5).stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
         allClosures = salesRepository.allClosures.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         recentLogs = repository.recentLogs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         activeSession = salesRepository.activeSession.stateIn(viewModelScope, SharingStarted.Eagerly, null)
         allSessions = salesRepository.allSessions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allSuppliers = repository.allSuppliers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allSupplies = repository.allSupplies.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allAudits = repository.allAudits.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
@@ -221,15 +207,6 @@ class MainViewModel @Inject constructor(
             }
         }
 
-        viewModelScope.launch {
-            lowStockAlerts.collect { alerts ->
-                alerts.forEach { stock ->
-                    if (stock.quantity <= stock.alertThreshold) {
-                        notificationHelper.showLowStockNotification(stock.productName, stock.quantity)
-                    }
-                }
-            }
-        }
         catchUpSms(application)
     }
 
@@ -305,21 +282,9 @@ class MainViewModel @Inject constructor(
     fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { salesRepository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
 
-    fun adjustStock(stock: StockEntity, newQuantity: Double, reason: String) = viewModelScope.launch { try { repository.adjustStock(stock, newQuantity, reason, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    fun updateStock(stock: StockEntity) = viewModelScope.launch { try { repository.updateStock(stock, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    fun updateStockQuantity(id: Long, delta: Double) = viewModelScope.launch { repository.updateStockQuantity(id, delta) }
-    fun deleteStock(stock: StockEntity) = viewModelScope.launch { try { repository.deleteStock(stock) } catch (e: Exception) { _uiError.value = e.message } }
-    suspend fun getProductByBarcode(barcode: String) = repository.getProductByBarcode(barcode)
-    
-    fun addSupply(supply: SupplyEntity) = viewModelScope.launch { try { repository.addSupply(supply, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    fun addSupplier(supplier: SupplierEntity) = viewModelScope.launch { try { repository.addSupplier(supplier) } catch (e: Exception) { _uiError.value = e.message } }
-    fun deleteSupplier(supplier: SupplierEntity) = viewModelScope.launch { try { repository.deleteSupplier(supplier) } catch (e: Exception) { _uiError.value = e.message } }
-    fun updateSupplierDebt(supplierId: Long, delta: Double) = viewModelScope.launch { try { repository.updateSupplierDebt(supplierId, delta) } catch (e: Exception) { _uiError.value = e.message } }
-    fun getExpiringSoon() = salesRepository.getExpiringSoon()
+    fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
+    fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
 
-    fun performAudit(note: String?, items: List<AuditItemEntity>) = viewModelScope.launch { try { repository.performAudit(note, items) } catch (e: Exception) { _uiError.value = e.message } }
-    fun performClosure(closure: ClosureEntity) = viewModelScope.launch { try { salesRepository.performClosure(closure, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-    
     fun openSession(seller: String, balance: Double) = viewModelScope.launch {
         try { salesRepository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message }
     }
@@ -328,8 +293,7 @@ class MainViewModel @Inject constructor(
     }
 
     fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { salesRepository.addRepayment(customerId, amount, method, userRole.value) }
-    fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
-    fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
+
     fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) {
         val boutiqueName = boutique.value?.name ?: "votre boutique"
         val message = "Bonjour ${customer.name}, un petit rappel concernant votre dette de ${FormatUtil.formatCurrency(customer.totalDebt)} chez $boutiqueName. Merci de régulariser dès que possible."
@@ -611,8 +575,6 @@ class MainViewModel @Inject constructor(
         }
     }
 
-    fun getPriceHistory(productId: Long) = repository.getPriceHistory(productId)
-    fun getStockMovements(productId: Long) = repository.getStockMovements(productId)
     fun resolveSmsError(error: SmsErrorEntity, venteId: Long) = viewModelScope.launch {
         try { salesRepository.resolveSmsError(error, venteId) } catch (e: Exception) { _uiError.value = e.message }
     }
@@ -717,15 +679,6 @@ class MainViewModel @Inject constructor(
     }
     fun clearError() { _uiError.value = null }
     
-    // Recipe Management
-    fun getRecipeForProduct(parentId: Long) = repository.getRecipeForProduct(parentId)
-    fun addRecipeComponent(parentProductId: Long, ingredientProductId: Long, quantity: Double) = viewModelScope.launch {
-        repository.addRecipeComponent(RecipeEntity(parentProductId = parentProductId, ingredientProductId = ingredientProductId, quantityRequired = quantity))
-    }
-    fun deleteRecipeComponent(recipe: RecipeEntity) = viewModelScope.launch {
-        repository.deleteRecipeComponent(recipe)
-    }
-
     fun resetApplicationData() = viewModelScope.launch(Dispatchers.IO) {
         try {
             repository.deletePhysicalDatabase(getApplication())

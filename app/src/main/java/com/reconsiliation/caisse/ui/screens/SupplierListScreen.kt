@@ -25,13 +25,23 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.state.InventoryUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SupplierListScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: InventoryViewModel = hiltViewModel()
     val suppliers by viewModel.allSuppliers.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Success) {
+            viewModel.clearUiState()
+        }
+    }
     
     var showAddDialog by remember { mutableStateOf(false) }
     var supplierToPay by remember { mutableStateOf<SupplierEntity?>(null) }
@@ -100,9 +110,10 @@ fun SupplierListScreen(navController: NavController) {
         if (supplierToReturn != null) {
             ReturnToSupplierDialog(
                 supplier = supplierToReturn!!,
+                inventoryViewModel = viewModel,
                 onDismiss = { supplierToReturn = null },
                 onConfirm = { product, qty, price ->
-                    viewModel.adjustStock(product, product.quantity - qty, "Retour Fournisseur: ${supplierToReturn!!.name}")
+                    viewModel.adjustStock(product, product.quantity - qty, "Retour Fournisseur: ${supplierToReturn!!.name}", mainViewModel.userRole.value)
                     viewModel.updateSupplierDebt(supplierToReturn!!.id, -(qty * price))
                     supplierToReturn = null
                 }
@@ -206,9 +217,8 @@ fun RepaySupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfi
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ReturnToSupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfirm: (StockEntity, Double, Double) -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val stockItems by viewModel.allStock.collectAsState()
+fun ReturnToSupplierDialog(supplier: SupplierEntity, inventoryViewModel: InventoryViewModel, onDismiss: () -> Unit, onConfirm: (StockEntity, Double, Double) -> Unit) {
+    val stockItems by inventoryViewModel.allStock.collectAsState()
     
     var selectedProduct by remember { mutableStateOf<StockEntity?>(null) }
     var qty by remember { mutableStateOf("") }

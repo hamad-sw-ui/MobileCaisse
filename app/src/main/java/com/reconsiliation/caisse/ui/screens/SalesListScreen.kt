@@ -33,16 +33,18 @@ import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesListScreen(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()
+    val inventoryViewModel: InventoryViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.selectedMonthVentes.collectAsState()
-    val stockItems by viewModel.allStock.collectAsState()
+    val stockItems by inventoryViewModel.allStock.collectAsState()
     val isManager = viewModel.isManager()
     
     val snackbarHostState = remember { SnackbarHostState() }

@@ -23,12 +23,28 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.state.InventoryUiState
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AuditScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: InventoryViewModel = hiltViewModel()
     val stock by viewModel.allStock.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as InventoryUiState.Error).message)
+            viewModel.clearUiState()
+        } else if (uiState is InventoryUiState.Success) {
+            viewModel.clearUiState()
+            navController.popBackStack()
+        }
+    }
     
     // Local state for physical quantities
     val physicalQuantities = remember(stock) {
@@ -108,8 +124,7 @@ fun AuditScreen(navController: NavController) {
                         }
                         viewModel.performAudit(null, auditItems)
                         showConfirmDialog = false
-                        navController.popBackStack()
-                    }) {
+                    }, enabled = uiState !is InventoryUiState.Processing) {
                         Text("Confirmer")
                     }
                 },

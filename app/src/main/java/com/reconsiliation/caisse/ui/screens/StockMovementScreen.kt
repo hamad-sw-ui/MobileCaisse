@@ -22,14 +22,17 @@ import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StockMovementScreen(navController: NavController, productId: Long) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val movements by viewModel.getStockMovements(productId).collectAsState(initial = emptyList())
-    val stockItems by viewModel.allStock.collectAsState()
+    val viewModel: InventoryViewModel = hiltViewModel()
+    val movementsState = viewModel.getStockMovements(productId).collectAsState(initial = emptyList())
+    val movements = movementsState.value
+    val stockItemsState = viewModel.allStock.collectAsState()
+    val stockItems = stockItemsState.value
     val product = stockItems.find { it.id == productId }
 
     Scaffold(

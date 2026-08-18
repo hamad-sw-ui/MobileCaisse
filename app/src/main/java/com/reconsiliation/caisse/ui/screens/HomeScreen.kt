@@ -22,6 +22,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
@@ -29,11 +30,13 @@ import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
+    val inventoryViewModel: InventoryViewModel = hiltViewModel()
     val context = androidx.compose.ui.platform.LocalContext.current
     
     val permissionsToCheck = listOf(
@@ -50,10 +53,10 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
 
     val boutique by viewModel.boutique.collectAsState()
     val ventesWithItems by viewModel.allVentesWithItems.collectAsState()
-    val allStock by viewModel.allStock.collectAsState()
+    val allStock by inventoryViewModel.allStock.collectAsState()
     val smsErrors by viewModel.smsErrors.collectAsState()
-    val lowStock by viewModel.lowStockAlerts.collectAsState()
-    val valuation by viewModel.stockValuation.collectAsState()
+    val lowStock by inventoryViewModel.lowStockAlerts.collectAsState()
+    val valuation by inventoryViewModel.stockValuation.collectAsState()
     val uiError by viewModel.uiError.collectAsState()
     val isDataLoaded by viewModel.isDataLoaded.collectAsState()
     val subscription by viewModel.subscription.collectAsState()

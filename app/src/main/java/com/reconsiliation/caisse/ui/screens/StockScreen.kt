@@ -46,19 +46,35 @@ import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.state.InventoryUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun StockScreen(navController: NavController, initialBarcode: String? = null) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val boutique by viewModel.boutique.collectAsState()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: InventoryViewModel = hiltViewModel()
+    val boutique by mainViewModel.boutique.collectAsState()
     val stockItems by viewModel.allStock.collectAsState()
-    val isManager = viewModel.isManager()
+    val isManager = mainViewModel.isManager()
     
     var selectedCategory by remember { mutableStateOf("Tout") }
     var searchQuery by remember { mutableStateOf("") }
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
+    val uiState by viewModel.uiState.collectAsState()
+
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(uiState) {
+        if (uiState is InventoryUiState.Error) {
+            snackbarHostState.showSnackbar((uiState as InventoryUiState.Error).message)
+            viewModel.clearUiState()
+        } else if (uiState is InventoryUiState.Success) {
+            viewModel.clearUiState()
+        }
+    }
     
     val filteredItems = remember(stockItems, selectedCategory, searchQuery) {
         stockItems.filter {
@@ -69,9 +85,6 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
 
     val totalPurchaseValue = remember(filteredItems) { filteredItems.sumOf { it.quantity * it.purchasePrice } }
     val totalSaleValue = remember(filteredItems) { filteredItems.sumOf { it.quantity * it.unitPrice } }
-    
-    val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
     
     var showAddDialog by remember { mutableStateOf(initialBarcode != null) }
     var itemToEdit by remember { mutableStateOf<StockEntity?>(null) }
@@ -202,7 +215,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                             unitPrice = item.unitPrice,
                                             purchasePrice = item.purchasePrice
                                         )
-                                        viewModel.addVenteWithItems(vente, listOf(venteItem))
+                                        mainViewModel.addVenteWithItems(vente, listOf(venteItem))
                                         scope.launch { snackbarHostState.showSnackbar("Vente Rapide : ${item.productName} encaissé !") }
                                     }
                                 )
@@ -238,7 +251,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                         IconButton(onClick = {
                                             // Point 6: Print Shelf Label
                                             boutique?.printerAddress?.let { address ->
-                                                viewModel.testPrint(address) // Or dedicated printShelfLabel logic
+                                                mainViewModel.testPrint(address) // Or dedicated printShelfLabel logic
                                             }
                                         }) {
                                             Icon(Icons.Default.Label, "Étiquette", tint = Color.Gray)
@@ -275,9 +288,10 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
         if (showAddDialog) {
             AddProductDialog(
                 initialItem = if (initialBarcode != null) StockEntity(productName = "", quantity = 0.0, unitPrice = 0.0, alertThreshold = 5.0, barcode = initialBarcode) else null,
+                inventoryViewModel = viewModel,
                 onDismiss = { showAddDialog = false },
                 onConfirm = { stock ->
-                    viewModel.updateStock(stock)
+                    viewModel.updateStock(stock, mainViewModel.userRole.value)
                     showAddDialog = false
                 }
             )
@@ -286,9 +300,10 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
         if (itemToEdit != null) {
             AddProductDialog(
                 initialItem = itemToEdit,
+                inventoryViewModel = viewModel,
                 onDismiss = { itemToEdit = null },
                 onConfirm = { stock ->
-                    viewModel.updateStock(stock)
+                    viewModel.updateStock(stock, mainViewModel.userRole.value)
                     itemToEdit = null
                 }
             )
@@ -299,7 +314,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                 productName = itemToReportLoss!!.productName,
                 onDismiss = { itemToReportLoss = null },
                 onConfirm = { qty, reason ->
-                    viewModel.adjustStock(itemToReportLoss!!, itemToReportLoss!!.quantity - qty, reason)
+                    viewModel.adjustStock(itemToReportLoss!!, itemToReportLoss!!.quantity - qty, reason, mainViewModel.userRole.value)
                     itemToReportLoss = null
                     val msg = "Perte enregistrée"
                     scope.launch { snackbarHostState.showSnackbar(msg) }
@@ -311,6 +326,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
             RecipeDialog(
                 parentProduct = itemForRecipe!!,
                 allStock = stockItems,
+                inventoryViewModel = viewModel,
                 onDismiss = { itemForRecipe = null }
             )
         }
@@ -334,9 +350,8 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
 }
 
 @Composable
-fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, onDismiss: () -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val recipeItems by viewModel.getRecipeForProduct(parentProduct.id).collectAsState(initial = emptyList())
+fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, inventoryViewModel: InventoryViewModel, onDismiss: () -> Unit) {
+    val recipeItems by inventoryViewModel.getRecipeForProduct(parentProduct.id).collectAsState(initial = emptyList())
     var showAddIngredient by remember { mutableStateOf(false) }
 
     AlertDialog(
@@ -358,7 +373,7 @@ fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, onDism
                                     Text(item.ingredient.productName, fontWeight = FontWeight.Bold)
                                     Text("Quantité à déduire : ${item.recipe.quantityRequired} ${item.ingredient.unit}", style = MaterialTheme.typography.labelSmall)
                                 }
-                                IconButton(onClick = { viewModel.deleteRecipeComponent(item.recipe) }) {
+                                IconButton(onClick = { inventoryViewModel.deleteRecipeComponent(item.recipe) }) {
                                     Icon(Icons.Default.Delete, null, tint = RedError)
                                 }
                             }
@@ -385,7 +400,7 @@ fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, onDism
             allStock = allStock.filter { it.id != parentProduct.id },
             onDismiss = { showAddIngredient = false },
             onConfirm = { ingredientId, qty ->
-                viewModel.addRecipeComponent(parentProduct.id, ingredientId, qty)
+                inventoryViewModel.addRecipeComponent(parentProduct.id, ingredientId, qty)
                 showAddIngredient = false
             }
         )
@@ -495,8 +510,7 @@ fun ReportLossDialog(productName: String, onDismiss: () -> Unit, onConfirm: (Dou
 }
 
 @Composable
-fun AddProductDialog(initialItem: StockEntity? = null, onDismiss: () -> Unit, onConfirm: (StockEntity) -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
+fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: InventoryViewModel, onDismiss: () -> Unit, onConfirm: (StockEntity) -> Unit) {
     val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
 
     var name by remember { mutableStateOf(initialItem?.productName ?: "") }
@@ -508,7 +522,7 @@ fun AddProductDialog(initialItem: StockEntity? = null, onDismiss: () -> Unit, on
     var barcode by remember { mutableStateOf(initialItem?.barcode ?: "") }
     
     var category by remember { mutableStateOf(initialItem?.category ?: "Général") }
-    val productCategories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
+    val productCategories by inventoryViewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
     var expandedCategory by remember { mutableStateOf(false) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
@@ -642,7 +656,7 @@ fun AddProductDialog(initialItem: StockEntity? = null, onDismiss: () -> Unit, on
             type = "PRODUCT",
             onDismiss = { showAddCategoryDialog = false },
             onConfirm = { name ->
-                viewModel.addCategory(name, "PRODUCT")
+                inventoryViewModel.addCategory(name, "PRODUCT")
                 category = name
                 showAddCategoryDialog = false
             }

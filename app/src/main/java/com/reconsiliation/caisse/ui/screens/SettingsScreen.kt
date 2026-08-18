@@ -24,6 +24,7 @@ import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -32,8 +33,9 @@ import androidx.compose.runtime.setValue
 @Composable
 fun SettingsScreen(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()
+    val inventoryViewModel: InventoryViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
-    val allStock by viewModel.allStock.collectAsState()
+    val allStock by inventoryViewModel.allStock.collectAsState()
     val allVentes by viewModel.allVentes.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     
