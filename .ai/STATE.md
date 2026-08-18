@@ -5,13 +5,13 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 66c42855db053880f58349127e37e781c193b03c
-- **HEAD actuel** : 66c42855db053880f58349127e37e781c193b03c
+- **Dernier commit fonctionnel** : 7c870b13b3bbd6a981bbfa2c5bc32ffcc37250dc
+- **HEAD actuel** : 7c870b13b3bbd6a981bbfa2c5bc32ffcc37250dc
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
 - **Dernière compilation** : 2026-08-17 (SUCCESS)
-- **Dernière exécution des tests** : 2026-08-17 (79/79 SUCCESS)
+- **Dernière exécution des tests** : 2026-08-17 (82/82 SUCCESS)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -20,15 +20,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - AnomalyEngine (100% logique détection fraude)
     - Repositories (Data pure : Sales, Inventory, Main)
     - Platform (Services Framework : ReportManager, PrinterManager, ShareManager)
-    - ViewModels (Orchestration : MainViewModel, NewSaleViewModel)
+    - ViewModels (Orchestration : MainViewModel, NewSaleViewModel, InventoryViewModel)
 - **Dette technique** :
-    - `MainViewModel` monolithique en cours de découpage (J5.7 terminé, J5.8 à suivre).
-    - `MainViewModel` encore à ~660 lignes après extraction `NewSale`.
+    - `MainViewModel` allégé (~690 lignes) mais encore responsable des Ventes et Sessions.
+    - Découpage architectural en cours (J5.8.1 terminé, J5.8.2 à suivre).
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J5.7 - Extraction NewSaleViewModel (CLÔTURÉ).
+- **Dernière tâche terminée** : J5.8.1 - Extraction InventoryViewModel (CLÔTURÉ).
 - **Tâche en cours** : Synchronisation documentaire.
-- **Prochaine tâche prévue** : J5.8 - Étendre le découpage architectural aux écrans restants.
+- **Prochaine tâche prévue** : J5.8.2 - Étendre le découpage architectural (Sessions, Clients...).
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-007, BUG-008, BUG-009, BUG-010, BUG-012, BUG-013.
@@ -36,12 +36,12 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 
 ## 🏛️ Décisions & Risques
 - **Décisions d'architecture** : 
-    - Découpage ViewModel : Chaque écran complexe doit posséder son propre ViewModel et son `UiState`.
-    - Isolation des Repositories : Confirmée et maintenue.
-    - Orchestration par le ViewModel : Le ViewModel coordonne les données et les effets système via les Platform Managers.
+    - Découpage ViewModel : Chaque domaine fonctionnel doit posséder son propre ViewModel.
+    - Autonomie d\u0027InventoryViewModel : Gère Stock, Audits, Fournisseurs et Arrivages.
+    - Centralisation de la session : `MainViewModel` conserve `userRole` et `isManager()`.
 - **Risques connus** : 
     - Dette de test (Platform) : Les propriétés internes des Intent ne sont pas inspectées en JVM pure.
-    - Persistance du panier : Repose sur `SavedStateHandle` dans `NewSaleViewModel`.
+    - Multi-ViewModel dans l\u0027UI : Certains écrans (StockScreen, Reports) injectent désormais deux ViewModels.
 
 ## 🕒 Dernière Mise à jour
 - **Date** : 2026-08-17

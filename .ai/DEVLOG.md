@@ -4,29 +4,38 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 ---
 
+## [2026-08-17] - J5.8.1 : Extraction de l\u0027InventoryViewModel
+
+**Objectif** : Isoler le domaine Inventaire pour poursuivre l\u0027allégement du `MainViewModel`.
+
+**Analyses réalisées** :
+- Identification de 22 méthodes et 7 StateFlows liés au stock, audits, fournisseurs et arrivages.
+- Analyse de la "Vente Rapide" du `StockScreen` : la logique appartient au domaine **SALES**, elle est donc conservée dans `MainViewModel` pour l\u0027instant.
+- Vérification du rôle `isManager()` : conservé comme donnée de session globale.
+
+**Décisions prises** :
+- Création de `InventoryViewModel` et `InventoryUiState`.
+- Migration chirurgicale des responsabilités Stock (CRUD, Alerts, Valuation), Audit, Supply et Supplier.
+- Raccordement de 11 écrans, injectant parfois deux ViewModels (MAD approach).
+- Création de 3 nouveaux tests unitaires pour garantir l\u0027intégrité de la logique extraite.
+
+**Fichiers créés** :
+- `InventoryViewModel.kt`
+- `InventoryUiState.kt`
+- `InventoryViewModelTest.kt`
+
+**Fichiers modifiés** :
+- `MainViewModel.kt` (Purge Inventory)
+- 11 écrans de l\u0027UI (Raccordement)
+
+**Résultats de compilation** : SUCCESS.
+**Résultats des tests** : 82/82 SUCCESS. Commit final `7c870b1`.
+
+---
+
 ## [2026-08-17] - J5.7 : Découpage structurel du ViewModel (NewSaleScreen)
 
 **Objectif** : Extraire la logique de l\u0027écran de vente du `MainViewModel` monolithique.
-
-**Analyses réalisées** :
-- Cartographie des dépendances du `NewSaleScreen`.
-- Analyse du mécanisme de persistance `"cart_items"` dans le `SavedStateHandle`.
-- Identification du couplage `userRole`.
-
-**Décisions prises** :
-- Création de `NewSaleViewModel` et `NewSaleUiState`.
-- Transfert de la clé `"cart_items"` vers le nouveau ViewModel pour préserver la protection contre le process death.
-- Transmission explicite du rôle utilisateur depuis l\u0027UI pour éviter la dépendance circulaire vers `MainViewModel`.
-- Suppression de la fuite d\u0027Intent WhatsApp dans `NewSaleScreen` via `ShareManager`.
-- Maintien de `addVenteWithItems` dans `MainViewModel` uniquement pour les "Ventes Rapides" du StockScreen (évite la duplication).
-
-**Fichiers modifiés** :
-- `NewSaleViewModel.kt` (Création)
-- `NewSaleUiState.kt` (Création)
-- `NewSaleViewModelTest.kt` (Création)
-- `MainViewModel.kt` (Allégement du panier)
-- `NewSaleScreen.kt` (Raccordement)
-- `BigButton.kt` (Support enabled)
 
 **Résultats de compilation** : SUCCESS.
 **Résultats des tests** : 79/79 SUCCESS. Commit final `66c4285`.
@@ -48,59 +57,3 @@ Ce journal retrace l\u0027historique des cycles de développement. Chaque entré
 
 **Résultats de compilation** : SUCCESS.
 **Résultats des tests** : 75/75 SUCCESS. Commit final `a457eda`.
-
----
-
-## [2026-08-13] - B-050c : Finalisation de InventoryRepository (Commit 2)
-
-**Objectif** : Achever l\u0027extraction du domaine inventaire vers `InventoryRepository`.
-
-**Résultats** : InventoryRepository complet, 75 tests SUCCESS. Commit `563eee3`.
-
----
-
-## [2026-08-13] - B-050c : Extraction du cœur Stock (Commit 1)
-
-**Objectif** : Isoler la logique de stock de `MainRepository` vers `InventoryRepository`.
-
-**Résultats** : Cœur Stock extrait, atomicité préservée. Commit `8812490`.
-
----
-
-## [2026-08-13] - B-050b : Extraction du domaine Sales
-
-**Objectif** : Extraire tout le domaine des ventes vers `SalesRepository`.
-
-**Résultats** : isolation réussie, raccordement du `SmsProcessor`, 6 nouveaux tests validés. Commit `c8dfdb6`.
-
----
-
-## [2026-08-13] - Jalon 4 : Migration Hilt terminée
-
-**Objectif** : Mettre en place l\u0027injection de dépendances sur l\u0027ensemble du projet.
-
-**Résultats** : Plugin KSP configuré, `DatabaseModule` créé, ViewModels et Workers migrés. Commit final `de859ae`.
-
----
-
-## [2024-05-22] - Résolution du blocage environnemental et Clôture J3 (B-094A)
-
-**Objectif** : Lever le verrou sur `classes.jar` et valider les tests unitaires du Repository pour clôturer le Jalon 3.
-
-**Fichiers modifiés** :
-- `app/src/test/java/com/reconsiliation/caisse/data/repository/FakeDaos.kt`
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : Unit tests 65/65 SUCCESS.
-
----
-
-## [2024-05-22] - J1.3 : Réécriture des migrations divergentes (B-010)
-
-**Objectif** : Résoudre les incohérences entre les migrations Room et les entités Kotlin.
-
-**Fichiers modifiés** :
-- `app/src/main/java/com/reconsiliation/caisse/data/local/AppDatabase.kt`
-
-**Résultats de compilation** : SUCCESS (KSP v29).
-**Résultats des tests** : Unit tests 41/41 SUCCESS.
