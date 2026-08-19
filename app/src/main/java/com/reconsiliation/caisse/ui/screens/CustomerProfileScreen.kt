@@ -24,17 +24,29 @@ import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.CustomerViewModel
+import com.reconsiliation.caisse.ui.state.CustomerUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CustomerProfileScreen(navController: NavController, customerId: Long) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = hiltViewModel()
-    val allCustomers by viewModel.allCustomers.collectAsState(initial = emptyList())
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: CustomerViewModel = hiltViewModel()
+    val allCustomers by viewModel.allCustomers.collectAsState()
     val customer: CustomerEntity? = allCustomers.find { it.id == customerId }
-    val currency by viewModel.currency.collectAsState()
+    val boutique by mainViewModel.boutique.collectAsState()
+    val currency by mainViewModel.currency.collectAsState()
     val customerVentes by viewModel.getVentesByCustomer(customerId).collectAsState(initial = emptyList())
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is CustomerUiState.Error) {
+            // Handle error (e.g. show snackbar)
+            viewModel.clearUiState()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -47,7 +59,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                 },
                 actions = {
                     customer?.let {
-                        IconButton(onClick = { viewModel.generateCustomerStatement(context, it) }) {
+                        IconButton(onClick = { viewModel.generateCustomerStatement(it) }) {
                             Icon(Icons.Default.PictureAsPdf, contentDescription = "Relevé PDF")
                         }
                     }
@@ -78,7 +90,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                             }
                             if (data.totalDebt > 0) {
                                 Button(
-                                    onClick = { viewModel.sendDebtReminder(context, data) },
+                                    onClick = { viewModel.sendDebtReminder(data, boutique?.name, currency) },
                                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                                 ) {
                                     Icon(androidx.compose.material.icons.Icons.Default.Send, null)

@@ -456,6 +456,7 @@ class SalesRepository @Inject constructor(
     }
 
     fun getRepayments(customerId: Long) = db.repaymentDao().getRepaymentsForCustomer(customerId)
+    suspend fun updateCustomerVipStatus(customerId: Long, isVip: Boolean) = customerDao.updateVipStatus(customerId, isVip)
 
     // 7. SMS Reconciliation
     suspend fun resolveSmsError(error: SmsErrorEntity, venteId: Long, role: String? = null) {

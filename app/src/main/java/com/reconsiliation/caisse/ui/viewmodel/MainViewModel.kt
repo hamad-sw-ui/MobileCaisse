@@ -124,8 +124,6 @@ class MainViewModel @Inject constructor(
     val allVentes: StateFlow<List<VenteEntity>>
     val allVentesWithItems: StateFlow<List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>>
     val smsErrors: StateFlow<List<SmsErrorEntity>>
-    val debtors: StateFlow<List<CustomerEntity>>
-    val allCustomers: StateFlow<List<CustomerEntity>>
     val allExpenses: StateFlow<List<ExpenseEntity>>
     val subscription: StateFlow<SubscriptionEntity?>
     val allClosures: StateFlow<List<ClosureEntity>>
@@ -171,8 +169,6 @@ class MainViewModel @Inject constructor(
         allVentes = salesRepository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allVentesWithItems = salesRepository.allVentesWithItems.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         smsErrors = salesRepository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        debtors = salesRepository.debtors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allCustomers = salesRepository.allCustomers.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allExpenses = repository.allExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
         allClosures = salesRepository.allClosures.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -291,16 +287,6 @@ class MainViewModel @Inject constructor(
     fun closeSession(balance: Double) = viewModelScope.launch {
         try { salesRepository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
-
-    fun addRepayment(customerId: Long, amount: Double, method: String) = viewModelScope.launch { salesRepository.addRepayment(customerId, amount, method, userRole.value) }
-
-    fun sendDebtReminder(context: android.content.Context, customer: CustomerEntity) {
-        val boutiqueName = boutique.value?.name ?: "votre boutique"
-        val message = "Bonjour ${customer.name}, un petit rappel concernant votre dette de ${FormatUtil.formatCurrency(customer.totalDebt)} chez $boutiqueName. Merci de régulariser dès que possible."
-        shareManager.shareText(message, "Envoyer le rappel", "com.whatsapp")
-    }
-    suspend fun getCustomerByPhone(phone: String) = salesRepository.getCustomerByPhone(phone)
-    suspend fun findOrCreateCustomer(name: String, phone: String) = salesRepository.findOrCreateCustomer(name, phone)
 
     fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) {
         val venteWithItems = salesRepository.getVenteWithItems(venteId) ?: return@launch
@@ -563,17 +549,6 @@ class MainViewModel @Inject constructor(
     fun getPaymentUssd(operator: String, amount: Int): String = repository.getPaymentUssd(operator, amount)
     fun getDeviceId() = repository.getDeviceId(getApplication())
     fun isStaffRestricted() = boutique.value?.hideProfitsFromStaff == true
-    fun generateCustomerStatement(context: android.content.Context, customer: CustomerEntity) = viewModelScope.launch {
-        try {
-            val ventes = salesRepository.getVentesByCustomer(customer.id).first()
-            val file = reportManager.generateCustomerStatementPdf(customer, ventes)
-            if (file != null) {
-                shareManager.shareFile(file, "application/pdf", "Partager le relevé")
-            }
-        } catch (e: Exception) {
-            _uiError.value = "Erreur PDF: ${e.message}"
-        }
-    }
 
     fun resolveSmsError(error: SmsErrorEntity, venteId: Long) = viewModelScope.launch {
         try { salesRepository.resolveSmsError(error, venteId) } catch (e: Exception) { _uiError.value = e.message }
@@ -593,7 +568,6 @@ class MainViewModel @Inject constructor(
     }
 
     suspend fun getVenteWithItems(venteId: Long) = salesRepository.getVenteWithItems(venteId)
-    fun getVentesByCustomer(customerId: Long) = salesRepository.getVentesByCustomer(customerId)
     fun lockSalesForToday() = viewModelScope.launch { salesRepository.lockSalesForToday() }
     fun returnVenteItem(venteId: Long, productId: Long, quantity: Double, refundAmount: Double, method: String = "AVOIR") = viewModelScope.launch {
         try { salesRepository.returnVenteItem(venteId, productId, quantity, refundAmount, method, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
@@ -664,9 +638,6 @@ class MainViewModel @Inject constructor(
         return@withContext null
     }
     fun updateBoutique(boutique: BoutiqueEntity) = viewModelScope.launch { repository.updateBoutique(boutique) }
-    fun updateVipStatus(customerId: Long, isVip: Boolean) = viewModelScope.launch {
-        repository.updateCustomerVipStatus(customerId, isVip)
-    }
     @android.annotation.SuppressLint("MissingPermission")
     fun getPairedPrinters(): List<android.bluetooth.BluetoothDevice> {
         val btManager = getApplication<Application>().getSystemService(android.content.Context.BLUETOOTH_SERVICE) as android.bluetooth.BluetoothManager

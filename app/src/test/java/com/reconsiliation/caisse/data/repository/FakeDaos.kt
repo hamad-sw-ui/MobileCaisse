@@ -207,7 +207,12 @@ class FakeCustomerDao : CustomerDao {
         customers.value.values.find { it.phone == phone && it.totalDebt > 0 }
 
     override suspend fun updateCreditBalance(id: Long, delta: Double): Int = 1
-    override suspend fun updateVipStatus(id: Long, isVip: Boolean): Int = 1
+    override suspend fun updateVipStatus(id: Long, isVip: Boolean): Int {
+        customers.value[id]?.let {
+            customers.value = customers.value + (id to it.copy(isVip = isVip))
+        }
+        return 1
+    }
     override suspend fun getCustomerById(id: Long) = customers.value[id]
     override suspend fun delete(customer: CustomerEntity) {
         customers.value = customers.value - customer.id

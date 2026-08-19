@@ -373,7 +373,6 @@ class MainRepository @Inject constructor(
     suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
     suspend fun getAllActiveStaffOnce(): List<StaffEntity> = db.staffDao().getAllActiveStaff().first()
     suspend fun updateStaffSecurityInfo(staff: StaffEntity) = db.staffDao().insertOrUpdate(staff)
-    suspend fun updateCustomerVipStatus(customerId: Long, isVip: Boolean) = db.customerDao().updateVipStatus(customerId, isVip)
 
     /** Format d'un fichier de sauvegarde, pour adapter l'interface. */
     fun detectBackupFormat(file: File): com.reconsiliation.caisse.utils.BackupFormat =

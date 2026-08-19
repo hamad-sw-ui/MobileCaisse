@@ -1,7 +1,5 @@
 package com.reconsiliation.caisse.ui.screens
 
-import android.content.Intent
-import android.net.Uri
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,16 +28,26 @@ import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.CustomerViewModel
+import com.reconsiliation.caisse.ui.state.CustomerUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DebtScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = hiltViewModel()
-    val boutique by viewModel.boutique.collectAsState()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val viewModel: CustomerViewModel = hiltViewModel()
+    val boutique by mainViewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val debtors by viewModel.debtors.collectAsState()
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is CustomerUiState.Success) {
+            viewModel.clearUiState()
+        }
+    }
     
     var selectedDebtor by remember { mutableStateOf<CustomerEntity?>(null) }
     var showRepayDialog by remember { mutableStateOf(false) }
@@ -55,7 +63,7 @@ fun DebtScreen(navController: NavController) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        debtors.forEach { viewModel.sendDebtReminder(context, it) }
+                        debtors.forEach { viewModel.sendDebtReminder(it, boutique?.name, boutique?.currency ?: "FCFA") }
                     }) {
                         Icon(Icons.Default.NotificationsActive, "Relancer tous")
                     }
@@ -74,9 +82,7 @@ fun DebtScreen(navController: NavController) {
                         debtor = debtor,
                         onRepay = { selectedDebtor = debtor; showRepayDialog = true },
                         onRemind = {
-                            val message = "Bonjour ${debtor.name}, votre boutique vous rappelle votre dette de ${FormatUtil.formatCurrency(debtor.totalDebt, boutique?.currency ?: "FCFA")}. Merci de régulariser dès que possible."
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("sms:${debtor.phone}?body=${Uri.encode(message)}"))
-                            context.startActivity(intent)
+                            viewModel.sendDebtReminder(debtor, boutique?.name, boutique?.currency ?: "FCFA")
                         },
                         onViewProfile = { navController.navigate(Screen.CustomerProfile.createRoute(debtor.id)) }
                     )
@@ -90,7 +96,7 @@ fun DebtScreen(navController: NavController) {
                 operatorName = operatorName,
                 onDismiss = { showRepayDialog = false },
                 onConfirm = { amount, method ->
-                    viewModel.addRepayment(selectedDebtor!!.id, amount, method)
+                    viewModel.addRepayment(selectedDebtor!!.id, amount, method, mainViewModel.userRole.value)
                     showRepayDialog = false
                 }
             )

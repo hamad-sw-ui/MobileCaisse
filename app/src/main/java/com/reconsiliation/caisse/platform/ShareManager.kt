@@ -2,6 +2,7 @@ package com.reconsiliation.caisse.platform
 
 import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -9,14 +10,14 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ShareManager @Inject constructor(
+open class ShareManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
     /**
      * Partage du texte simple, avec option de ciblage (ex: WhatsApp).
      */
-    fun shareText(text: String, title: String, pkg: String? = null) {
+    open fun shareText(text: String, title: String, pkg: String? = null) {
         val intent = Intent(Intent.ACTION_SEND).apply {
             type = "text/plain"
             putExtra(Intent.EXTRA_TEXT, text)
@@ -50,7 +51,7 @@ class ShareManager @Inject constructor(
     /**
      * Partage un fichier via FileProvider.
      */
-    fun shareFile(file: File, mimeType: String, title: String) {
+    open fun shareFile(file: File, mimeType: String, title: String) {
         val authority = "${context.packageName}.fileprovider"
         val uri = FileProvider.getUriForFile(context, authority, file)
         
@@ -64,5 +65,22 @@ class ShareManager @Inject constructor(
         val chooser = Intent.createChooser(intent, title)
         chooser.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         context.startActivity(chooser)
+    }
+
+    /**
+     * Envoie un SMS direct via l'application SMS par défaut (ACTION_VIEW).
+     * Préserve le comportement direct sans sélecteur générique.
+     */
+    open fun sendSms(phone: String, message: String) {
+        val uri = Uri.parse("sms:$phone?body=${Uri.encode(message)}")
+        val intent = Intent(Intent.ACTION_VIEW, uri).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        }
+        try {
+            context.startActivity(intent)
+        } catch (e: Exception) {
+            // Fallback to share text if SMS app fails
+            shareText(message, "Envoyer par")
+        }
     }
 }

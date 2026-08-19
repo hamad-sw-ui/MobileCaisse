@@ -13,7 +13,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class ReportManager @Inject constructor(
+open class ReportManager @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
 
@@ -21,7 +21,7 @@ class ReportManager @Inject constructor(
      * Génère un relevé de compte client au format PDF.
      * Isole PdfDocument et la logique graphique du repository.
      */
-    fun generateCustomerStatementPdf(customer: CustomerEntity, ventes: List<VenteWithItems>): File? {
+    open fun generateCustomerStatementPdf(customer: CustomerEntity, ventes: List<VenteWithItems>): File? {
         val fileName = "Releve_${customer.name}_${System.currentTimeMillis()}.pdf"
         val file = File(context.cacheDir, fileName)
         
