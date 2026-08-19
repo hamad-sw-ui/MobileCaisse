@@ -1,59 +1,38 @@
-# 📓 JOURNAL DE DÉVELOPPEMENT (DEVLOG)
+# 🪵 JOURNAL DE BORD (DEVLOG)
 
-Ce journal retrace l\u0027historique des cycles de développement. Chaque entrée est ajoutée en fin de session.
-
----
-
-## [2026-08-17] - J5.8.1 : Extraction de l\u0027InventoryViewModel
-
-**Objectif** : Isoler le domaine Inventaire pour poursuivre l\u0027allégement du `MainViewModel`.
-
-**Analyses réalisées** :
-- Identification de 22 méthodes et 7 StateFlows liés au stock, audits, fournisseurs et arrivages.
-- Analyse de la "Vente Rapide" du `StockScreen` : la logique appartient au domaine **SALES**, elle est donc conservée dans `MainViewModel` pour l\u0027instant.
-- Vérification du rôle `isManager()` : conservé comme donnée de session globale.
-
-**Décisions prises** :
-- Création de `InventoryViewModel` et `InventoryUiState`.
-- Migration chirurgicale des responsabilités Stock (CRUD, Alerts, Valuation), Audit, Supply et Supplier.
-- Raccordement de 11 écrans, injectant parfois deux ViewModels (MAD approach).
-- Création de 3 nouveaux tests unitaires pour garantir l\u0027intégrité de la logique extraite.
-
-**Fichiers créés** :
-- `InventoryViewModel.kt`
-- `InventoryUiState.kt`
-- `InventoryViewModelTest.kt`
-
-**Fichiers modifiés** :
-- `MainViewModel.kt` (Purge Inventory)
-- 11 écrans de l\u0027UI (Raccordement)
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 82/82 SUCCESS. Commit final `7c870b1`.
+## 🗓️ 2026-08-19 — Extraction J5.8.2 (CustomerViewModel)
+### Actions réalisées :
+- **Extraction Domaine Clients** : Création de `CustomerViewModel` gérant `allCustomers`, `debtors`, `addRepayment` et `updateVipStatus`.
+- **Migration SMS** : Ajout de `ShareManager.sendSms(phone, message)` utilisant `ACTION_VIEW`. Purge totale des imports `Intent` et `Uri` dans `DebtScreen` et `CustomerProfileScreen`.
+- **Réduction monolithique** : `MainViewModel` descend à ~660 lignes.
+- **Réorganisation Repository** : Déplacement de la méthode `updateCustomerVipStatus` de `MainRepository` vers `SalesRepository` pour respect des domaines.
+- **Certification technique** : 4 nouveaux tests unitaires pour `CustomerViewModel` (Remboursement, VIP, Filtrage). Build OK.
 
 ---
 
-## [2026-08-17] - J5.7 : Découpage structurel du ViewModel (NewSaleScreen)
-
-**Objectif** : Extraire la logique de l\u0027écran de vente du `MainViewModel` monolithique.
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 79/79 SUCCESS. Commit final `66c4285`.
-
----
-
-## [2026-08-17] - B-052 : Extraction des Intent et Share vers la couche Platform
-
-**Objectif** : Purger les Repositories des dépendances de communication Android (Intents, FileProvider, Uri).
-
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 75/75 SUCCESS. Commit final `056be5b`.
+## 🗓️ 2026-08-17 — Extraction J5.8.1 (InventoryViewModel)
+### Actions réalisées :
+- **Extraction Domaine Inventaire** : Création de `InventoryViewModel` gérant `allStock`, `lowStock`, `audits`, `categories`, `suppliers` et `supplies`.
+- **Réduction monolithique** : `MainViewModel` descend à ~690 lignes.
+- **Support des domaines** : `MainRepository` conserve la boutique globale et le personnel.
+- **Certification technique** : 3 nouveaux tests unitaires pour `InventoryViewModel`. Build OK.
 
 ---
 
-## [2026-08-16] - B-051 : Extraction PDF et Ticket vers la couche Platform
+## 🗓️ 2026-08-16 — Finalisation J5.7 (NewSaleViewModel)
+### Actions réalisées :
+- **Extraction J5.7** : Migration totale de la logique de vente de `MainViewModel` vers `NewSaleViewModel`.
+- **Gestion d\u0027état** : Implémentation de `NewSaleUiState` (Idle, Processing, Success, Error) pour orchestrer les confirmations de vente et les tickets.
+- **Allégement ViewModel** : `MainViewModel` amputé de ~100 lignes de logique métier pure.
+- **Validation** : Build SUCCESSFUL et tests unitaires (79/79) SUCCESS.
 
-**Objectif** : Purger les Repositories des dépendances au Framework Android (PdfDocument, Bluetooth).
+---
 
-**Résultats de compilation** : SUCCESS.
-**Résultats des tests** : 75/75 SUCCESS. Commit final `a457eda`.
+## 🗓️ 2026-08-14 — Refactor technique (B-052)
+### Actions réalisées :
+- **Correction B-052** : Migration des `Intent` Android du repository vers `ShareManager.kt` (platform).
+- **Assainissement technique** : Suppression des dépendances `android.content.*` dans les repositories pour permettre les tests unitaires JVM purs.
+- **Validation** : 75 tests SUCCESS.
+
+---
+*Fin du journal.*

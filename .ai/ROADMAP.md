@@ -90,7 +90,8 @@ J7 Industrialisation (CI, release)
 | 5.6 | Sortir les `Intent` Android vers `platform/` | B-052 | ✅ (056be5b) |
 | 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | ✅ (66c4285) |
 | 5.8.1 | Extraction du domaine Inventaire (InventoryViewModel) | B-054 | ✅ (7c870b1) |
-| 5.8.2 | Étendre le motif aux écrans restants (Sessions, Clients...) | B-054 | ⏭ PROCHAINE ÉTAPE |
+| 5.8.2 | Extraction du domaine Clients (CustomerViewModel) | B-054 | ✅ (61b616e) |
+| 5.8.3 | Étendre le motif aux écrans restants (Sessions, Dépenses...) | B-054 | ⏭ PROCHAINE ÉTAPE |
 
 *Note sur 5.3/5.4 : Customer est dans SalesRepo, Supplier/Audit dans InventoryRepo. Le plan de découpage vers des repositories autonomes a été redéfini par absorption fonctionnelle.*
 
@@ -148,4 +149,4 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-08-17 (J5.8.1 InventoryViewModel TERMINÉ).*
+*Document mis à jour le 2026-08-19 (J5.8.2 CustomerViewModel TERMINÉ).*
