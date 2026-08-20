@@ -1,5 +1,15 @@
 # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-08-19 — Extraction J5.8.3 (SessionViewModel)
+### Actions réalisées :
+- **Extraction Domaine Sessions** : Création de `SessionViewModel` gérant `activeSession`, `allSessions`, `allClosures` et les actions Open/Close.
+- **Centralisation KPIs** : Migration de `todayProfit` et `todayRevenue` vers `SessionViewModel`. Amélioration de la précision temporelle (ms).
+- **Sécurisation Verrouillage** : Ajout d'un flag `isLoaded` pour garantir que `NewSaleScreen` ne ferme pas prématurément lors de l'initialisation asynchrone du flux Room.
+- **Réduction monolithique** : `MainViewModel` descend à ~610 lignes.
+- **Certification technique** : 4 nouveaux tests unitaires pour `SessionViewModel` (Cycle de vie, Permissions profit). Total tests : 90.
+
+---
+
 ## 🗓️ 2026-08-19 — Extraction J5.8.2 (CustomerViewModel)
 ### Actions réalisées :
 - **Extraction Domaine Clients** : Création de `CustomerViewModel` gérant `allCustomers`, `debtors`, `addRepayment` et `updateVipStatus`.
@@ -25,14 +35,6 @@
 - **Gestion d\u0027état** : Implémentation de `NewSaleUiState` (Idle, Processing, Success, Error) pour orchestrer les confirmations de vente et les tickets.
 - **Allégement ViewModel** : `MainViewModel` amputé de ~100 lignes de logique métier pure.
 - **Validation** : Build SUCCESSFUL et tests unitaires (79/79) SUCCESS.
-
----
-
-## 🗓️ 2026-08-14 — Refactor technique (B-052)
-### Actions réalisées :
-- **Correction B-052** : Migration des `Intent` Android du repository vers `ShareManager.kt` (platform).
-- **Assainissement technique** : Suppression des dépendances `android.content.*` dans les repositories pour permettre les tests unitaires JVM purs.
-- **Validation** : 75 tests SUCCESS.
 
 ---
 *Fin du journal.*

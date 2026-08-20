@@ -91,7 +91,8 @@ J7 Industrialisation (CI, release)
 | 5.7 | `UiState` + ViewModel dédié pour `NewSaleScreen` | B-053, B-054 | ✅ (66c4285) |
 | 5.8.1 | Extraction du domaine Inventaire (InventoryViewModel) | B-054 | ✅ (7c870b1) |
 | 5.8.2 | Extraction du domaine Clients (CustomerViewModel) | B-054 | ✅ (61b616e) |
-| 5.8.3 | Étendre le motif aux écrans restants (Sessions, Dépenses...) | B-054 | ⏭ PROCHAINE ÉTAPE |
+| 5.8.3 | Extraction du domaine Sessions (SessionViewModel) | B-054 | ✅ (b8ac697) |
+| 5.8.4 | Étendre le motif aux écrans restants (Dépenses, Rapports...) | B-054 | ⏭ PROCHAINE ÉTAPE |
 
 *Note sur 5.3/5.4 : Customer est dans SalesRepo, Supplier/Audit dans InventoryRepo. Le plan de découpage vers des repositories autonomes a été redéfini par absorption fonctionnelle.*
 
@@ -149,4 +150,4 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-08-19 (J5.8.2 CustomerViewModel TERMINÉ).*
+*Document mis à jour le 2026-08-19 (J5.8.3 SessionViewModel TERMINÉ).*
