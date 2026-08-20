@@ -82,6 +82,7 @@ dependencies {
     // BackupManager est du Kotlin/JVM pur (aucune dépendance au framework Android) :
     // ses tests s'exécutent en JVM, donc dans Docker, sans appareil ni Robolectric.
     testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)

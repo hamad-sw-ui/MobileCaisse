@@ -23,13 +23,14 @@ import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClosureHistoryScreen(navController: NavController) {
-    val mainViewModel: MainViewModel = hiltViewModel()
-    val closures by mainViewModel.allClosures.collectAsState()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val closures by sessionViewModel.allClosures.collectAsState()
 
     Scaffold(
         topBar = {
@@ -88,8 +89,8 @@ fun ClosureHistoryScreen(navController: NavController) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SessionHistoryScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val sessions by viewModel.allSessions.collectAsState()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
+    val sessions by sessionViewModel.allSessions.collectAsState()
     
     var showCommissionDialog by remember { mutableStateOf<SessionEntity?>(null) }
 

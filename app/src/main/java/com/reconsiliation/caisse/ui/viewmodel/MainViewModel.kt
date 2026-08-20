@@ -126,12 +126,7 @@ class MainViewModel @Inject constructor(
     val smsErrors: StateFlow<List<SmsErrorEntity>>
     val allExpenses: StateFlow<List<ExpenseEntity>>
     val subscription: StateFlow<SubscriptionEntity?>
-    val allClosures: StateFlow<List<ClosureEntity>>
     val recentLogs: StateFlow<List<ActionLogEntity>>
-    val activeSession: StateFlow<SessionEntity?>
-    val allSessions: StateFlow<List<SessionEntity>>
-    val todayProfit: StateFlow<Double>
-    val todayRevenue: StateFlow<Double>
     
     private val _categorySales = MutableStateFlow<List<com.reconsiliation.caisse.data.local.dao.CategoryReport>>(emptyList())
     val categorySales = _categorySales.asStateFlow()
@@ -171,32 +166,13 @@ class MainViewModel @Inject constructor(
         smsErrors = salesRepository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allExpenses = repository.allExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
-        allClosures = salesRepository.allClosures.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         recentLogs = repository.recentLogs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        activeSession = salesRepository.activeSession.stateIn(viewModelScope, SharingStarted.Eagerly, null)
-        allSessions = salesRepository.allSessions.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-
-        val calendar = Calendar.getInstance()
-        calendar.set(Calendar.HOUR_OF_DAY, 0)
-        calendar.set(Calendar.MINUTE, 0)
-        val start = calendar.time
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        val end = calendar.time
-
-        todayProfit = combine(salesRepository.getProfitFlow(start, end), userRole, boutique) { profit, role, b ->
-            if (role == "MANAGER" || b?.hideProfitsFromStaff == false) profit else 0.0
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
-
-        todayRevenue = combine(salesRepository.getTotalCash(start, end), salesRepository.getTotalMomo(start, end)) { cash, momo ->
-            (cash ?: 0.0) + (momo ?: 0.0)
-        }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), 0.0)
 
         loadCurrentStats()
 
         viewModelScope.launch {
             // Combine multiple flows to ensure critical data is considered "loaded"
-            combine(boutique, subscription, activeSession) { _, _, _ ->
+            combine(boutique, subscription) { _, _ ->
                 true
             }.collect {
                 _isDataLoaded.value = true
@@ -280,13 +256,6 @@ class MainViewModel @Inject constructor(
 
     fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
     fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
-
-    fun openSession(seller: String, balance: Double) = viewModelScope.launch {
-        try { salesRepository.openSession(seller, balance, staffId.value) } catch (e: Exception) { _uiError.value = e.message }
-    }
-    fun closeSession(balance: Double) = viewModelScope.launch {
-        try { salesRepository.closeSession(balance, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
-    }
 
     fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) {
         val venteWithItems = salesRepository.getVenteWithItems(venteId) ?: return@launch

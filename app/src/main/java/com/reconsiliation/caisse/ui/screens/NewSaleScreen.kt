@@ -35,6 +35,7 @@ import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.NewSaleViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
 import com.reconsiliation.caisse.ui.state.NewSaleUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 import androidx.compose.ui.res.stringResource
@@ -48,6 +49,7 @@ fun NewSaleScreen(navController: NavController) {
     val context = androidx.compose.ui.platform.LocalContext.current
     val mainViewModel: MainViewModel = hiltViewModel()
     val viewModel: NewSaleViewModel = hiltViewModel()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
     
     val boutique by mainViewModel.boutique.collectAsState()
     val operatorName = if (boutique?.operator == "MTN") "MTN/OM" else boutique?.operator ?: "MTN/OM"
@@ -59,10 +61,11 @@ fun NewSaleScreen(navController: NavController) {
     val uiState by viewModel.uiState.collectAsState()
 
     val isDataLoaded by mainViewModel.isDataLoaded.collectAsState()
-    val activeSession by mainViewModel.activeSession.collectAsState()
+    val activeSession by sessionViewModel.activeSession.collectAsState()
+    val isSessionLoaded by sessionViewModel.isLoaded.collectAsState()
 
-    LaunchedEffect(activeSession, isDataLoaded) {
-        if (isDataLoaded && activeSession == null) {
+    LaunchedEffect(activeSession, isDataLoaded, isSessionLoaded) {
+        if (isDataLoaded && isSessionLoaded && activeSession == null) {
             navController.popBackStack()
         }
     }

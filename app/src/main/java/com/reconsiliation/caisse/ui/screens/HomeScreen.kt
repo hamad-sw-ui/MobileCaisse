@@ -31,12 +31,15 @@ import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
+import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class, androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val inventoryViewModel: InventoryViewModel = hiltViewModel()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
     val context = androidx.compose.ui.platform.LocalContext.current
     
     val permissionsToCheck = listOf(
@@ -51,6 +54,9 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
         }
     }
 
+    val userRole by viewModel.userRole.collectAsState()
+    val isLoggedIn = userRole != null
+
     val boutique by viewModel.boutique.collectAsState()
     val ventesWithItems by viewModel.allVentesWithItems.collectAsState()
     val allStock by inventoryViewModel.allStock.collectAsState()
@@ -60,13 +66,22 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val uiError by viewModel.uiError.collectAsState()
     val isDataLoaded by viewModel.isDataLoaded.collectAsState()
     val subscription by viewModel.subscription.collectAsState()
-    val totalRevenue by viewModel.todayRevenue.collectAsState()
-    val netProfit by viewModel.todayProfit.collectAsState()
+    
+    val totalRevenue by sessionViewModel.todayRevenue.collectAsState()
+    val netProfit by sessionViewModel.todayProfit.collectAsState()
     val currency by viewModel.currency.collectAsState()
-    val activeSession by viewModel.activeSession.collectAsState()
+    val activeSession by sessionViewModel.activeSession.collectAsState()
+    val sessionUiState by sessionViewModel.uiState.collectAsState()
 
-    val userRole by viewModel.userRole.collectAsState()
-    val isLoggedIn = userRole != null
+    LaunchedEffect(userRole) {
+        sessionViewModel.setUserRole(userRole)
+    }
+
+    LaunchedEffect(sessionUiState) {
+        if (sessionUiState is SessionUiState.Success) {
+            sessionViewModel.clearUiState()
+        }
+    }
 
     // Remove the aggressive redirection here.
     // SplashScreen and SetupScreen handle transitions.
@@ -146,11 +161,11 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 Button(
                     onClick = {
                         if (sellerName.isNotBlank()) {
-                            viewModel.openSession(sellerName, openingBalance.toDoubleOrNull() ?: 0.0)
+                            sessionViewModel.openSession(sellerName, openingBalance.toDoubleOrNull() ?: 0.0, viewModel.staffId.value)
                             showSessionDialog = false
                         }
                     },
-                    enabled = sellerName.isNotBlank(),
+                    enabled = sellerName.isNotBlank() && sessionUiState !is SessionUiState.Processing,
                     shape = RoundedCornerShape(12.dp)
                 ) { Text("Ouvrir la Session") }
             }

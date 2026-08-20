@@ -35,7 +35,10 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
+import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.runtime.LaunchedEffect
 import java.io.File
 import java.util.*
 
@@ -44,10 +47,18 @@ import java.util.*
 fun ClosureScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: MainViewModel = hiltViewModel()
+    val sessionViewModel: SessionViewModel = hiltViewModel()
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.allVentes.collectAsState()
+    val sessionUiState by sessionViewModel.uiState.collectAsState()
+
+    LaunchedEffect(sessionUiState) {
+        if (sessionUiState is SessionUiState.Success) {
+            sessionViewModel.clearUiState()
+        }
+    }
     
     val todayVentes = ventes.filter { DateUtils.isToday(it.date.time) }
     val cashTotal = todayVentes.filter { it.paymentMethod == "CASH" && it.status == "CONFIRMED" }.sumOf { it.amount }
@@ -163,10 +174,11 @@ fun ClosureScreen(navController: NavController) {
                                     category = "Pertes"
                                 ))
                             }
-                            viewModel.closeSession(realCash.toDoubleOrNull() ?: cashTotal)
+                            sessionViewModel.closeSession(realCash.toDoubleOrNull() ?: cashTotal, viewModel.userRole.value)
                             viewModel.lockSalesForToday()
                         },
                         modifier = Modifier.fillMaxWidth(),
+                        enabled = sessionUiState !is SessionUiState.Processing,
                         colors = ButtonDefaults.buttonColors(containerColor = RedError)
                     ) {
                         Icon(Icons.Default.Lock, null)
