@@ -18,6 +18,48 @@ open class ReportManager @Inject constructor(
 ) {
 
     /**
+     * Génère un rapport de ventes au format CSV.
+     */
+    open fun generateSalesCsv(ventes: List<VenteWithItems>): File? {
+        val fileName = "Rapport_Ventes_${System.currentTimeMillis()}.csv"
+        val file = File(context.cacheDir, fileName)
+
+        return try {
+            FileOutputStream(file).use { out ->
+                // Header with BOM for Excel UTF-8 support
+                out.write(byteArrayOf(0xEF.toByte(), 0xBB.toByte(), 0xBF.toByte()))
+
+                val header = "ID;Date;Description;Montant;Mode;Remise;Frais;Taxe;Cout_Achat;Marge_Nette;Statut;Articles\n"
+                out.write(header.toByteArray())
+
+                ventes.forEach { data ->
+                    val itemsString = data.items.joinToString(" | ") { "${it.productName}(${it.quantity})" }
+                    val purchaseCost = data.items.sumOf { it.quantity * it.purchasePrice }
+                    val netMargin = data.vente.amount - purchaseCost - data.vente.fees
+
+                    val line = "${data.vente.id};" +
+                            "${FormatUtil.formatDate(data.vente.date)};" +
+                            "${data.vente.description.replace(";", ",")};" +
+                            "${data.vente.amount};" +
+                            "${data.vente.paymentMethod};" +
+                            "${data.vente.discount};" +
+                            "${data.vente.fees};" +
+                            "${data.vente.taxAmount};" +
+                            "$purchaseCost;" +
+                            "$netMargin;" +
+                            "${data.vente.status};" +
+                            "$itemsString\n"
+                    out.write(line.toByteArray())
+                }
+            }
+            file
+        } catch (e: Exception) {
+            e.printStackTrace()
+            null
+        }
+    }
+
+    /**
      * Génère un relevé de compte client au format PDF.
      * Isole PdfDocument et la logique graphique du repository.
      */

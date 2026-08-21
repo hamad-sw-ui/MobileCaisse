@@ -36,6 +36,8 @@ import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ExpenseViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ReportsViewModel
 import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 import androidx.compose.runtime.LaunchedEffect
@@ -48,10 +50,14 @@ fun ClosureScreen(navController: NavController) {
     val context = LocalContext.current
     val viewModel: MainViewModel = hiltViewModel()
     val sessionViewModel: SessionViewModel = hiltViewModel()
+    val expenseViewModel: ExpenseViewModel = hiltViewModel()
+    val reportsViewModel: ReportsViewModel = hiltViewModel()
+    
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.allVentes.collectAsState()
+    val allVentesWithItems by viewModel.allVentesWithItems.collectAsState()
     val sessionUiState by sessionViewModel.uiState.collectAsState()
 
     LaunchedEffect(sessionUiState) {
@@ -144,7 +150,13 @@ fun ClosureScreen(navController: NavController) {
                 Text("Actions de fin de journée", style = MaterialTheme.typography.titleMedium)
                 
                 Button(
-                    onClick = { exportToCsv(context, todayVentes) },
+                    onClick = { 
+                        // Filter only today's sales for the closure report (J5.8.5)
+                        val todayVentesWithItems = allVentesWithItems.filter { 
+                            android.text.format.DateUtils.isToday(it.vente.date.time) 
+                        }
+                        reportsViewModel.exportSalesData(todayVentesWithItems)
+                    },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                 ) {
@@ -167,12 +179,11 @@ fun ClosureScreen(navController: NavController) {
                     Button(
                         onClick = {
                             if (cashDiff < 0) {
-                                viewModel.addExpense(com.reconsiliation.caisse.data.local.entity.ExpenseEntity(
+                                expenseViewModel.addExpense(
                                     label = "Manquant de caisse (${FormatUtil.formatDate(Date())})",
                                     amount = kotlin.math.abs(cashDiff),
-                                    date = Date(),
                                     category = "Pertes"
-                                ))
+                                )
                             }
                             sessionViewModel.closeSession(realCash.toDoubleOrNull() ?: cashTotal, viewModel.userRole.value)
                             viewModel.lockSalesForToday()
@@ -225,26 +236,3 @@ fun ClosureCard(label: String, amount: Double) {
 // La fonction locale backupDatabase() a été supprimée : elle accédait au système
 // de fichiers depuis un Composable (violation MVVM) et produisait un export non
 // chiffré. L'export passe désormais par MainViewModel.exportEncryptedBackup.
-
-fun exportToCsv(context: android.content.Context, ventes: List<com.reconsiliation.caisse.data.local.entity.VenteEntity>) {
-    val fileName = "ventes_${System.currentTimeMillis()}.csv"
-    val fileContent = StringBuilder("ID,Date,Description,Montant,Methode,Statut\n")
-    ventes.forEach {
-        fileContent.append("${it.id},${it.date},${it.description},${it.amount},${it.paymentMethod},${it.status}\n")
-    }
-    
-    try {
-        val file = File(context.cacheDir, fileName)
-        file.writeText(fileContent.toString())
-        
-        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
-        val shareIntent = Intent(Intent.ACTION_SEND).apply {
-            type = "text/csv"
-            putExtra(Intent.EXTRA_STREAM, uri)
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-        }
-        context.startActivity(Intent.createChooser(shareIntent, "Partager le rapport"))
-    } catch (e: Exception) {
-        e.printStackTrace()
-    }
-}

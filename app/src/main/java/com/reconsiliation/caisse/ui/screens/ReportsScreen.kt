@@ -69,7 +69,7 @@ fun ReportsScreen(navController: NavController) {
                 },
                 actions = {
                     IconButton(
-                        onClick = { viewModel.exportSalesData(context) },
+                        onClick = { viewModel.exportSalesData() },
                         enabled = uiState !is ReportsUiState.Processing
                     ) {
                         Icon(Icons.Default.Share, contentDescription = "Exporter")

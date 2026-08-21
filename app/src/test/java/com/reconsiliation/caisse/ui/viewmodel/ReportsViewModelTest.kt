@@ -21,6 +21,7 @@ class ReportsViewModelTest {
     private lateinit var db: FakeAppDatabase
     private lateinit var salesRepository: SalesRepository
     private lateinit var mainRepository: MainRepository
+    private lateinit var reportManager: FakeReportManager
     private lateinit var shareManager: FakeShareManager
     private val testDispatcher = StandardTestDispatcher()
 
@@ -29,6 +30,14 @@ class ReportsViewModelTest {
         var lastSharedFile: java.io.File? = null
         override fun shareText(text: String, title: String, pkg: String?) { lastSharedText = text }
         override fun shareFile(file: java.io.File, mimeType: String, title: String) { lastSharedFile = file }
+    }
+
+    class FakeReportManager(context: android.content.Context) : com.reconsiliation.caisse.platform.ReportManager(context) {
+        var salesPassedToGenerateCsv: List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>? = null
+        override fun generateSalesCsv(ventes: List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>): java.io.File? {
+            salesPassedToGenerateCsv = ventes
+            return java.io.File("fake.csv")
+        }
     }
 
     @Before
@@ -58,9 +67,11 @@ class ReportsViewModelTest {
         )
         
         shareManager = FakeShareManager(context)
+        reportManager = FakeReportManager(context)
         viewModel = ReportsViewModel(
             salesRepository = salesRepository,
             mainRepository = mainRepository,
+            reportManager = reportManager,
             shareManager = shareManager
         )
     }
@@ -79,6 +90,14 @@ class ReportsViewModelTest {
     }
 
     @Test
+    fun `loadCurrentStats YEAR should trigger monthly sales data`() = runTest {
+        backgroundScope.launch { viewModel.dailySales.collect {} }
+        viewModel.loadCurrentStats("YEAR")
+        advanceUntilIdle()
+        assertTrue(viewModel.dailySales.value.isEmpty())
+    }
+
+    @Test
     fun `loadVentesForMonth should filter sales correctly`() = runTest {
         backgroundScope.launch { viewModel.selectedMonthVentes.collect {} }
         val now = Date()
@@ -91,16 +110,32 @@ class ReportsViewModelTest {
     }
 
     @Test
-    fun `exportSalesData should set success state on success`() = runTest {
+    fun `exportSalesData should delegate to reportManager and shareManager`() = runTest {
         val now = Date()
         val venteId = db.venteDao().insertVente(VenteEntity(amount = 100.0, description = "T", date = now, paymentMethod = "CASH", status = "CONFIRMED"))
         db.venteDao().insertVenteItems(listOf(VenteItemEntity(venteId = venteId, productId = 1, productName = "P", quantity = 1.0, unitPrice = 100.0, purchasePrice = 80.0)))
         advanceUntilIdle()
 
-        viewModel.exportSalesData(FakeContext())
+        viewModel.exportSalesData()
         advanceUntilIdle()
         
-        assertTrue("State was ${viewModel.uiState.value}", viewModel.uiState.value is ReportsUiState.Success)
+        assertTrue(viewModel.uiState.value is ReportsUiState.Success)
+        assertEquals(1, reportManager.salesPassedToGenerateCsv?.size)
+        assertEquals("fake.csv", shareManager.lastSharedFile?.name)
+    }
+
+    @Test
+    fun `exportSalesData with filtered list should only export those`() = runTest {
+        val list = listOf(com.reconsiliation.caisse.data.local.dao.VenteWithItems(
+            VenteEntity(id = 99, amount = 100.0, description = "F", date = Date(), paymentMethod = "CASH", status = "CONFIRMED"),
+            emptyList()
+        ))
+        
+        viewModel.exportSalesData(list)
+        advanceUntilIdle()
+        
+        assertEquals(1, reportManager.salesPassedToGenerateCsv?.size)
+        assertEquals(99L, reportManager.salesPassedToGenerateCsv?.get(0)?.vente?.id)
     }
 
     @Test
@@ -108,8 +143,9 @@ class ReportsViewModelTest {
         val now = Date()
         db.venteDao().insertVente(VenteEntity(amount = 1000.0, description = "V1", date = now, paymentMethod = "CASH", status = "CONFIRMED"))
         
-        viewModel.shareDailySummary(FakeContext())
+        viewModel.shareDailySummary()
         advanceUntilIdle()
+        assertTrue(shareManager.lastSharedText?.contains("Boutique") == true)
     }
 
     @Test
@@ -125,14 +161,6 @@ class ReportsViewModelTest {
         viewModel.loadCurrentStats("MONTH")
         advanceUntilIdle()
         
-        assertTrue(viewModel.dailySales.value.isEmpty())
-    }
-
-    @Test
-    fun `loadCurrentStats YEAR should trigger monthly sales data`() = runTest {
-        backgroundScope.launch { viewModel.dailySales.collect {} }
-        viewModel.loadCurrentStats("YEAR")
-        advanceUntilIdle()
         assertTrue(viewModel.dailySales.value.isEmpty())
     }
 }

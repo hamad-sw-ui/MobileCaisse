@@ -27,6 +27,8 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ExpenseViewModel
+import com.reconsiliation.caisse.ui.state.ExpenseUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 import androidx.compose.foundation.clickable
 import java.util.Date
@@ -34,12 +36,12 @@ import java.util.Date
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ExpenseScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: ExpenseViewModel = hiltViewModel()
     val expenses by viewModel.allExpenses.collectAsState()
     
     var selectedCategory by remember { mutableStateOf("Tout") }
     var searchQuery by remember { mutableStateOf("") }
-    val categories by viewModel.getCategories("EXPENSE").collectAsState(initial = emptyList())
+    val categories by viewModel.getCategories().collectAsState(initial = emptyList())
 
     val filteredExpenses = remember(expenses, selectedCategory, searchQuery) {
         expenses.filter {
@@ -49,6 +51,13 @@ fun ExpenseScreen(navController: NavController) {
     }
     
     var showAddDialog by remember { mutableStateOf(false) }
+    val uiState by viewModel.uiState.collectAsState()
+
+    LaunchedEffect(uiState) {
+        if (uiState is ExpenseUiState.Success) {
+            viewModel.clearUiState()
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -133,7 +142,7 @@ fun ExpenseScreen(navController: NavController) {
             AddExpenseDialog(
                 onDismiss = { showAddDialog = false },
                 onConfirm = { label, amt, cat ->
-                    viewModel.addExpense(ExpenseEntity(label = label, amount = amt, category = cat, date = Date()))
+                    viewModel.addExpense(label, amt, cat)
                     showAddDialog = false
                 }
             )
@@ -143,11 +152,11 @@ fun ExpenseScreen(navController: NavController) {
 
 @Composable
 fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: ExpenseViewModel = hiltViewModel()
     var label by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
     var category by remember { mutableStateOf("Divers") }
-    val expenseCategories by viewModel.getCategories("EXPENSE").collectAsState(initial = emptyList())
+    val expenseCategories by viewModel.getCategories().collectAsState(initial = emptyList())
     var expandedCategory by remember { mutableStateOf(false) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
@@ -202,7 +211,7 @@ fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) 
             type = "EXPENSE",
             onDismiss = { showAddCategoryDialog = false },
             onConfirm = { name ->
-                viewModel.addCategory(name, "EXPENSE")
+                viewModel.addCategory(name)
                 category = name
                 showAddCategoryDialog = false
             }

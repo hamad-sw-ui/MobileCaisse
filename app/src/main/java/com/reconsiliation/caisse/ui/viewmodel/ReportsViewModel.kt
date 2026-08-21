@@ -4,12 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.reconsiliation.caisse.data.local.dao.CategoryReport
 import com.reconsiliation.caisse.data.local.dao.DailySales
+import com.reconsiliation.caisse.data.local.dao.VenteWithItems
 import com.reconsiliation.caisse.data.local.entity.VenteEntity
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
+import com.reconsiliation.caisse.platform.ReportManager
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.ui.state.ReportsUiState
-import com.reconsiliation.caisse.utils.ExportUtil
 import com.reconsiliation.caisse.utils.FormatUtil
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -22,6 +23,7 @@ import javax.inject.Inject
 class ReportsViewModel @Inject constructor(
     private val salesRepository: SalesRepository,
     private val mainRepository: MainRepository,
+    private val reportManager: ReportManager,
     private val shareManager: ShareManager
 ) : ViewModel() {
 
@@ -98,12 +100,12 @@ class ReportsViewModel @Inject constructor(
         _historyDate.value = date
     }
 
-    fun exportSalesData(context: android.content.Context) {
+    fun exportSalesData(ventes: List<VenteWithItems>? = null) {
         viewModelScope.launch {
             _uiState.value = ReportsUiState.Processing
             try {
-                val ventes = salesRepository.allVentesWithItems.first()
-                val file = ExportUtil.exportSalesToCsv(context, ventes)
+                val dataToExport = ventes ?: salesRepository.allVentesWithItems.first()
+                val file = reportManager.generateSalesCsv(dataToExport)
                 if (file != null) {
                     shareManager.shareFile(file, "text/csv", "Partager le rapport")
                     _uiState.value = ReportsUiState.Success
@@ -116,7 +118,7 @@ class ReportsViewModel @Inject constructor(
         }
     }
 
-    fun shareDailySummary(context: android.content.Context) {
+    fun shareDailySummary() {
         viewModelScope.launch {
             val calendar = Calendar.getInstance().apply {
                 set(Calendar.HOUR_OF_DAY, 0)

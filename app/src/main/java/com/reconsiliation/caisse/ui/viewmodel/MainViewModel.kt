@@ -124,7 +124,6 @@ class MainViewModel @Inject constructor(
     val allVentes: StateFlow<List<VenteEntity>>
     val allVentesWithItems: StateFlow<List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>>
     val smsErrors: StateFlow<List<SmsErrorEntity>>
-    val allExpenses: StateFlow<List<ExpenseEntity>>
     val subscription: StateFlow<SubscriptionEntity?>
     val recentLogs: StateFlow<List<ActionLogEntity>>
     
@@ -152,7 +151,6 @@ class MainViewModel @Inject constructor(
         allVentes = salesRepository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         allVentesWithItems = salesRepository.allVentesWithItems.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         smsErrors = salesRepository.smsErrors.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
-        allExpenses = repository.allExpenses.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
         recentLogs = repository.recentLogs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
@@ -195,9 +193,6 @@ class MainViewModel @Inject constructor(
     fun cancelVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.cancelVente(vente) } catch (e: Exception) { _uiError.value = e.message } }
     fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { salesRepository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
-
-    fun addExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.insertExpense(expense) }
-    fun deleteExpense(expense: ExpenseEntity) = viewModelScope.launch { repository.deleteExpense(expense) }
 
     fun printTicket(venteId: Long, printerAddress: String) = viewModelScope.launch(Dispatchers.IO) {
         val venteWithItems = salesRepository.getVenteWithItems(venteId) ?: return@launch

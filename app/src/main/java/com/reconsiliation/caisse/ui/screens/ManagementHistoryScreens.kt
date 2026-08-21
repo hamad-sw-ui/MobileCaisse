@@ -24,6 +24,7 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ExpenseViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -159,7 +160,7 @@ fun SessionHistoryScreen(navController: NavController) {
 
 @Composable
 fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val expenseViewModel: ExpenseViewModel = hiltViewModel()
     var rate by remember { mutableStateOf("2") }
     val revenue = (session.closingBalance ?: 0.0) - session.openingBalance
     val commission = (revenue * (rate.toDoubleOrNull() ?: 0.0)) / 100.0
@@ -187,12 +188,11 @@ fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
                 
                 Button(
                     onClick = {
-                        viewModel.addExpense(com.reconsiliation.caisse.data.local.entity.ExpenseEntity(
+                        expenseViewModel.addExpense(
                             label = "Commission : ${session.sellerName} (${FormatUtil.formatDate(session.startTime)})",
                             amount = commission,
-                            date = java.util.Date(),
                             category = "Salaires"
-                        ))
+                        )
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
