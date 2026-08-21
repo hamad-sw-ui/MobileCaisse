@@ -1,4 +1,15 @@
-# 🪵 JOURNAL DE BORD (DEVLOG)
+# # 🪵 JOURNAL DE BORD (DEVLOG)
+
+## 🗓️ 2026-08-19 — Extraction J5.8.5 (ExpenseViewModel)
+### Actions réalisées :
+- **Extraction Domaine Dépenses** : Création de `ExpenseViewModel` gérant `allExpenses` et les catégories `"EXPENSE"`.
+- **Consolidation Plateforme** : Migration de la logique de génération CSV de `ExportUtil` vers `ReportManager.generateSalesCsv`.
+- **Nettoyage UI** : Suppression de la duplication CSV dans `ClosureScreen.kt`. L'écran délègue désormais l'export au `ReportsViewModel`.
+- **Isolation Android** : Poursuite de l'élimination du `android.content.Context` dans les ViewModels au profit des services `Platform`.
+- **Réduction monolithique** : `MainViewModel` descend à ~480 lignes.
+- **Certification technique** : 7 nouveaux tests (CRUD Dépenses, Intégrité CSV, Correction de suite Reports). Total : 103 tests SUCCESS.
+
+---
 
 ## 🗓️ 2026-08-19 — Extraction J5.8.4 (ReportsViewModel)
 ### Actions réalisées :
@@ -17,25 +28,6 @@
 - **Sécurisation Verrouillage** : Ajout d'un flag `isLoaded` pour garantir que `NewSaleScreen` ne ferme pas prématurément lors de l'initialisation asynchrone du flux Room.
 - **Réduction monolithique** : `MainViewModel` descend à ~610 lignes.
 - **Certification technique** : 4 nouveaux tests unitaires pour `SessionViewModel` (Cycle de vie, Permissions profit). Total tests : 90.
-
----
-
-## 🗓️ 2026-08-19 — Extraction J5.8.2 (CustomerViewModel)
-### Actions réalisées :
-- **Extraction Domaine Clients** : Création de `CustomerViewModel` gérant `allCustomers`, `debtors`, `addRepayment` et `updateVipStatus`.
-- **Migration SMS** : Ajout de `ShareManager.sendSms(phone, message)` utilisant `ACTION_VIEW`. Purge totale des imports `Intent` et `Uri` dans `DebtScreen` et `CustomerProfileScreen`.
-- **Réduction monolithique** : `MainViewModel` descend à ~660 lignes.
-- **Réorganisation Repository** : Déplacement de la méthode `updateCustomerVipStatus` de `MainRepository` vers `SalesRepository` pour respect des domaines.
-- **Certification technique** : 4 nouveaux tests unitaires pour `CustomerViewModel` (Remboursement, VIP, Filtrage). Build OK.
-
----
-
-## 🗓️ 2026-08-17 — Extraction J5.8.1 (InventoryViewModel)
-### Actions réalisées :
-- **Extraction Domaine Inventaire** : Création de `InventoryViewModel` gérant `allStock`, `lowStock`, `audits`, `categories`, `suppliers` et `supplies`.
-- **Réduction monolithique** : `MainViewModel` descend à ~690 lignes.
-- **Support des domaines** : `MainRepository` conserve la boutique globale et le personnel.
-- **Certification technique** : 3 nouveaux tests unitaires pour `InventoryViewModel`. Build OK.
 
 ---
 *Fin du journal.*

@@ -93,7 +93,8 @@ J7 Industrialisation (CI, release)
 | 5.8.2 | Extraction du domaine Clients (CustomerViewModel) | B-054 | ✅ (61b616e) |
 | 5.8.3 | Extraction du domaine Sessions (SessionViewModel) | B-054 | ✅ (b8ac697) |
 | 5.8.4 | Extraction du domaine Rapports (ReportsViewModel) | B-054 | ✅ (a0eb83a) |
-| 5.8.5 | Étendre le motif aux écrans restants (Dépenses, Paramètres...) | B-054 | ⏭ PROCHAINE ÉTAPE |
+| 5.8.5 | Extraction du domaine Dépenses (ExpenseViewModel) | B-054 | ✅ (62ef8fa) |
+| 5.8.6 | Étendre le motif aux écrans restants (Paramètres, Staff...) | B-054 | ⏭ PROCHAINE ÉTAPE |
 
 *Note sur 5.3/5.4 : Customer est dans SalesRepo, Supplier/Audit dans InventoryRepo. Le plan de découpage vers des repositories autonomes a été redéfini par absorption fonctionnelle.*
 
@@ -151,4 +152,4 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-08-19 (J5.8.4 ReportsViewModel TERMINÉ).*
+*Document mis à jour le 2026-08-19 (J5.8.5 ExpenseViewModel TERMINÉ).*
