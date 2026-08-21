@@ -9,23 +9,20 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Bug / Tâche | Analyse d\u0027impact | ADR | Fichiers modifiés | Test(s) associé(s) | Build | Niveau | Documentation | Statut |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **J5.7** (NewSale ViewModel) | ✅ J5.7 | — | `NewSaleViewModel.kt`, etc. | 79 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.1** (Inventory ViewModel) | ✅ J5.8.1 | — | `InventoryViewModel.kt`, etc. | 82 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.2** (Customer ViewModel) | ✅ J5.8.2 | — | `CustomerViewModel.kt`, `MainViewModel.kt`, +4 fichiers | 86 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.3** (Session ViewModel) | ✅ J5.8.3 | — | `SessionViewModel.kt`, `MainViewModel.kt`, +8 fichiers | 90 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
+| **J5.8.4** (Reports ViewModel) | ✅ J5.8.4 | — | `ReportsViewModel.kt`, `MainViewModel.kt`, +4 fichiers | 96 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 
 ---
 
 ## 🧪 Détail des Tests (Validations AI-DOS 3.0)
 
-### 1. `SessionViewModel` (J5.8.3)
+### 1. `ReportsViewModel` (J5.8.4)
+- **Preuve (a0eb83a) :** Extraction du domaine Rapports (Stats par catégorie, journalières, horaires, historiques mensuels). Correction de la réactivité des flux via `flatMapLatest`. 6 tests unitaires certifiant l'annulation des collectes et l'exactitude des exports. Total : 96 tests SUCCESS.
+
+### 2. `SessionViewModel` (J5.8.3)
 - **Preuve (b8ac697) :** Extraction du domaine Sessions (Ouverture, Clôture, Profit/Revenue journalier). Sécurisation du verrouillage `NewSaleScreen`. 4 nouveaux tests unitaires certifiés. Total : 90 tests SUCCESS.
-
-### 2. `CustomerViewModel` (J5.8.2)
-- **Preuve (61b616e) :** Extraction du domaine Clients (Dettes, Remboursements, Rappels). Migration de l\u0027Intent SMS vers `ShareManager.sendSms`. 4 nouveaux tests unitaires certifiés. Total : 86 tests SUCCESS.
-
-### 3. `InventoryViewModel` (J5.8.1)
-- **Preuve (7c870b1) :** Extraction du domaine Inventaire (Stock, Audits, Fournisseurs, Arrivages). 3 nouveaux tests unitaires. Total : 82 tests SUCCESS.
 
 ---
 
@@ -33,8 +30,8 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Date | Commande | Résultat | Git Hash | Branche | Tâches | Durée |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-08-19 | `./gradlew :app:assembleDebug` | **SUCCESS** | `b8ac697` | `arena/...` | 33 | 0m 18s |
-| 2026-08-19 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `b8ac697` | `arena/...` | 33 | 0m 21s |
+| 2026-08-19 | `./gradlew :app:assembleDebug` | **SUCCESS** | `a0eb83a` | `arena/...` | 33 | 0m 50s |
+| 2026-08-19 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `a0eb83a` | `arena/...` | 33 | 0m 17s |
 
 ---
 
@@ -42,4 +39,4 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Branche | Commit Initial | Commit Final | État |
 | :--- | :--- | :--- | :--- |
-| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `b8ac697` | **Working tree clean** |
+| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `a0eb83a` | **Working tree clean** |
