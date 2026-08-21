@@ -34,18 +34,21 @@ import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ReportsViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SalesListScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
     val inventoryViewModel: InventoryViewModel = hiltViewModel()
-    val boutique by viewModel.boutique.collectAsState()
+    val viewModel: ReportsViewModel = hiltViewModel()
+    
+    val boutique by mainViewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val ventes by viewModel.selectedMonthVentes.collectAsState()
     val stockItems by inventoryViewModel.allStock.collectAsState()
-    val isManager = viewModel.isManager()
+    val isManager = mainViewModel.isManager()
     
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
@@ -122,7 +125,7 @@ fun SalesListScreen(navController: NavController) {
                             onForceConfirm = {
                                 // Point 1: Force Confirm logic
                                 val updated = it.copy(status = "CONFIRMED", reconciliationStatus = "OK", description = it.description + " (Manuel)")
-                                viewModel.updateVente(updated)
+                                mainViewModel.updateVente(updated)
                             }
                         )
                     }
@@ -137,7 +140,7 @@ fun SalesListScreen(navController: NavController) {
                 text = { Text("Cette action est irréversible.") },
                 confirmButton = {
                     Button(onClick = {
-                        viewModel.deleteVente(venteToDelete!!)
+                        mainViewModel.deleteVente(venteToDelete!!)
                         venteToDelete = null
                         scope.launch { snackbarHostState.showSnackbar("Vente supprimée") }
                     }, colors = ButtonDefaults.buttonColors(containerColor = RedError)) {
@@ -157,7 +160,7 @@ fun SalesListScreen(navController: NavController) {
                 stockItems = stockItems,
                 onDismiss = { venteToAdoption = null },
                 onConfirm = { product ->
-                    viewModel.confirmOrphanSale(venteToAdoption!!, product)
+                    mainViewModel.confirmOrphanSale(venteToAdoption!!, product)
                     venteToAdoption = null
                 }
             )

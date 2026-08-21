@@ -128,18 +128,6 @@ class MainViewModel @Inject constructor(
     val subscription: StateFlow<SubscriptionEntity?>
     val recentLogs: StateFlow<List<ActionLogEntity>>
     
-    private val _categorySales = MutableStateFlow<List<com.reconsiliation.caisse.data.local.dao.CategoryReport>>(emptyList())
-    val categorySales = _categorySales.asStateFlow()
-    
-    private val _dailySales = MutableStateFlow<List<com.reconsiliation.caisse.data.local.dao.DailySales>>(emptyList())
-    val dailySales = _dailySales.asStateFlow()
-
-    private val _hourlySales = MutableStateFlow<List<com.reconsiliation.caisse.data.local.dao.DailySales>>(emptyList())
-    val hourlySales = _hourlySales.asStateFlow()
-
-    private val _expenseBreakdown = MutableStateFlow<List<CategoryTotal>>(emptyList())
-    val expenseBreakdown = _expenseBreakdown.asStateFlow()
-
     private val _isDataLoaded = MutableStateFlow(false)
     val isDataLoaded = _isDataLoaded.asStateFlow()
 
@@ -168,8 +156,6 @@ class MainViewModel @Inject constructor(
         subscription = repository.getSubscriptionStatus(application).stateIn(viewModelScope, SharingStarted.Eagerly, null)
         recentLogs = repository.recentLogs.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
-        loadCurrentStats()
-
         viewModelScope.launch {
             // Combine multiple flows to ensure critical data is considered "loaded"
             combine(boutique, subscription) { _, _ ->
@@ -182,51 +168,6 @@ class MainViewModel @Inject constructor(
         catchUpSms(application)
     }
 
-    fun loadCurrentStats(rangeType: String = "MONTH") {
-        val calendar = Calendar.getInstance()
-        val end = calendar.time
-        
-        val start = if (rangeType == "YEAR") {
-            calendar.set(Calendar.DAY_OF_YEAR, 1)
-            calendar.time
-        } else {
-            calendar.set(Calendar.DAY_OF_MONTH, 1)
-            calendar.time
-        }
-
-        viewModelScope.launch {
-            salesRepository.getSalesByCategory(start, end).collect { _categorySales.value = it }
-        }
-        viewModelScope.launch {
-            if (rangeType == "YEAR") {
-                salesRepository.getMonthlySales(start, end).collect { _dailySales.value = it }
-            } else {
-                salesRepository.getDailySales(start, end).collect { _dailySales.value = it }
-            }
-        }
-        viewModelScope.launch {
-            salesRepository.getHourlySales(start, end).collect { _hourlySales.value = it }
-        }
-        viewModelScope.launch {
-            repository.getExpensesByCategory(start, end).collect { _expenseBreakdown.value = it }
-        }
-    }
-
-    private val _selectedMonthVentes = MutableStateFlow<List<VenteEntity>>(emptyList())
-    val selectedMonthVentes = _selectedMonthVentes.asStateFlow()
-
-    fun loadVentesForMonth(date: Date) {
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.set(Calendar.DAY_OF_MONTH, 1)
-        val start = calendar.time
-        calendar.add(Calendar.MONTH, 1)
-        val end = calendar.time
-        
-        viewModelScope.launch {
-            salesRepository.getVentesByDateRange(start, end).collect { _selectedMonthVentes.value = it }
-        }
-    }
     fun catchUpSms(application: Application) {
         viewModelScope.launch(Dispatchers.IO) {
             com.reconsiliation.caisse.sms.SmsSyncManager.syncMissedSms(application)
@@ -249,6 +190,7 @@ class MainViewModel @Inject constructor(
     fun updateVente(vente: VenteEntity, items: List<VenteItemEntity>? = null) = viewModelScope.launch {
         try { salesRepository.updateVente(vente, items, userRole.value) } catch (e: Exception) { _uiError.value = e.message }
     }
+
     fun deleteVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.deleteVente(vente, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun cancelVente(vente: VenteEntity) = viewModelScope.launch { try { salesRepository.cancelVente(vente) } catch (e: Exception) { _uiError.value = e.message } }
     fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
@@ -263,50 +205,6 @@ class MainViewModel @Inject constructor(
         printerManager.printReceipt(boutique, venteWithItems.vente, venteWithItems.items, printerAddress)
     }
     fun testPrint(address: String) = viewModelScope.launch(Dispatchers.IO) { printerManager.testConnection(address) }
-    
-    fun exportSalesData(context: android.content.Context) = viewModelScope.launch {
-        try {
-            val ventes = salesRepository.allVentesWithItems.first()
-            val file = com.reconsiliation.caisse.utils.ExportUtil.exportSalesToCsv(context, ventes)
-            if (file != null) {
-                com.reconsiliation.caisse.utils.ExportUtil.shareFile(context, file)
-            } else {
-                _uiError.value = "Erreur lors de la création du fichier CSV"
-            }
-        } catch (e: Exception) {
-            _uiError.value = "Erreur d'exportation: ${e.message}"
-        }
-    }
-    fun shareDailySummary(context: android.content.Context) = viewModelScope.launch {
-        val calendar = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 0)
-            set(Calendar.SECOND, 0)
-        }
-        val start = calendar.time
-        calendar.set(Calendar.HOUR_OF_DAY, 23)
-        calendar.set(Calendar.MINUTE, 59)
-        val end = calendar.time
-
-        val b = boutique.value
-        val cash = salesRepository.getTotalCash(start, end).first() ?: 0.0
-        val momo = salesRepository.getTotalMomo(start, end).first() ?: 0.0
-        val expenses = repository.getTotalExpenses(start, end).first() ?: 0.0
-        val profit = salesRepository.getProfitFlow(start, end).first()
-
-        val text = FormatUtil.generateDailySummary(
-            boutiqueName = b?.name ?: "Boutique",
-            date = Date(),
-            totalSales = cash + momo,
-            cashSales = cash,
-            momoSales = momo,
-            debtsCreated = 0.0,
-            expenses = expenses,
-            netProfit = profit,
-            currency = b?.currency ?: "FCFA"
-        )
-        shareManager.shareText(text, "Partager le résumé")
-    }
     
     fun backupDatabase(file: File) = repository.backupDatabase(getApplication(), file)
     fun restoreDatabase(file: File) = repository.restoreDatabase(getApplication(), file)

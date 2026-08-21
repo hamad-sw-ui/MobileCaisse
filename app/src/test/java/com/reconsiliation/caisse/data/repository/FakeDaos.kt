@@ -52,11 +52,11 @@ class FakeStockDao : StockDao {
 class FakeVenteDao : VenteDao {
     val ventes = MutableStateFlow<Map<Long, VenteEntity>>(emptyMap())
     val items = MutableStateFlow<List<VenteItemEntity>>(emptyList())
-    override fun getAllVentesWithItems() = ventes.map { vMap ->
+    override fun getAllVentesWithItems() = combine(ventes, items) { vMap, itemList ->
         vMap.values.map {
             VenteWithItems(
                 it,
-                items.value.filter { i -> i.venteId == it.id })
+                itemList.filter { i -> i.venteId == it.id })
         }
     }
 

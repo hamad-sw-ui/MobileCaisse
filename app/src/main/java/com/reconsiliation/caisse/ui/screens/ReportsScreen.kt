@@ -26,25 +26,36 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.viewmodel.ReportsViewModel
+import com.reconsiliation.caisse.ui.state.ReportsUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ReportsScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
     val inventoryViewModel: InventoryViewModel = hiltViewModel()
+    val viewModel: ReportsViewModel = hiltViewModel()
+    
     val categorySales by viewModel.categorySales.collectAsState()
     val dailySales by viewModel.dailySales.collectAsState()
-    val currency by viewModel.currency.collectAsState()
-    val userRole by viewModel.userRole.collectAsState()
+    val currency by mainViewModel.currency.collectAsState()
+    val userRole by mainViewModel.userRole.collectAsState()
     val valuation = inventoryViewModel.stockValuation.collectAsState().value
     val topProducts = inventoryViewModel.topProducts.collectAsState().value
+    val uiState by viewModel.uiState.collectAsState()
     
     var period by remember { mutableStateOf("MONTH") } // MONTH, YEAR, CUSTOM
 
     LaunchedEffect(period) {
         viewModel.loadCurrentStats(period)
+    }
+
+    LaunchedEffect(uiState) {
+        if (uiState is ReportsUiState.Success) {
+            viewModel.clearUiState()
+        }
     }
 
     Scaffold(
@@ -57,7 +68,10 @@ fun ReportsScreen(navController: NavController) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.exportSalesData(context) }) {
+                    IconButton(
+                        onClick = { viewModel.exportSalesData(context) },
+                        enabled = uiState !is ReportsUiState.Processing
+                    ) {
                         Icon(Icons.Default.Share, contentDescription = "Exporter")
                     }
                 }
