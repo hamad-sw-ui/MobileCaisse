@@ -2,6 +2,7 @@ package com.reconsiliation.caisse.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -26,31 +27,21 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.StaffEntity
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
-import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.StaffViewModel
 
 private const val ROLE_STAFF = "STAFF"
 private const val ROLE_MANAGER = "MANAGER"
 
-/**
- * Gestion des employés (B-070).
- *
- * `StaffEntity`, `StaffDao` et l'authentification par PIN existaient déjà, mais
- * aucun écran ne permettait de créer un employé : la table restait vide, et le
- * rôle `STAFF` était donc inaccessible en pratique.
- *
- * Écran réservé au rôle MANAGER (route protégée dans `MainViewModel`).
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StaffManagementScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val staff by viewModel.activeStaff.collectAsState()
+    val viewModel: StaffViewModel = hiltViewModel()
+    val uiState by viewModel.uiState.collectAsState()
 
     var editing by remember { mutableStateOf<StaffEntity?>(null) }
     var showForm by remember { mutableStateOf(false) }
@@ -79,7 +70,7 @@ fun StaffManagementScreen(navController: NavController) {
         }
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
-            if (staff.isEmpty()) {
+            if (uiState.activeStaff.isEmpty()) {
                 Column(
                     modifier = Modifier.fillMaxSize().padding(32.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -99,10 +90,10 @@ fun StaffManagementScreen(navController: NavController) {
                 }
             } else {
                 LazyColumn(
-                    contentPadding = androidx.compose.foundation.layout.PaddingValues(16.dp),
+                    contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    items(staff, key = { it.id }) { member ->
+                    items(uiState.activeStaff, key = { it.id }) { member ->
                         StaffCard(
                             member = member,
                             onEdit = { editing = member; showForm = true },
@@ -166,7 +157,7 @@ private fun StaffCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(member.name, fontWeight = FontWeight.Bold)
                     if (member.role == ROLE_MANAGER) {
-                        Spacer(Modifier.fillMaxWidth(0.02f))
+                        Spacer(Modifier.padding(4.dp))
                         Icon(
                             Icons.Default.Shield,
                             contentDescription = "Manager",
@@ -205,8 +196,6 @@ private fun StaffFormDialog(
     var pin by rememberSaveable { mutableStateOf("") }
     var role by rememberSaveable { mutableStateOf(existing?.role ?: ROLE_STAFF) }
 
-    // À la création le PIN est obligatoire ; à la modification, le laisser vide
-    // conserve le PIN existant — on ne peut pas le réafficher, il est haché.
     val pinValid = pin.length == 4 || (existing != null && pin.isEmpty())
     val canSave = name.isNotBlank() && pinValid
 
@@ -258,8 +247,7 @@ private fun StaffFormDialog(
                 }
                 if (role == ROLE_MANAGER) {
                     Text(
-                        "Un manager accède aux rapports, aux paramètres et peut " +
-                            "supprimer des ventes.",
+                        "Un manager accède aux rapports, aux paramètres et peut supprimer des ventes.",
                         style = MaterialTheme.typography.bodySmall,
                         color = RedError
                     )

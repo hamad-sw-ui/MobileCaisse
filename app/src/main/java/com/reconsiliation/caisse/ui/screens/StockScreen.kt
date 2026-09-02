@@ -47,6 +47,7 @@ import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
+import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 import com.reconsiliation.caisse.ui.state.InventoryUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 
@@ -55,6 +56,7 @@ import com.reconsiliation.caisse.utils.FormatUtil
 fun StockScreen(navController: NavController, initialBarcode: String? = null) {
     val mainViewModel: MainViewModel = hiltViewModel()
     val viewModel: InventoryViewModel = hiltViewModel()
+    val printerViewModel: PrinterViewModel = hiltViewModel()
     val boutique by mainViewModel.boutique.collectAsState()
     val stockItems by viewModel.allStock.collectAsState()
     val isManager = mainViewModel.isManager()
@@ -251,7 +253,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                         IconButton(onClick = {
                                             // Point 6: Print Shelf Label
                                             boutique?.printerAddress?.let { address ->
-                                                mainViewModel.testPrint(address) // Or dedicated printShelfLabel logic
+                                                printerViewModel.testPrint(address) // Or dedicated printShelfLabel logic
                                             }
                                         }) {
                                             Icon(Icons.Default.Label, "Étiquette", tint = Color.Gray)

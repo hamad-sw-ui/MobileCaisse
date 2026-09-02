@@ -11,18 +11,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MaintenanceScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: MaintenanceViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
     val scope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     
@@ -82,7 +83,6 @@ fun MaintenanceScreen(navController: NavController) {
             HorizontalDivider()
 
             Text("Statistiques de stockage", style = MaterialTheme.typography.titleMedium, color = Primary)
-            // Here we could add DB size info if available
             ListItem(
                 headlineContent = { Text("Base de données") },
                 supportingContent = { Text("Stockage local actif") },
@@ -91,6 +91,7 @@ fun MaintenanceScreen(navController: NavController) {
         }
 
         if (showPurgeDialog) {
+            val userRole by mainViewModel.userRole.collectAsState()
             AlertDialog(
                 onDismissRequest = { showPurgeDialog = false },
                 title = { Text("Confirmer la purge") },
@@ -112,7 +113,7 @@ fun MaintenanceScreen(navController: NavController) {
                     TextButton(
                         onClick = {
                             scope.launch {
-                                val count = viewModel.purgeOldData(purgeMonths.toInt())
+                                val count = viewModel.purgeOldData(purgeMonths.toInt(), userRole)
                                 snackbarHostState.showSnackbar("$count entrées supprimées avec succès.")
                                 showPurgeDialog = false
                             }

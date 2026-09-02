@@ -11,17 +11,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
-import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ActionLogScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: MaintenanceViewModel = hiltViewModel()
     val logs by viewModel.recentLogs.collectAsState(initial = emptyList())
     
     var filterLevel by remember { mutableStateOf("ALL") }

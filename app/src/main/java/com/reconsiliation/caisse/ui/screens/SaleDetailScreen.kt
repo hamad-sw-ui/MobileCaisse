@@ -1,41 +1,43 @@
 package com.reconsiliation.caisse.ui.screens
 
+import android.content.Intent
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Info
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.ui.draw.clip
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.background
-import androidx.compose.material.icons.filled.Print
-import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.dao.VenteWithItems
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
+import com.reconsiliation.caisse.ui.components.NumericKeypad
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
-import android.content.Intent
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SaleDetailScreen(navController: NavController, venteId: Long) {
     val context = LocalContext.current
     val viewModel: MainViewModel = hiltViewModel()
+    val printerViewModel: PrinterViewModel = hiltViewModel()
+    
     val boutique by viewModel.boutique.collectAsState()
     val operatorName = boutique?.operator ?: "MoMo"
     val currency by viewModel.currency.collectAsState()
@@ -66,9 +68,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                 actions = {
                     IconButton(onClick = {
                         boutique?.printerAddress?.let { address ->
-                            viewModel.printTicket(venteId, address)
-                        } ?: run {
-                            // Show message to configure printer
+                            printerViewModel.printTicket(venteId, address)
                         }
                     }) {
                         Icon(Icons.Default.Print, "Imprimer")
@@ -76,12 +76,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                     IconButton(onClick = {
                         venteWithItems?.let { data ->
                             boutique?.let { b ->
-                                val text = FormatUtil.generateReceiptText(
-                                    boutique = b,
-                                    vente = data.vente,
-                                    items = data.items,
-                                    currency = currency
-                                )
+                                val text = FormatUtil.generateReceiptText(b, data.vente, data.items, currency)
                                 val intent = Intent(Intent.ACTION_SEND).apply {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, text)
@@ -218,10 +213,9 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             value = returnQty,
                             onValueChange = { returnQty = it },
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                         )
-                        
                         Text("Mode de remboursement")
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(selected = refundMethod == "AVOIR", onClick = { refundMethod = "AVOIR" }, label = { Text("Avoir (Crédit)") })
@@ -258,7 +252,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                                 Box(modifier = Modifier.size(16.dp).clip(CircleShape).background(if (isError) MaterialTheme.colorScheme.error else if (filled) Primary else Color.LightGray))
                             }
                         }
-                        com.reconsiliation.caisse.ui.components.NumericKeypad(
+                        NumericKeypad(
                             onNumberClick = {
                                 if (pinInput.length < 4) {
                                     isError = false

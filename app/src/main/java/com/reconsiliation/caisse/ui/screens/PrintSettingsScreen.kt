@@ -1,5 +1,6 @@
 package com.reconsiliation.caisse.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -9,19 +10,21 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 
+@SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun PrintSettingsScreen(navController: NavController) {
-    val viewModel: MainViewModel = hiltViewModel()
-    val boutique by viewModel.boutique.collectAsState()
+    val viewModel: PrinterViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
+    val boutique by mainViewModel.boutique.collectAsState()
     
-    val pairedPrinters = viewModel.getPairedPrinters()
+    val pairedPrinters = remember { viewModel.getPairedPrinters() }
     var showPrinterDropdown by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -58,11 +61,13 @@ fun PrintSettingsScreen(navController: NavController) {
                                 onClick = { showPrinterDropdown = true },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
+                                @SuppressLint("MissingPermission")
                                 val currentPrinter = try {
                                     pairedPrinters.find { it.address == b.printerAddress }
                                 } catch (e: SecurityException) {
                                     null
                                 }
+                                @SuppressLint("MissingPermission")
                                 val printerName = try {
                                     currentPrinter?.name
                                 } catch (e: SecurityException) {
@@ -81,7 +86,7 @@ fun PrintSettingsScreen(navController: NavController) {
                                     DropdownMenuItem(
                                         text = { Text("Imprimante intégrée") },
                                         onClick = {
-                                            viewModel.updateBoutique(b.copy(printerAddress = "INTEGRATED"))
+                                            mainViewModel.updateBoutique(b.copy(printerAddress = "INTEGRATED"))
                                             showPrinterDropdown = false
                                         }
                                     )
@@ -90,11 +95,12 @@ fun PrintSettingsScreen(navController: NavController) {
                                 pairedPrinters.forEach { device ->
                                     DropdownMenuItem(
                                         text = {
+                                            @SuppressLint("MissingPermission")
                                             val name = try { device.name } catch (e: SecurityException) { null }
                                             Text(name ?: device.address)
                                         },
                                         onClick = {
-                                            viewModel.updateBoutique(b.copy(printerAddress = device.address))
+                                            mainViewModel.updateBoutique(b.copy(printerAddress = device.address))
                                             showPrinterDropdown = false
                                         }
                                     )
@@ -128,25 +134,25 @@ fun PrintSettingsScreen(navController: NavController) {
                 ToggleOption(
                     label = "Afficher le téléphone du client",
                     checked = b.showCustomerPhoneOnReceipt,
-                    onCheckedChange = { viewModel.updateBoutique(b.copy(showCustomerPhoneOnReceipt = it)) }
+                    onCheckedChange = { mainViewModel.updateBoutique(b.copy(showCustomerPhoneOnReceipt = it)) }
                 )
                 
                 ToggleOption(
                     label = "Détailler les taxes",
                     checked = b.showTaxesOnReceipt,
-                    onCheckedChange = { viewModel.updateBoutique(b.copy(showTaxesOnReceipt = it)) }
+                    onCheckedChange = { mainViewModel.updateBoutique(b.copy(showTaxesOnReceipt = it)) }
                 )
                 
                 ToggleOption(
                     label = "Afficher la quantité totale",
                     checked = b.showTotalQuantityOnReceipt,
-                    onCheckedChange = { viewModel.updateBoutique(b.copy(showTotalQuantityOnReceipt = it)) }
+                    onCheckedChange = { mainViewModel.updateBoutique(b.copy(showTotalQuantityOnReceipt = it)) }
                 )
                 
                 ToggleOption(
                     label = "Imprimer une copie marchand",
                     checked = b.printMerchantCopy,
-                    onCheckedChange = { viewModel.updateBoutique(b.copy(printMerchantCopy = it)) }
+                    onCheckedChange = { mainViewModel.updateBoutique(b.copy(printMerchantCopy = it)) }
                 )
             }
         }
@@ -156,9 +162,9 @@ fun PrintSettingsScreen(navController: NavController) {
 @Composable
 fun ToggleOption(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         Text(label)
         Switch(checked = checked, onCheckedChange = onCheckedChange)

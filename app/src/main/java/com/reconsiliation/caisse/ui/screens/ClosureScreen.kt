@@ -1,47 +1,33 @@
 package com.reconsiliation.caisse.ui.screens
 
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
-import android.content.Intent
 import android.text.format.DateUtils
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Backup
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Summarize
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.core.content.FileProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.components.BackupPasswordDialog
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
+import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
-import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
-import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
-import com.reconsiliation.caisse.ui.viewmodel.ExpenseViewModel
-import com.reconsiliation.caisse.ui.viewmodel.ReportsViewModel
-import com.reconsiliation.caisse.ui.state.SessionUiState
+import com.reconsiliation.caisse.ui.viewmodel.*
 import com.reconsiliation.caisse.utils.FormatUtil
-import androidx.compose.runtime.LaunchedEffect
-import java.io.File
 import java.util.*
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,6 +38,7 @@ fun ClosureScreen(navController: NavController) {
     val sessionViewModel: SessionViewModel = hiltViewModel()
     val expenseViewModel: ExpenseViewModel = hiltViewModel()
     val reportsViewModel: ReportsViewModel = hiltViewModel()
+    val backupViewModel: BackupViewModel = hiltViewModel()
     
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
     val boutique by viewModel.boutique.collectAsState()
@@ -96,7 +83,7 @@ fun ClosureScreen(navController: NavController) {
                 Icon(Icons.Default.Summarize, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
                 Spacer(modifier = Modifier.height(16.dp))
                 Text("Aucune activité aujourd'hui.", style = MaterialTheme.typography.titleMedium)
-                Text("Enregistrez d'abord une vente pour pouvoir clôturer votre journée.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
+                Text("Enregistrez d'abord une vente pour pouvoir clôturer votre journée.", textAlign = TextAlign.Center, color = Color.Gray)
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = { navController.navigate(Screen.NewSale.route) }) {
                     Text("Faire une Vente")
@@ -151,9 +138,8 @@ fun ClosureScreen(navController: NavController) {
                 
                 Button(
                     onClick = { 
-                        // Filter only today's sales for the closure report (J5.8.5)
                         val todayVentesWithItems = allVentesWithItems.filter { 
-                            android.text.format.DateUtils.isToday(it.vente.date.time) 
+                            DateUtils.isToday(it.vente.date.time) 
                         }
                         reportsViewModel.exportSalesData(todayVentesWithItems)
                     },
@@ -209,13 +195,13 @@ fun ClosureScreen(navController: NavController) {
         }
 
         if (showBackupPasswordDialog) {
-            com.reconsiliation.caisse.ui.components.BackupPasswordDialog(
+            BackupPasswordDialog(
                 isExport = true,
                 subtitle = "Sauvegarde complète de la base après clôture. " +
                     "Choisissez un mot de passe pour la protéger.",
                 onConfirm = { password ->
                     showBackupPasswordDialog = false
-                    viewModel.exportEncryptedBackup(context, password)
+                    backupViewModel.exportEncryptedBackup(context, password, viewModel.userRole.value)
                 },
                 onDismiss = { showBackupPasswordDialog = false }
             )
@@ -232,7 +218,3 @@ fun ClosureCard(label: String, amount: Double) {
         }
     }
 }
-
-// La fonction locale backupDatabase() a été supprimée : elle accédait au système
-// de fichiers depuis un Composable (violation MVVM) et produisait un export non
-// chiffré. L'export passe désormais par MainViewModel.exportEncryptedBackup.

@@ -1,5 +1,6 @@
 package com.reconsiliation.caisse.ui.screens
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -9,21 +10,25 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 
+@SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditBoutiqueScreen(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()
+    val printerViewModel: PrinterViewModel = hiltViewModel()
     val boutique by viewModel.boutique.collectAsState()
 
     var name by remember { mutableStateOf("") }
@@ -36,11 +41,10 @@ fun EditBoutiqueScreen(navController: NavController) {
     var taxName by remember { mutableStateOf("TVA") }
     var taxRate by remember { mutableStateOf("0") }
     var isTaxEnabled by remember { mutableStateOf(false) }
-
     var address by remember { mutableStateOf("") }
     var receiptFooter by remember { mutableStateOf("") }
     
-    val pairedPrinters = viewModel.getPairedPrinters()
+    val pairedPrinters = remember { printerViewModel.getPairedPrinters() }
     var showPrinterDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(boutique) {
@@ -133,9 +137,10 @@ fun EditBoutiqueScreen(navController: NavController) {
                             DropdownMenuItem(
                                 text = {
                                     Column {
-                                        @android.annotation.SuppressLint("MissingPermission")
-                                        Text(device.name ?: "Inconnu")
-                                        Text(device.address, style = MaterialTheme.typography.labelSmall, color = androidx.compose.ui.graphics.Color.Gray)
+                                        @SuppressLint("MissingPermission")
+                                        val deviceName = try { device.name ?: "Inconnu" } catch (e: SecurityException) { "Inconnu" }
+                                        Text(deviceName)
+                                        Text(device.address, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     }
                                 },
                                 onClick = {
@@ -151,7 +156,7 @@ fun EditBoutiqueScreen(navController: NavController) {
 
             if (printerAddress.isNotBlank()) {
                 Button(
-                    onClick = { viewModel.testPrint(printerAddress) },
+                    onClick = { printerViewModel.testPrint(printerAddress) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
@@ -159,14 +164,14 @@ fun EditBoutiqueScreen(navController: NavController) {
                 }
             }
 
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = allowNegativeStock, onCheckedChange = { allowNegativeStock = it })
                 Text("Autoriser les ventes en stock négatif")
             }
 
             HorizontalDivider()
             Text("Paramètres de Taxe", style = MaterialTheme.typography.titleMedium, color = Primary)
-            Row(verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = isTaxEnabled, onCheckedChange = { isTaxEnabled = it })
                 Spacer(modifier = Modifier.width(8.dp))
                 Text("Activer les taxes (TVA/AIR)")
@@ -207,7 +212,7 @@ fun EditBoutiqueScreen(navController: NavController) {
                             isTaxEnabled = isTaxEnabled,
                             address = address.ifBlank { null },
                             receiptFooter = receiptFooter.ifBlank { null },
-                            isSetupComplete = true // Ensure it stays complete
+                            isSetupComplete = true
                         ))
                         navController.popBackStack()
                     }

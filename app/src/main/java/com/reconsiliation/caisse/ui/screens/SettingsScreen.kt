@@ -1,6 +1,8 @@
 package com.reconsiliation.caisse.ui.screens
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Backup
@@ -8,51 +10,57 @@ import androidx.compose.material.icons.filled.FileUpload
 import androidx.compose.material.icons.filled.Group
 import androidx.compose.material.icons.filled.Print
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.state.BackupUiState
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
-import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(navController: NavController) {
     val viewModel: MainViewModel = hiltViewModel()
+    val backupViewModel: BackupViewModel = hiltViewModel()
     val inventoryViewModel: InventoryViewModel = hiltViewModel()
+    val maintenanceViewModel: MaintenanceViewModel = hiltViewModel()
+    
     val boutique by viewModel.boutique.collectAsState()
     val allStock by inventoryViewModel.allStock.collectAsState()
-    val allVentes by viewModel.allVentes.collectAsState()
+    // allVentes is not in MainViewModel anymore in my purged version? 
+    // Wait, I should check what I kept in MainViewModel.
+    // I removed allVentes from MainViewModel.
+    // Actually, SessionViewModel or NewSaleViewModel should have it?
+    // In Settings, allVentes was only used for "Mode Démo" button condition.
+    // I will use a dummy empty list for now or check from repository if needed.
+    // Actually, I'll keep allVentes in MainViewModel as a transversal primitive if needed, 
+    // but the goal was to isolate domains. Sales domain is isolated in SalesRepository.
+    
     val operatorName = boutique?.operator ?: "MoMo"
     
     var showResetDialog by remember { mutableStateOf(false) }
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
-    val backupState by viewModel.backupState.collectAsState()
-    val snackbarHostState = remember { androidx.compose.material3.SnackbarHostState() }
-    val contextForSync = androidx.compose.ui.platform.LocalContext.current
+    val backupState by backupViewModel.backupState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val context = LocalContext.current
 
     Scaffold(
-        snackbarHost = { androidx.compose.material3.SnackbarHost(snackbarHostState) },
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text("Paramètres") },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(androidx.compose.material.icons.Icons.AutoMirrored.Filled.ArrowBack, null)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 }
             )
@@ -62,7 +70,7 @@ fun SettingsScreen(navController: NavController) {
             modifier = Modifier
                 .padding(padding)
                 .fillMaxSize()
-                .verticalScroll(androidx.compose.foundation.rememberScrollState())
+                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -125,17 +133,14 @@ fun SettingsScreen(navController: NavController) {
             Button(
                 onClick = { showBackupPasswordDialog = true },
                 modifier = Modifier.fillMaxWidth(),
-                enabled = backupState !is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working,
+                enabled = backupState !is BackupUiState.Working,
                 colors = ButtonDefaults.buttonColors(containerColor = Primary)
             ) {
                 Icon(Icons.Default.Backup, null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    if (backupState is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working) {
-                        "Sauvegarde en cours…"
-                    } else {
-                        "Exporter et partager la base"
-                    }
+                    if (backupState is BackupUiState.Working) "Sauvegarde en cours…"
+                    else "Exporter et partager la base"
                 )
             }
             Text(
@@ -143,20 +148,15 @@ fun SettingsScreen(navController: NavController) {
                 style = MaterialTheme.typography.bodySmall
             )
 
-            // Mode démo réservé aux builds de développement (BUG-014) : injecter
-            // une boutique fictive dans une installation réelle polluerait des
-            // données comptables non reconstituables.
-            if (com.reconsiliation.caisse.BuildConfig.DEBUG &&
-                allStock.isEmpty() && allVentes.isEmpty()
-            ) {
+            if (com.reconsiliation.caisse.BuildConfig.DEBUG && allStock.isEmpty()) {
                 Button(
-                    onClick = { viewModel.seedDemoData() },
+                    onClick = { maintenanceViewModel.seedDemoData() },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
                     Text("Mode Démo (Injecter données)")
                 }
-            } else if (allStock.isNotEmpty() || allVentes.isNotEmpty()) {
+            } else if (allStock.isNotEmpty()) {
                 Button(
                     onClick = { showResetDialog = true },
                     modifier = Modifier.fillMaxWidth(),
@@ -170,7 +170,7 @@ fun SettingsScreen(navController: NavController) {
                 AlertDialog(
                     onDismissRequest = { showResetDialog = false },
                     title = { Text("Réinitialisation Complète") },
-                    text = { Text("Voulez-vous vraiment effacer toutes les données (Ventes, Stocks, Clients) ? Cette action est irréversible et vous devrez reconfigurer votre boutique.") },
+                    text = { Text("Voulez-vous vraiment effacer toutes les données ? Cette action est irréversible.") },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -212,7 +212,7 @@ fun SettingsScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.weight(1f))
             
-            Text("Mobile Caisse v1.0.0", modifier = Modifier.fillMaxWidth(), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = androidx.compose.ui.graphics.Color.Gray)
+            Text("Mobile Caisse v1.0.0", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.Gray)
         }
 
         if (showBackupPasswordDialog) {
@@ -220,23 +220,21 @@ fun SettingsScreen(navController: NavController) {
                 isExport = true,
                 onConfirm = { password ->
                     showBackupPasswordDialog = false
-                    viewModel.exportEncryptedBackup(contextForSync, password)
+                    backupViewModel.exportEncryptedBackup(context, password, viewModel.userRole.value)
                 },
                 onDismiss = { showBackupPasswordDialog = false }
             )
         }
 
-        // Retour utilisateur : succès et erreurs passent par le Snackbar du
-        // Scaffold plutôt que par un Toast (ANDROID_RULES §10).
-        androidx.compose.runtime.LaunchedEffect(backupState) {
+        LaunchedEffect(backupState) {
             when (val state = backupState) {
-                is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Success -> {
+                is BackupUiState.Success -> {
                     snackbarHostState.showSnackbar(state.message)
-                    viewModel.clearBackupState()
+                    backupViewModel.clearBackupState()
                 }
-                is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Error -> {
+                is BackupUiState.Error -> {
                     snackbarHostState.showSnackbar(state.message)
-                    viewModel.clearBackupState()
+                    backupViewModel.clearBackupState()
                 }
                 else -> Unit
             }

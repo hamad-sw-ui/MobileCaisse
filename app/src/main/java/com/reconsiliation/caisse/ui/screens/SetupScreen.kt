@@ -17,13 +17,15 @@ import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
-import kotlinx.coroutines.launch
+import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
+import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SetupScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: com.reconsiliation.caisse.ui.viewmodel.MainViewModel = hiltViewModel()
+    val viewModel: MainViewModel = hiltViewModel()
+    val backupViewModel: BackupViewModel = hiltViewModel()
 
     var name by remember { mutableStateOf("") }
     var owner by remember { mutableStateOf("") }
@@ -36,7 +38,7 @@ fun SetupScreen(navController: NavController) {
     var setupError by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        showRestoreDialog = viewModel.hasMirrorBackup(context)
+        showRestoreDialog = backupViewModel.hasMirrorBackup(context)
     }
 
     Scaffold(
@@ -53,21 +55,12 @@ fun SetupScreen(navController: NavController) {
         ) {
             val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
 
-            // Sans ce bandeau, un échec d'écriture en base laissait l'utilisateur
-            // sur l'écran de configuration sans aucune explication.
             setupError?.let { message ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.errorContainer
-                    )
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)
                 ) {
-                    Text(
-                        text = message,
-                        modifier = Modifier.padding(12.dp),
-                        color = MaterialTheme.colorScheme.onErrorContainer,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    Text(text = message, modifier = Modifier.padding(12.dp), color = MaterialTheme.colorScheme.onErrorContainer, style = MaterialTheme.typography.bodySmall)
                 }
             }
 
@@ -95,22 +88,14 @@ fun SetupScreen(navController: NavController) {
             )
 
             Spacer(modifier = Modifier.height(24.dp))
-            
             BigButton(
                 text = "Finaliser la configuration",
                 onClick = {
                     if (name.isNotBlank() && pin.length == 4) {
                         setupError = null
-                        // Hachage, écriture en base et journalisation sont
-                        // portés par le ViewModel (CODING_RULES §1).
-                        viewModel.completeSetup(
-                            name = name, owner = owner, phone = phone,
-                            operator = operator, momoNumber = momoNumber, pin = pin
-                        ) { error ->
+                        viewModel.completeSetup(name = name, owner = owner, phone = phone, operator = operator, momoNumber = momoNumber, pin = pin) { error ->
                             if (error == null) {
-                                navController.navigate(Screen.Home.route) {
-                                    popUpTo(Screen.Setup.route) { inclusive = true }
-                                }
+                                navController.navigate(Screen.Home.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
                             } else {
                                 setupError = error
                             }
@@ -128,14 +113,11 @@ fun SetupScreen(navController: NavController) {
                 confirmButton = {
                     TextButton(onClick = {
                         showRestoreDialog = false
-                        viewModel.restoreMirrorBackup(context) { restored ->
+                        backupViewModel.restoreMirrorBackup(context) { restored ->
                             if (restored) {
-                                navController.navigate(Screen.Splash.route) {
-                                    popUpTo(Screen.Setup.route) { inclusive = true }
-                                }
+                                navController.navigate(Screen.Splash.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
                             } else {
-                                setupError = "La restauration a échoué. " +
-                                    "Vous pouvez poursuivre la configuration."
+                                setupError = "La restauration a échoué."
                             }
                         }
                     }) { Text("Restaurer") }

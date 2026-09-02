@@ -518,7 +518,7 @@ class FakeAppDatabase : AppDatabase() {
 }
 
 /** Dummy Context for JVM tests */
-class FakeContext : android.content.ContextWrapper(null) {
+class FakeContext : android.app.Application() {
     private val tempDir = java.io.File(System.getProperty("java.io.tmpdir"), "fake_context_${System.nanoTime()}")
     init { tempDir.mkdirs() }
     override fun getCacheDir(): java.io.File = tempDir

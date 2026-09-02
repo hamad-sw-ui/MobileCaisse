@@ -16,11 +16,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.reconsiliation.caisse.ui.state.BackupUiState
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
+import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import java.io.File
 import java.io.FileOutputStream
@@ -29,7 +30,8 @@ import java.io.FileOutputStream
 @Composable
 fun RestorationWizardScreen(navController: NavController) {
     val context = LocalContext.current
-    val viewModel: MainViewModel = hiltViewModel()
+    val viewModel: BackupViewModel = hiltViewModel()
+    val mainViewModel: MainViewModel = hiltViewModel()
     var selectedUri by remember { mutableStateOf<Uri?>(null) }
     var step by remember { mutableStateOf(1) } // 1: choix du fichier, 2: confirmation
     var stagedFile by remember { mutableStateOf<File?>(null) }
@@ -42,8 +44,6 @@ fun RestorationWizardScreen(navController: NavController) {
     ) { uri ->
         if (uri != null) {
             selectedUri = uri
-            // Le fichier est copié immédiatement : l'URI d'un ContentProvider
-            // peut expirer, et la détection de format exige un accès local.
             val tmp = File(context.cacheDir, "temp_restore.bin")
             context.contentResolver.openInputStream(uri)?.use { input ->
                 FileOutputStream(tmp).use { output -> input.copyTo(output) }
@@ -111,8 +111,6 @@ fun RestorationWizardScreen(navController: NavController) {
                     }
                 }
                 
-                // Le format est indiqué : l'utilisateur sait s'il devra fournir
-                // un mot de passe avant de confirmer l'écrasement.
                 Text(
                     text = if (isEncrypted) {
                         "🔒 Sauvegarde chiffrée : le mot de passe sera demandé."
@@ -128,26 +126,22 @@ fun RestorationWizardScreen(navController: NavController) {
                         if (isEncrypted) {
                             showPasswordDialog = true
                         } else {
-                            viewModel.importEncryptedBackup(context, file, null) {
+                            viewModel.importEncryptedBackup(context, file, null, mainViewModel.userRole.value) {
                                 navController.navigate("splash") { popUpTo(0) }
                             }
                         }
                     },
-                    enabled = stagedFile != null &&
-                        backupState !is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working,
+                    enabled = stagedFile != null && backupState !is BackupUiState.Working,
                     colors = ButtonDefaults.buttonColors(containerColor = RedError),
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        if (backupState is com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Working) {
-                            "Restauration en cours…"
-                        } else {
-                            "Confirmer la restauration"
-                        }
+                        if (backupState is BackupUiState.Working) "Restauration en cours…"
+                        else "Confirmer la restauration"
                     )
                 }
 
-                (backupState as? com.reconsiliation.caisse.ui.viewmodel.BackupUiState.Error)?.let {
+                (backupState as? BackupUiState.Error)?.let {
                     Text(it.message, color = RedError, style = MaterialTheme.typography.bodySmall)
                 }
                 
@@ -167,7 +161,7 @@ fun RestorationWizardScreen(navController: NavController) {
                     onConfirm = { password ->
                         showPasswordDialog = false
                         stagedFile?.let { file ->
-                            viewModel.importEncryptedBackup(context, file, password) {
+                            viewModel.importEncryptedBackup(context, file, password, mainViewModel.userRole.value) {
                                 navController.navigate("splash") { popUpTo(0) }
                             }
                         }
