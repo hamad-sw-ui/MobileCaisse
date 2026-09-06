@@ -83,11 +83,22 @@ sealed class Screen(
     data object SupplierInflow : Screen("supplier_inflow")
 
     companion object {
-        /** Liste des routes nécessitant le rôle MANAGER (B-027). */
-        val MANAGER_ROUTES = listOf(
-            Settings, Reports, EditBoutique, RestorationWizard, Audit,
-            ClosureHistory, ActionLogs, Suppliers, Categories, Staff, Maintenance
-        ).map { it.route }
+        private val ALL_SCREENS = listOf(
+            Splash, Onboarding, Setup, Pin, Home, NewSale, History, Stock,
+            SmsErrors, Closure, Debts, Expenses, Settings, Support, Reports,
+            EditBoutique, PrintSettings, RestorationWizard, Audit, AuditHistory,
+            SessionHistory, SupplyHistory, ClosureHistory, ActionLogs, Suppliers,
+            Categories, Staff, Maintenance, StockMovements, PriceHistory,
+            CustomerProfile, SaleDetail, SupplierInflow
+        )
+
+        fun isManagerRequired(route: String?): Boolean {
+            if (route == null) return false
+            val baseRoute = route.substringBefore("?").substringBefore("/")
+            return ALL_SCREENS.any { 
+                it.isManagerOnly && it.route.substringBefore("?").substringBefore("/") == baseRoute 
+            }
+        }
     }
 }
 

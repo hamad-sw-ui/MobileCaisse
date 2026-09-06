@@ -61,9 +61,9 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
         viewModel.recordActivity()
         viewModel.requestAccess(route)
         val currentRole = viewModel.userRole.value
-        if (currentRole == "MANAGER") {
-            navController.navigate(route)
-        } else if (currentRole == "STAFF" && route !in listOf(Screen.Audit.route, Screen.Suppliers.route, Screen.Debts.route, Screen.ClosureHistory.route)) {
+        val isManagerRequired = Screen.isManagerRequired(route)
+        
+        if (currentRole == "MANAGER" || (currentRole == "STAFF" && !isManagerRequired)) {
             navController.navigate(route)
         }
     }

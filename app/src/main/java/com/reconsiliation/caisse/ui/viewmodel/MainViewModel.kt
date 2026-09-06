@@ -54,7 +54,7 @@ class MainViewModel @Inject constructor(
 
     fun requestAccess(route: String) {
         val currentRole = _userRole.value
-        val isManagerRequired = route in com.reconsiliation.caisse.ui.navigation.Screen.MANAGER_ROUTES
+        val isManagerRequired = com.reconsiliation.caisse.ui.navigation.Screen.isManagerRequired(route)
         if (currentRole != "MANAGER" && (currentRole != "STAFF" || isManagerRequired)) {
             pendingRoute = route
             _showPinDialog.value = true

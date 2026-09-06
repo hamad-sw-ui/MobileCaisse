@@ -81,4 +81,21 @@ class MainActivity : ComponentActivity() {
             subRequest
         )
     }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == 101) {
+            val deniedPermissions = permissions.zip(grantResults.toTypedArray())
+                .filter { it.second == PackageManager.PERMISSION_DENIED }
+                .map { it.first }
+
+            if (deniedPermissions.isNotEmpty()) {
+                android.util.Log.w("PERMISSIONS", "Certaines permissions ont été refusées : $deniedPermissions")
+            }
+        }
+    }
 }

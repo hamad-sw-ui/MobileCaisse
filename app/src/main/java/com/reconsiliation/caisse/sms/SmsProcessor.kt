@@ -7,6 +7,7 @@ import com.reconsiliation.caisse.data.local.entity.VenteEntity
 import com.reconsiliation.caisse.data.local.entity.SmsErrorEntity
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
+import com.reconsiliation.caisse.di.ApplicationScope
 import com.reconsiliation.caisse.notification.NotificationHelper
 import com.reconsiliation.caisse.utils.PhoneUtil
 import kotlinx.coroutines.CoroutineScope
@@ -21,14 +22,15 @@ class SmsProcessor @Inject constructor(
     private val db: AppDatabase,
     private val repository: MainRepository,
     private val salesRepository: SalesRepository,
-    private val notificationHelper: NotificationHelper
+    private val notificationHelper: NotificationHelper,
+    @ApplicationScope private val scope: CoroutineScope
 ) {
     fun processSms(
         context: Context,
         messages: List<Pair<String, String?>>,
         onFinished: (() -> Unit)? = null
     ) {
-        CoroutineScope(Dispatchers.IO).launch {
+        scope.launch(Dispatchers.IO) {
             try {
                 for ((body, sender) in messages) {
                     val parsed = SmsParser.parse(body, sender)
