@@ -27,6 +27,8 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.CustomerViewModel
 import com.reconsiliation.caisse.ui.state.CustomerUiState
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,7 +53,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(customer?.name ?: "Profil Client") },
+                title = { Text(customer?.name ?: stringResource(R.string.title_customer_profile)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -60,7 +62,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                 actions = {
                     customer?.let {
                         IconButton(onClick = { viewModel.generateCustomerStatement(it) }) {
-                            Icon(Icons.Default.PictureAsPdf, contentDescription = "Relevé PDF")
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = stringResource(R.string.action_statement))
                         }
                     }
                 }
@@ -73,19 +75,19 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("Statut VIP:")
+                            Text(stringResource(R.string.label_vip_status))
                             Switch(
                                 checked = data.isVip,
                                 onCheckedChange = { viewModel.updateVipStatus(data.id, it) }
                             )
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Téléphone:")
+                            Text(stringResource(R.string.label_phone_colon))
                             Text(data.phone, fontWeight = FontWeight.Bold)
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                             Column {
-                                Text("Dette Actuelle:")
+                                Text(stringResource(R.string.label_current_debt_colon))
                                 Text(FormatUtil.formatCurrency(data.totalDebt, currency), color = RedError, fontWeight = FontWeight.Bold)
                             }
                             if (data.totalDebt > 0) {
@@ -95,34 +97,34 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                                 ) {
                                     Icon(androidx.compose.material.icons.Icons.Default.Send, null)
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Rappel")
+                                    Text(stringResource(R.string.action_reminder))
                                 }
                             }
                         }
                         if (data.creditBalance > 0) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Avoir (Crédit Client):")
+                                Text(stringResource(R.string.label_credit_balance_colon))
                                 Text(FormatUtil.formatCurrency(data.creditBalance, currency), color = GreenSuccess, fontWeight = FontWeight.Bold)
                             }
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Points Fidélité:")
+                            Text(stringResource(R.string.label_loyalty_points_colon))
                             Text("${data.loyaltyPoints}", color = Primary, fontWeight = FontWeight.Bold)
                         }
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Total Dépensé:")
+                            Text(stringResource(R.string.label_total_spent_colon))
                             Text(FormatUtil.formatCurrency(data.totalSpent, currency), fontWeight = FontWeight.Bold)
                         }
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Historique des Transactions", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_transaction_history), style = MaterialTheme.typography.titleMedium, color = Primary)
                 Spacer(modifier = Modifier.height(8.dp))
                 
                 if (customerVentes.isEmpty()) {
                     Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Aucune transaction enregistrée", color = Color.Gray)
+                        Text(stringResource(R.string.error_no_transaction_recorded), color = Color.Gray)
                     }
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f)) {

@@ -15,6 +15,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.reconsiliation.caisse.ui.theme.Primary
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @Composable
 fun NumericKeypad(
@@ -47,7 +49,7 @@ fun NumericKeypad(
                             content = {
                                 Icon(
                                     Icons.AutoMirrored.Filled.Backspace,
-                                    contentDescription = "Delete",
+                                    contentDescription = stringResource(R.string.action_delete),
                                     tint = Primary
                                 )
                             }

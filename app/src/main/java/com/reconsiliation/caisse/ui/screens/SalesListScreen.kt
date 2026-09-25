@@ -50,6 +50,7 @@ fun SalesListScreen(navController: NavController) {
     val stockItems by inventoryViewModel.allStock.collectAsState()
     val isManager = mainViewModel.isManager()
     
+    val context = androidx.compose.ui.platform.LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     
@@ -88,10 +89,10 @@ fun SalesListScreen(navController: NavController) {
                     cal.add(java.util.Calendar.MONTH, -1)
                     selectedDate = cal.time
                 }) {
-                    Text("< Précédent")
+                    Text(stringResource(R.string.action_previous))
                 }
                 
-                val sdf = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.FRANCE)
+                val sdf = java.text.SimpleDateFormat("MMMM yyyy", java.util.Locale.getDefault())
                 Text(sdf.format(selectedDate).replaceFirstChar { it.uppercase() }, fontWeight = FontWeight.Bold)
 
                 TextButton(onClick = {
@@ -100,13 +101,13 @@ fun SalesListScreen(navController: NavController) {
                     cal.add(java.util.Calendar.MONTH, 1)
                     selectedDate = cal.time
                 }) {
-                    Text("Suivant >")
+                    Text(stringResource(R.string.action_next_arrow))
                 }
             }
 
             if (ventes.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Aucune vente pour ce mois")
+                    Text(stringResource(R.string.error_no_sale_period))
                 }
             } else {
                 LazyColumn(
@@ -124,7 +125,7 @@ fun SalesListScreen(navController: NavController) {
                             onAdopt = { venteToAdoption = vente },
                             onForceConfirm = {
                                 // Point 1: Force Confirm logic
-                                val updated = it.copy(status = "CONFIRMED", reconciliationStatus = "OK", description = it.description + " (Manuel)")
+                                val updated = it.copy(status = "CONFIRMED", reconciliationStatus = "OK", description = it.description + context.getString(R.string.suffix_manual))
                                 mainViewModel.updateVente(updated)
                             }
                         )
@@ -136,19 +137,19 @@ fun SalesListScreen(navController: NavController) {
         if (venteToDelete != null) {
             AlertDialog(
                 onDismissRequest = { venteToDelete = null },
-                title = { Text("Supprimer la vente ?") },
-                text = { Text("Cette action est irréversible.") },
+                title = { Text(stringResource(R.string.dialog_delete_sale_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_sale_desc)) },
                 confirmButton = {
                     Button(onClick = {
                         mainViewModel.deleteVente(venteToDelete!!)
                         venteToDelete = null
-                        scope.launch { snackbarHostState.showSnackbar("Vente supprimée") }
+                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.sale_deleted)) }
                     }, colors = ButtonDefaults.buttonColors(containerColor = RedError)) {
                         Text(stringResource(R.string.action_delete))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { venteToDelete = null }) { Text("Annuler") }
+                    TextButton(onClick = { venteToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -179,17 +180,17 @@ fun SaleItem(vente: VenteEntity, operatorName: String, isManager: Boolean, onCli
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(vente.description.ifEmpty { "Vente sans titre" }, style = MaterialTheme.typography.titleMedium)
+                Text(vente.description.ifEmpty { stringResource(R.string.label_sale_untitled) }, style = MaterialTheme.typography.titleMedium)
                 Text(FormatUtil.formatDate(vente.date), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 val methodDisplay = if (vente.paymentMethod == "MOMO") operatorName else vente.paymentMethod
-                Text("Via: $methodDisplay", style = MaterialTheme.typography.labelMedium)
+                Text(stringResource(R.string.label_via_colon, methodDisplay), style = MaterialTheme.typography.labelMedium)
                 
                 if (vente.reconciliationStatus == "ORPHAN") {
                     Spacer(modifier = Modifier.height(8.dp))
                     Button(onClick = onAdopt, contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp), colors = ButtonDefaults.buttonColors(containerColor = OrangeWarning)) {
                         Icon(Icons.Default.ShoppingBag, null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Attribuer un produit", fontSize = 10.sp)
+                        Text(stringResource(R.string.action_assign_product), fontSize = 10.sp)
                     }
                 }
 
@@ -198,7 +199,7 @@ fun SaleItem(vente: VenteEntity, operatorName: String, isManager: Boolean, onCli
                     TextButton(onClick = { onForceConfirm(vente) }, colors = ButtonDefaults.textButtonColors(contentColor = GreenSuccess)) {
                         Icon(Icons.Default.CheckCircle, null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Forcer la confirmation", fontSize = 10.sp)
+                        Text(stringResource(R.string.action_force_confirm), fontSize = 10.sp)
                     }
                 }
                 
@@ -207,7 +208,7 @@ fun SaleItem(vente: VenteEntity, operatorName: String, isManager: Boolean, onCli
                     Button(onClick = onDelete, colors = ButtonDefaults.buttonColors(containerColor = RedError), contentPadding = PaddingValues(horizontal = 8.dp, vertical = 0.dp)) {
                         Icon(Icons.Default.Delete, null, modifier = Modifier.size(14.dp))
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Valider la suppression", fontSize = 10.sp)
+                        Text(stringResource(R.string.action_validate_delete), fontSize = 10.sp)
                     }
                 }
             }
@@ -233,7 +234,14 @@ fun SaleItem(vente: VenteEntity, operatorName: String, isManager: Boolean, onCli
                         modifier = Modifier.size(16.dp)
                     )
                     Spacer(modifier = Modifier.width(4.dp))
-                    Text(if (vente.status == "PENDING_DELETION") "SUPPRESSION..." else vente.status, color = statusColor, style = MaterialTheme.typography.labelSmall)
+                    val statusLabel = when (vente.status) {
+                        "CONFIRMED" -> stringResource(R.string.status_confirmed)
+                        "PENDING" -> stringResource(R.string.status_pending)
+                        "CANCELLED" -> stringResource(R.string.status_cancelled)
+                        "PENDING_DELETION" -> stringResource(R.string.status_deleting)
+                        else -> vente.status
+                    }
+                    Text(statusLabel, color = statusColor, style = MaterialTheme.typography.labelSmall)
                 }
                 
                 if (!vente.isLocked && isManager) {
@@ -252,17 +260,17 @@ fun SaleItem(vente: VenteEntity, operatorName: String, isManager: Boolean, onCli
 fun AdoptionDialog(vente: VenteEntity, operatorName: String, stockItems: List<StockEntity>, onDismiss: () -> Unit, onConfirm: (StockEntity) -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Attribuer un produit") },
+        title = { Text(stringResource(R.string.action_assign_product)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Ce paiement de ${FormatUtil.formatCurrency(vente.amount)} a été reçu par $operatorName mais n'est lié à aucune vente.")
-                Text("Sélectionnez le produit vendu :", fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.orphan_sale_desc, FormatUtil.formatCurrency(vente.amount), operatorName))
+                Text(stringResource(R.string.dialog_select_product_sold), fontWeight = FontWeight.Bold)
                 
                 LazyColumn(modifier = Modifier.heightIn(max = 200.dp)) {
                     items(stockItems) { item ->
                         ListItem(
                             headlineContent = { Text(item.productName) },
-                            supportingContent = { Text("${item.unitPrice} FCFA") },
+                            supportingContent = { Text(stringResource(R.string.label_qty_unit_price, 1, item.unitPrice.toString(), stringResource(R.string.label_unit_fcfa).trim())) },
                             modifier = Modifier.fillMaxWidth().clickable { onConfirm(item) }
                         )
                     }
@@ -270,6 +278,6 @@ fun AdoptionDialog(vente: VenteEntity, operatorName: String, stockItems: List<St
             }
         },
         confirmButton = {},
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

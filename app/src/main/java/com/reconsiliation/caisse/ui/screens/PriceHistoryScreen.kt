@@ -22,6 +22,8 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +38,7 @@ fun PriceHistoryScreen(navController: NavController, productId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historique des Prix: ${product?.productName ?: ""}") },
+                title = { Text(stringResource(R.string.title_price_history_product, product?.productName ?: "")) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -47,7 +49,7 @@ fun PriceHistoryScreen(navController: NavController, productId: Long) {
     ) { padding ->
         if (history.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Aucun changement de prix enregistré", color = Color.Gray)
+                Text(stringResource(R.string.no_price_change), color = Color.Gray)
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -63,12 +65,12 @@ fun PriceHistoryScreen(navController: NavController, productId: Long) {
 @Composable
 fun PriceHistoryRow(log: com.reconsiliation.caisse.data.local.entity.PriceHistoryEntity) {
     val isIncrease = log.newPrice > log.oldPrice
-    val typeLabel = if (log.type == "PURCHASE") "Achat" else "Vente"
+    val typeLabel = if (log.type == "PURCHASE") stringResource(R.string.type_purchase) else stringResource(R.string.type_sale)
     
     ListItem(
-        headlineContent = { Text("Changement de prix de $typeLabel", fontWeight = FontWeight.Bold) },
+        headlineContent = { Text(stringResource(R.string.price_change_label, typeLabel), fontWeight = FontWeight.Bold) },
         supportingContent = {
-            Text("${FormatUtil.formatCurrency(log.oldPrice)} ➔ ${FormatUtil.formatCurrency(log.newPrice)}")
+            Text(stringResource(R.string.label_price_change_arrow, FormatUtil.formatCurrency(log.oldPrice), FormatUtil.formatCurrency(log.newPrice)))
         },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {

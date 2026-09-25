@@ -31,6 +31,8 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.CustomerViewModel
 import com.reconsiliation.caisse.ui.state.CustomerUiState
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,7 +57,7 @@ fun DebtScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestion des Dettes") },
+                title = { Text(stringResource(R.string.title_debts)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -65,7 +67,7 @@ fun DebtScreen(navController: NavController) {
                     IconButton(onClick = {
                         debtors.forEach { viewModel.sendDebtReminder(it, boutique?.name, boutique?.currency ?: "FCFA") }
                     }) {
-                        Icon(Icons.Default.NotificationsActive, "Relancer tous")
+                        Icon(Icons.Default.NotificationsActive, stringResource(R.string.action_remind_all))
                     }
                 }
             )
@@ -73,7 +75,7 @@ fun DebtScreen(navController: NavController) {
     ) { padding ->
         if (debtors.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Aucune dette en cours", color = Color.Gray)
+                Text(stringResource(R.string.no_debt_found), color = Color.Gray)
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -117,13 +119,13 @@ fun DebtorCard(debtor: CustomerEntity, onRepay: () -> Unit, onRemind: () -> Unit
             
             Row {
                 IconButton(onClick = onViewProfile) {
-                    Icon(Icons.Default.Person, contentDescription = "Profil", tint = Color.Gray)
+                    Icon(Icons.Default.Person, contentDescription = stringResource(R.string.action_profile), tint = Color.Gray)
                 }
                 IconButton(onClick = onRemind) {
-                    Icon(Icons.Default.NotificationsActive, contentDescription = "Rappel", tint = OrangeWarning)
+                    Icon(Icons.Default.NotificationsActive, contentDescription = stringResource(R.string.action_reminder), tint = OrangeWarning)
                 }
                 IconButton(onClick = onRepay) {
-                    Icon(Icons.Default.Payments, contentDescription = "Rembourser", tint = Primary)
+                    Icon(Icons.Default.Payments, contentDescription = stringResource(R.string.action_repay), tint = Primary)
                 }
             }
         }
@@ -137,24 +139,24 @@ fun RepayDialog(debtor: CustomerEntity, operatorName: String, onDismiss: () -> U
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Enregistrer un remboursement") },
+        title = { Text(stringResource(R.string.dialog_repayment_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Client : ${debtor.name}")
-                Text("Reste à payer : ${FormatUtil.formatCurrency(debtor.totalDebt)}")
+                Text(stringResource(R.string.label_customer_name, debtor.name))
+                Text(stringResource(R.string.label_debt_balance, FormatUtil.formatCurrency(debtor.totalDebt)))
                 
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
-                    label = { Text("Montant remboursé (FCFA)") },
+                    label = { Text(stringResource(R.string.label_repayment_amount)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                 )
                 
-                Text("Mode de Paiement")
+                Text(stringResource(R.string.label_payment_method))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    FilterChip(selected = method == "CASH", onClick = { method = "CASH" }, label = { Text("Espèces") })
+                    FilterChip(selected = method == "CASH", onClick = { method = "CASH" }, label = { Text(stringResource(R.string.method_cash)) })
                     FilterChip(selected = method == "MOMO", onClick = { method = "MOMO" }, label = { Text(operatorName) })
                 }
             }
@@ -163,10 +165,10 @@ fun RepayDialog(debtor: CustomerEntity, operatorName: String, onDismiss: () -> U
             Button(onClick = {
                 val amt = amount.toDoubleOrNull() ?: 0.0
                 if (amt > 0) onConfirm(amt, method)
-            }) { Text("Confirmer") }
+            }) { Text(stringResource(R.string.action_confirm)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

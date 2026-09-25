@@ -32,6 +32,8 @@ import com.reconsiliation.caisse.ui.state.ExpenseUiState
 import com.reconsiliation.caisse.utils.FormatUtil
 import androidx.compose.foundation.clickable
 import java.util.Date
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -39,13 +41,14 @@ fun ExpenseScreen(navController: NavController) {
     val viewModel: ExpenseViewModel = hiltViewModel()
     val expenses by viewModel.allExpenses.collectAsState()
     
-    var selectedCategory by remember { mutableStateOf("Tout") }
+    val labelAll = stringResource(R.string.filter_all)
+    var selectedCategory by remember { mutableStateOf(labelAll) }
     var searchQuery by remember { mutableStateOf("") }
     val categories by viewModel.getCategories().collectAsState(initial = emptyList())
 
     val filteredExpenses = remember(expenses, selectedCategory, searchQuery) {
         expenses.filter {
-            (selectedCategory == "Tout" || it.category == selectedCategory) &&
+            (selectedCategory == labelAll || it.category == selectedCategory) &&
             (it.label.contains(searchQuery, ignoreCase = true))
         }
     }
@@ -62,7 +65,7 @@ fun ExpenseScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Dépenses") },
+                title = { Text(stringResource(R.string.title_expenses)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -72,7 +75,7 @@ fun ExpenseScreen(navController: NavController) {
         },
         floatingActionButton = {
             FloatingActionButton(onClick = { showAddDialog = true }, containerColor = Primary) {
-                Icon(Icons.Default.Add, contentDescription = "Nouvelle Dépense", tint = Color.White)
+                Icon(Icons.Default.Add, contentDescription = stringResource(R.string.title_expenses), tint = Color.White)
             }
         }
     ) { padding ->
@@ -81,25 +84,25 @@ fun ExpenseScreen(navController: NavController) {
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Rechercher une dépense...") },
+                placeholder = { Text(stringResource(R.string.hint_search_expense)) },
                 modifier = Modifier.fillMaxWidth().padding(16.dp, 8.dp),
                 leadingIcon = { Icon(Icons.Default.Search, null) },
                 singleLine = true,
-                shape = RoundedCornerShape(12.dp),
+                shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
                 colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
             )
 
             // Category Filter Bar
             ScrollableTabRow(
-                selectedTabIndex = if (selectedCategory == "Tout") 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
+                selectedTabIndex = if (selectedCategory == labelAll) 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
                 edgePadding = 16.dp,
                 containerColor = MaterialTheme.colorScheme.surface,
                 divider = {}
             ) {
                 Tab(
-                    selected = selectedCategory == "Tout",
-                    onClick = { selectedCategory = "Tout" },
-                    text = { Text("Tout") }
+                    selected = selectedCategory == labelAll,
+                    onClick = { selectedCategory = labelAll },
+                    text = { Text(stringResource(R.string.filter_all)) }
                 )
                 categories.forEach { category ->
                     Tab(
@@ -112,7 +115,7 @@ fun ExpenseScreen(navController: NavController) {
 
             if (filteredExpenses.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Aucune dépense correspondante")
+                    Text(stringResource(R.string.error_no_expense_period))
                 }
             } else {
                 LazyColumn(
@@ -125,7 +128,7 @@ fun ExpenseScreen(navController: NavController) {
                             Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(expense.label, style = MaterialTheme.typography.titleMedium)
-                                    Text("${expense.category} • ${FormatUtil.formatDate(expense.date)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Text(stringResource(R.string.label_category_date_sep, expense.category, FormatUtil.formatDate(expense.date)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                                 }
                                 Text(FormatUtil.formatCurrency(expense.amount), color = RedError, fontWeight = androidx.compose.ui.text.font.FontWeight.Bold)
                                 IconButton(onClick = { viewModel.deleteExpense(expense) }) {
@@ -155,19 +158,20 @@ fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) 
     val viewModel: ExpenseViewModel = hiltViewModel()
     var label by remember { mutableStateOf("") }
     var amount by remember { mutableStateOf("") }
-    var category by remember { mutableStateOf("Divers") }
+    val defaultCategory = stringResource(R.string.category_misc)
+    var category by remember { mutableStateOf(defaultCategory) }
     val expenseCategories by viewModel.getCategories().collectAsState(initial = emptyList())
     var expandedCategory by remember { mutableStateOf(false) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nouvelle dépense") },
+        title = { Text(stringResource(R.string.dialog_new_expense_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
-                OutlinedTextField(value = label, onValueChange = { label = it }, label = { Text("Libellé") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-                OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text("Montant (FCFA)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = label, onValueChange = { label = it }, label = { Text(stringResource(R.string.label_expense_label)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = amount, onValueChange = { amount = it }, label = { Text(stringResource(R.string.label_amount_fcfa)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
                 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     Box(modifier = Modifier.weight(1f)) {
@@ -175,7 +179,7 @@ fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) 
                             value = category,
                             onValueChange = { },
                             readOnly = true,
-                            label = { Text("Catégorie") },
+                            label = { Text(stringResource(R.string.label_category)) },
                             modifier = Modifier.fillMaxWidth().clickable { expandedCategory = true },
                             trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) },
                             colors = textFieldColors
@@ -185,12 +189,12 @@ fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) 
                                 DropdownMenuItem(text = { Text(cat.name) }, onClick = { category = cat.name; expandedCategory = false })
                             }
                             if (expenseCategories.isEmpty()) {
-                                DropdownMenuItem(text = { Text("Aucune catégorie") }, onClick = { expandedCategory = false })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.no_category_registered)) }, onClick = { expandedCategory = false })
                             }
                         }
                     }
                     IconButton(onClick = { showAddCategoryDialog = true }, modifier = Modifier.padding(top = 8.dp)) {
-                        Icon(Icons.Default.Add, "Nouvelle catégorie", tint = Primary)
+                        Icon(Icons.Default.Add, stringResource(R.string.dialog_new_category), tint = Primary)
                     }
                 }
             }
@@ -199,10 +203,10 @@ fun AddExpenseDialog(onDismiss: () -> Unit, onConfirm: (String, Double, String) 
             Button(onClick = {
                 val amt = amount.toDoubleOrNull() ?: 0.0
                 if (label.isNotBlank() && amt > 0) onConfirm(label, amt, category)
-            }) { Text("Ajouter") }
+            }) { Text(stringResource(R.string.action_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 

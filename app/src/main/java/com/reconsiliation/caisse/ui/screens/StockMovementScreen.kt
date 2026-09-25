@@ -24,6 +24,8 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +40,7 @@ fun StockMovementScreen(navController: NavController, productId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mouvements: ${product?.productName ?: ""}") },
+                title = { Text(stringResource(R.string.title_movements_product, product?.productName ?: "")) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -49,7 +51,7 @@ fun StockMovementScreen(navController: NavController, productId: Long) {
     ) { padding ->
         if (movements.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Aucun mouvement enregistré", color = Color.Gray)
+                Text(stringResource(R.string.no_movement_recorded), color = Color.Gray)
             }
         } else {
             LazyColumn(modifier = Modifier.fillMaxSize().padding(padding)) {
@@ -83,8 +85,8 @@ fun MovementRow(movement: com.reconsiliation.caisse.data.local.entity.StockMovem
         supportingContent = { Text(FormatUtil.formatDate(movement.date)) },
         trailingContent = {
             Column(horizontalAlignment = Alignment.End) {
-                Text("${if (movement.type == "IN") "+" else "-"}${movement.quantity}", color = color, fontWeight = FontWeight.Bold)
-                Text("Solde: ${movement.balanceAfter}", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                Text(stringResource(R.string.label_signed_quantity, if (movement.type == "IN") "+" else "-", movement.quantity.toString()), color = color, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.label_balance_after, FormatUtil.formatCurrency(movement.balanceAfter)), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
             }
         }
     )

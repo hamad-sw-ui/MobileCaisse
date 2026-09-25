@@ -25,6 +25,8 @@ import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +59,7 @@ fun SettingsScreen(navController: NavController) {
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Paramètres") },
+                title = { Text(stringResource(R.string.title_settings)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -75,48 +77,48 @@ fun SettingsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = androidx.compose.ui.Alignment.CenterVertically) {
-                Text("Configuration Boutique", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.settings_shop_config), style = MaterialTheme.typography.titleMedium, color = Primary)
                 TextButton(onClick = { navController.navigate(Screen.EditBoutique.route) }) {
-                    Text("Modifier")
+                    Text(stringResource(R.string.action_edit))
                 }
             }
             
             ListItem(
-                headlineContent = { Text("Nom de la boutique") },
+                headlineContent = { Text(stringResource(R.string.setup_shop_name)) },
                 supportingContent = { Text(boutique?.name ?: "-") }
             )
             
             ListItem(
-                headlineContent = { Text("Propriétaire") },
+                headlineContent = { Text(stringResource(R.string.settings_owner)) },
                 supportingContent = { Text(boutique?.ownerName ?: "-") }
             )
 
             ListItem(
-                headlineContent = { Text("Réception $operatorName (${boutique?.operator})") },
+                headlineContent = { Text(stringResource(R.string.settings_reception_label, operatorName, boutique?.operator ?: "-")) },
                 supportingContent = { Text(boutique?.momoNumber ?: "-") }
             )
 
-            Text("Matériel & Impression", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.settings_hardware_print), style = MaterialTheme.typography.titleMedium, color = Primary)
             Button(onClick = { navController.navigate("print_settings") }, modifier = Modifier.fillMaxWidth()) {
                 Icon(Icons.Default.Print, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Personnaliser les Tickets")
+                Text(stringResource(R.string.action_customize_tickets))
             }
 
             HorizontalDivider()
             
-            Text("Sécurité & Audit", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.settings_security_audit), style = MaterialTheme.typography.titleMedium, color = Primary)
             Button(onClick = { navController.navigate("action_logs") }, modifier = Modifier.fillMaxWidth()) {
-                Text("Voir le Journal d'Audit")
+                Text(stringResource(R.string.action_view_audit))
             }
             Button(onClick = { navController.navigate("categories") }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                Text("Gérer les Catégories")
+                Text(stringResource(R.string.action_manage_categories))
             }
             Button(onClick = { navController.navigate("maintenance") }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)) {
-                Text("Maintenance & Purge")
+                Text(stringResource(R.string.action_maintenance_purge))
             }
             Button(onClick = { /* Change PIN logic */ }, modifier = Modifier.fillMaxWidth(), colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)) {
-                Text("Changer le Code PIN")
+                Text(stringResource(R.string.action_change_pin))
             }
             
             Button(
@@ -124,12 +126,12 @@ fun SettingsScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
             ) {
-                Text("Abonnement & Support Technique")
+                Text(stringResource(R.string.action_support_sub))
             }
 
             HorizontalDivider()
             
-            Text("Sauvegarde & Export", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.settings_backup_export), style = MaterialTheme.typography.titleMedium, color = Primary)
             Button(
                 onClick = { showBackupPasswordDialog = true },
                 modifier = Modifier.fillMaxWidth(),
@@ -139,12 +141,12 @@ fun SettingsScreen(navController: NavController) {
                 Icon(Icons.Default.Backup, null)
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
-                    if (backupState is BackupUiState.Working) "Sauvegarde en cours…"
-                    else "Exporter et partager la base"
+                    if (backupState is BackupUiState.Working) stringResource(R.string.status_backup_working)
+                    else stringResource(R.string.action_export_share_db)
                 )
             }
             Text(
-                "La sauvegarde est chiffrée par un mot de passe que vous choisissez.",
+                stringResource(R.string.backup_password_notice),
                 style = MaterialTheme.typography.bodySmall
             )
 
@@ -154,7 +156,7 @@ fun SettingsScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
                 ) {
-                    Text("Mode Démo (Injecter données)")
+                    Text(stringResource(R.string.action_demo_mode))
                 }
             } else if (allStock.isNotEmpty()) {
                 Button(
@@ -162,15 +164,15 @@ fun SettingsScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = RedError)
                 ) {
-                    Text("Quitter le Mode Démo / Réinitialiser")
+                    Text(stringResource(R.string.action_reset_demo))
                 }
             }
 
             if (showResetDialog) {
                 AlertDialog(
                     onDismissRequest = { showResetDialog = false },
-                    title = { Text("Réinitialisation Complète") },
-                    text = { Text("Voulez-vous vraiment effacer toutes les données ? Cette action est irréversible.") },
+                    title = { Text(stringResource(R.string.dialog_reset_title)) },
+                    text = { Text(stringResource(R.string.dialog_reset_desc)) },
                     confirmButton = {
                         TextButton(
                             onClick = {
@@ -181,11 +183,11 @@ fun SettingsScreen(navController: NavController) {
                                 }
                             }
                         ) {
-                            Text("Tout effacer", color = RedError)
+                            Text(stringResource(R.string.action_erase_all), color = RedError)
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showResetDialog = false }) { Text("Annuler") }
+                        TextButton(onClick = { showResetDialog = false }) { Text(stringResource(R.string.action_cancel)) }
                     }
                 )
             }
@@ -197,7 +199,7 @@ fun SettingsScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.Group, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Gestion du personnel")
+                Text(stringResource(R.string.action_manage_staff))
             }
 
             Button(
@@ -207,12 +209,12 @@ fun SettingsScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.FileUpload, null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Restaurer une sauvegarde")
+                Text(stringResource(R.string.action_restore_backup))
             }
 
             Spacer(modifier = Modifier.weight(1f))
             
-            Text("Mobile Caisse v1.0.0", modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.Gray)
+            Text(stringResource(R.string.app_name) + " " + stringResource(R.string.app_version), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center, color = androidx.compose.ui.graphics.Color.Gray)
         }
 
         if (showBackupPasswordDialog) {

@@ -15,6 +15,8 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,7 +32,7 @@ fun PrintSettingsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Paramètres d'Impression") },
+                title = { Text(stringResource(R.string.title_print_settings)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -47,14 +49,14 @@ fun PrintSettingsScreen(navController: NavController) {
                     .fillMaxSize(),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Configuration de l'imprimante", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_printer_config), style = MaterialTheme.typography.titleMedium, color = Primary)
                 
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
                 ) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Imprimante sélectionnée", style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.label_selected_printer), style = MaterialTheme.typography.labelMedium)
                         
                         Box {
                             OutlinedButton(
@@ -73,7 +75,7 @@ fun PrintSettingsScreen(navController: NavController) {
                                 } catch (e: SecurityException) {
                                     null
                                 }
-                                Text(printerName ?: b.printerAddress ?: "Aucune imprimante")
+                                Text(printerName ?: b.printerAddress ?: stringResource(R.string.no_printer_selected))
                             }
                             
                             DropdownMenu(
@@ -84,7 +86,7 @@ fun PrintSettingsScreen(navController: NavController) {
                                 val model = android.os.Build.MODEL.lowercase()
                                 if (model.contains("v2") || model.contains("pax") || model.contains("sunmi")) {
                                     DropdownMenuItem(
-                                        text = { Text("Imprimante intégrée") },
+                                        text = { Text(stringResource(R.string.integrated_printer)) },
                                         onClick = {
                                             mainViewModel.updateBoutique(b.copy(printerAddress = "INTEGRATED"))
                                             showPrinterDropdown = false
@@ -107,7 +109,7 @@ fun PrintSettingsScreen(navController: NavController) {
                                 }
                                 if (pairedPrinters.isEmpty()) {
                                     DropdownMenuItem(
-                                        text = { Text("Aucun appareil associé") },
+                                        text = { Text(stringResource(R.string.no_paired_device)) },
                                         onClick = { showPrinterDropdown = false },
                                         enabled = false
                                     )
@@ -122,35 +124,35 @@ fun PrintSettingsScreen(navController: NavController) {
                         ) {
                             Icon(Icons.Default.Print, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Tester l'impression")
+                            Text(stringResource(R.string.action_test_print))
                         }
                     }
                 }
 
                 HorizontalDivider()
 
-                Text("Options du ticket", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_ticket_options), style = MaterialTheme.typography.titleMedium, color = Primary)
                 
                 ToggleOption(
-                    label = "Afficher le téléphone du client",
+                    label = stringResource(R.string.option_show_customer_phone),
                     checked = b.showCustomerPhoneOnReceipt,
                     onCheckedChange = { mainViewModel.updateBoutique(b.copy(showCustomerPhoneOnReceipt = it)) }
                 )
                 
                 ToggleOption(
-                    label = "Détailler les taxes",
+                    label = stringResource(R.string.option_show_taxes),
                     checked = b.showTaxesOnReceipt,
                     onCheckedChange = { mainViewModel.updateBoutique(b.copy(showTaxesOnReceipt = it)) }
                 )
                 
                 ToggleOption(
-                    label = "Afficher la quantité totale",
+                    label = stringResource(R.string.option_show_total_qty),
                     checked = b.showTotalQuantityOnReceipt,
                     onCheckedChange = { mainViewModel.updateBoutique(b.copy(showTotalQuantityOnReceipt = it)) }
                 )
                 
                 ToggleOption(
-                    label = "Imprimer une copie marchand",
+                    label = stringResource(R.string.option_print_merchant_copy),
                     checked = b.printMerchantCopy,
                     onCheckedChange = { mainViewModel.updateBoutique(b.copy(printMerchantCopy = it)) }
                 )

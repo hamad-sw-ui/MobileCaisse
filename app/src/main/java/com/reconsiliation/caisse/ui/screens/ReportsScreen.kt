@@ -29,6 +29,8 @@ import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.ReportsViewModel
 import com.reconsiliation.caisse.ui.state.ReportsUiState
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +63,7 @@ fun ReportsScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Statistiques & Rapports") },
+                title = { Text(stringResource(R.string.title_reports)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -72,7 +74,7 @@ fun ReportsScreen(navController: NavController) {
                         onClick = { viewModel.exportSalesData() },
                         enabled = uiState !is ReportsUiState.Processing
                     ) {
-                        Icon(Icons.Default.Share, contentDescription = "Exporter")
+                        Icon(Icons.Default.Share, contentDescription = stringResource(R.string.action_export))
                     }
                 }
             )
@@ -87,29 +89,29 @@ fun ReportsScreen(navController: NavController) {
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = period == "MONTH", onClick = { period = "MONTH" }, label = { Text("Ce mois") })
-                FilterChip(selected = period == "YEAR", onClick = { period = "YEAR" }, label = { Text("Cette année") })
+                FilterChip(selected = period == "MONTH", onClick = { period = "MONTH" }, label = { Text(stringResource(R.string.filter_this_month)) })
+                FilterChip(selected = period == "YEAR", onClick = { period = "YEAR" }, label = { Text(stringResource(R.string.filter_this_year)) })
             }
 
             if (userRole == "MANAGER") {
-                Text("Indicateurs de Performance (Manager)", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_performance_indicators), style = MaterialTheme.typography.titleMedium, color = Primary)
                 
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     ElevatedCard(modifier = Modifier.weight(1f)) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Valeur Stock (Achat)", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.stock_summary_purchase), style = MaterialTheme.typography.labelSmall)
                             Text(FormatUtil.formatCurrency(valuation.first, currency), style = MaterialTheme.typography.titleMedium, color = Primary)
                         }
                     }
                     ElevatedCard(modifier = Modifier.weight(1f)) {
                         Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Valeur Stock (Vente)", style = MaterialTheme.typography.labelSmall)
+                            Text(stringResource(R.string.stock_summary_sale), style = MaterialTheme.typography.labelSmall)
                             Text(FormatUtil.formatCurrency(valuation.second, currency), style = MaterialTheme.typography.titleMedium, color = Primary)
                         }
                     }
                 }
                 
-                Text("Produits les plus rentables", style = MaterialTheme.typography.titleSmall)
+                Text(stringResource(R.string.label_top_profitable_products), style = MaterialTheme.typography.titleSmall)
                 topProducts.forEach { product ->
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         Text(product.productName, style = MaterialTheme.typography.bodyMedium)
@@ -121,13 +123,13 @@ fun ReportsScreen(navController: NavController) {
             }
 
             Text(
-                if (period == "MONTH") "Ventes Quotidiennes" else "Ventes Mensuelles",
+                if (period == "MONTH") stringResource(R.string.label_daily_sales) else stringResource(R.string.label_monthly_sales),
                 style = MaterialTheme.typography.titleMedium,
                 color = Primary
             )
             if (dailySales.isEmpty()) {
                 Box(modifier = Modifier.height(200.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucune donnée pour cette période", color = Color.Gray)
+                    Text(stringResource(R.string.error_no_data_period), color = Color.Gray)
                 }
             } else {
                 DetailedSalesChart(
@@ -140,9 +142,9 @@ fun ReportsScreen(navController: NavController) {
             HorizontalDivider()
 
             val expenseBreakdown by viewModel.expenseBreakdown.collectAsState()
-            Text("Répartition des Dépenses", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.label_expense_breakdown), style = MaterialTheme.typography.titleMedium, color = Primary)
             if (expenseBreakdown.isEmpty()) {
-                Text("Aucune dépense sur cette période", color = Color.Gray)
+                Text(stringResource(R.string.error_no_expense_period), color = Color.Gray)
             } else {
                 expenseBreakdown.forEach { report ->
                     Row(
@@ -164,10 +166,10 @@ fun ReportsScreen(navController: NavController) {
 
             HorizontalDivider()
             
-            Text("Analyse des Heures de Pointe", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.label_peak_hours_analysis), style = MaterialTheme.typography.titleMedium, color = Primary)
             val hourlySales by viewModel.hourlySales.collectAsState()
             if (hourlySales.isEmpty()) {
-                Text("Données insuffisantes", color = Color.Gray)
+                Text(stringResource(R.string.error_insufficient_data), color = Color.Gray)
             } else {
                 DetailedSalesChart(
                     data = hourlySales,
@@ -178,10 +180,10 @@ fun ReportsScreen(navController: NavController) {
 
             HorizontalDivider()
 
-            Text("Ventes par Catégorie", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.label_sales_by_category), style = MaterialTheme.typography.titleMedium, color = Primary)
             if (categorySales.isEmpty()) {
                 Box(modifier = Modifier.height(200.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucune vente enregistrée", color = Color.Gray)
+                    Text(stringResource(R.string.error_no_sale_recorded), color = Color.Gray)
                 }
             } else {
                 categorySales.forEach { report ->

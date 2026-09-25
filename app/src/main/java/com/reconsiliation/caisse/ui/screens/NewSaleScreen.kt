@@ -160,7 +160,7 @@ fun NewSaleScreen(navController: NavController) {
                 var showProductPicker by remember { mutableStateOf(false) }
                 
                 OutlinedTextField(
-                    value = "Rechercher...",
+                    value = stringResource(R.string.hint_search),
                     onValueChange = {},
                     modifier = Modifier.weight(1f).clickable { showProductPicker = true },
                     readOnly = true,
@@ -202,7 +202,7 @@ fun NewSaleScreen(navController: NavController) {
                     modifier = Modifier.size(48.dp).background(Primary, RoundedCornerShape(12.dp)),
                     colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                 ) {
-                    Icon(Icons.Default.QrCodeScanner, contentDescription = "Scan", modifier = Modifier.size(20.dp))
+                    Icon(Icons.Default.QrCodeScanner, contentDescription = stringResource(R.string.action_scan), modifier = Modifier.size(20.dp))
                 }
             }
 
@@ -251,7 +251,7 @@ fun NewSaleScreen(navController: NavController) {
                                 isCustomerVip = false
                             }
                         },
-                        label = { Text("Client") },
+                        label = { Text(stringResource(R.string.label_customer)) },
                         modifier = Modifier.weight(1.3f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                         colors = CaisseTextFieldDefaults.outlinedTextFieldColors(),
@@ -260,7 +260,7 @@ fun NewSaleScreen(navController: NavController) {
                     OutlinedTextField(
                         value = discountAmount,
                         onValueChange = { discountAmount = it },
-                        label = { Text("Remise") },
+                        label = { Text(stringResource(R.string.label_discount)) },
                         modifier = Modifier.weight(0.7f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = CaisseTextFieldDefaults.outlinedTextFieldColors(),
@@ -275,12 +275,20 @@ fun NewSaleScreen(navController: NavController) {
                     val fees = momoFees.toDoubleOrNull() ?: 0.0
                     val finalTotal = subTotal + tax + fees
                     
-                    Text("TOTAL: ", style = MaterialTheme.typography.titleMedium)
+                    Text(stringResource(R.string.label_total), style = MaterialTheme.typography.titleMedium)
                     Text(FormatUtil.formatCurrency(finalTotal, currency), style = MaterialTheme.typography.headlineSmall, color = Primary, fontWeight = FontWeight.Bold)
                 }
 
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp), modifier = Modifier.fillMaxWidth()) {
-                    listOf("CASH", operatorName, "MIXED", "CREDIT").forEach { method ->
+                    val cashLabel = stringResource(R.string.method_cash)
+                    val mixedLabel = stringResource(R.string.method_mixed)
+                    val creditLabel = stringResource(R.string.method_credit)
+                    listOf(
+                        "CASH" to cashLabel,
+                        operatorName to operatorName,
+                        "MIXED" to mixedLabel,
+                        "CREDIT" to creditLabel
+                    ).forEach { (method, labelText) ->
                         FilterChip(
                             selected = paymentMethod == method || (method == operatorName && paymentMethod == "MOMO"),
                             onClick = {
@@ -290,7 +298,7 @@ fun NewSaleScreen(navController: NavController) {
                                     amountMomoStr = ""
                                 }
                             },
-                            label = { Text(if (method == "MOMO" || method == operatorName) operatorName else method, fontSize = 12.sp) },
+                            label = { Text(labelText, fontSize = 12.sp) },
                             modifier = Modifier.weight(1f)
                         )
                     }
@@ -302,22 +310,22 @@ fun NewSaleScreen(navController: NavController) {
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text("Type :", style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.label_type), style = MaterialTheme.typography.labelMedium)
                         AssistChip(
                             onClick = { operationType = "MARCHAND" },
-                            label = { Text("Marchand", fontSize = 11.sp) },
+                            label = { Text(stringResource(R.string.type_merchant), fontSize = 11.sp) },
                             leadingIcon = { Icon(Icons.Default.Storefront, null, modifier = Modifier.size(14.dp)) },
                             colors = if (operationType == "MARCHAND") AssistChipDefaults.assistChipColors(containerColor = Primary.copy(alpha = 0.1f)) else AssistChipDefaults.assistChipColors()
                         )
                         AssistChip(
                             onClick = { operationType = "TRANSFERT" },
-                            label = { Text("Envoi", fontSize = 11.sp) },
+                            label = { Text(stringResource(R.string.type_send), fontSize = 11.sp) },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.Send, null, modifier = Modifier.size(14.dp)) },
                             colors = if (operationType == "TRANSFERT") AssistChipDefaults.assistChipColors(containerColor = Primary.copy(alpha = 0.1f)) else AssistChipDefaults.assistChipColors()
                         )
                         AssistChip(
                             onClick = { operationType = "RETRAIT" },
-                            label = { Text("Retrait", fontSize = 11.sp) },
+                            label = { Text(stringResource(R.string.type_withdraw), fontSize = 11.sp) },
                             leadingIcon = { Icon(Icons.Default.Payments, null, modifier = Modifier.size(14.dp)) },
                             colors = if (operationType == "RETRAIT") AssistChipDefaults.assistChipColors(containerColor = Primary.copy(alpha = 0.1f)) else AssistChipDefaults.assistChipColors()
                         )
@@ -329,7 +337,7 @@ fun NewSaleScreen(navController: NavController) {
                         OutlinedTextField(
                             value = amountCashStr,
                             onValueChange = { amountCashStr = it },
-                            label = { Text("Cash") },
+                            label = { Text(stringResource(R.string.label_cash)) },
                             modifier = Modifier.weight(1f),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             colors = CaisseTextFieldDefaults.outlinedTextFieldColors(),
@@ -348,7 +356,7 @@ fun NewSaleScreen(navController: NavController) {
                 }
 
                 BigButton(
-                    text = "VALIDER LA VENTE",
+                    text = stringResource(R.string.action_validate_sale),
                     enabled = uiState !is NewSaleUiState.Processing,
                     onClick = {
                         mainViewModel.recordActivity()
@@ -382,7 +390,9 @@ fun NewSaleScreen(navController: NavController) {
                                     cashVal = amountCashStr.toDoubleOrNull() ?: 0.0
                                     momoVal = amountMomoStr.toDoubleOrNull() ?: 0.0
                                     if (kotlin.math.abs((cashVal + momoVal + creditUsed) - finalTotal) > 0.1) {
-                                        scope.launch { snackbarHostState.showSnackbar("Total incorrect") }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(context.getString(R.string.error_total_incorrect))
+                                        }
                                         return@BigButton
                                     }
                                 }
@@ -421,8 +431,8 @@ fun NewSaleScreen(navController: NavController) {
         if (lastVenteId != null) {
             AlertDialog(
                 onDismissRequest = { viewModel.clearLastVenteId() },
-                title = { Text("Vente Confirmée") },
-                text = { Text("Voulez-vous imprimer ou envoyer le reçu par WhatsApp ?") },
+                title = { Text(stringResource(R.string.sale_confirmed_title)) },
+                text = { Text(stringResource(R.string.sale_confirmed_desc)) },
                 confirmButton = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Button(
@@ -435,7 +445,7 @@ fun NewSaleScreen(navController: NavController) {
                         ) {
                             Icon(Icons.Default.Print, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Imprimer")
+                            Text(stringResource(R.string.action_print))
                         }
                         Button(
                             onClick = {
@@ -458,7 +468,7 @@ fun NewSaleScreen(navController: NavController) {
                         ) {
                             Icon(Icons.Default.Share, null)
                             Spacer(Modifier.width(8.dp))
-                            Text("WhatsApp")
+                            Text(stringResource(R.string.action_whatsapp))
                         }
                     }
                 },
@@ -466,7 +476,7 @@ fun NewSaleScreen(navController: NavController) {
                     TextButton(onClick = {
                         viewModel.clearLastVenteId()
                         navController.popBackStack()
-                    }) { Text("Terminer") }
+                    }) { Text(stringResource(R.string.action_finish)) }
                 }
             )
         }
@@ -497,16 +507,16 @@ fun NewSaleScreen(navController: NavController) {
         if (unknownBarcode != null) {
             AlertDialog(
                 onDismissRequest = { unknownBarcode = null },
-                title = { Text("Produit Inconnu") },
-                text = { Text("Le code-barres $unknownBarcode n'est pas dans votre stock.") },
+                title = { Text(stringResource(R.string.error_unknown_product_title)) },
+                text = { Text(stringResource(R.string.error_unknown_product_desc, unknownBarcode!!)) },
                 confirmButton = {
                     Button(onClick = {
                         navController.navigate(Screen.Stock.route + "?barcode=$unknownBarcode")
                         unknownBarcode = null
-                    }) { Text("Créer") }
+                    }) { Text(stringResource(R.string.action_create)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { unknownBarcode = null }) { Text("Annuler") }
+                    TextButton(onClick = { unknownBarcode = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -524,13 +534,14 @@ fun ProductPickerDialog(
 ) {
     val viewModel: NewSaleViewModel = hiltViewModel()
     var searchQuery by remember { mutableStateOf("") }
-    var selectedCategory by remember { mutableStateOf("Tout") }
+    val labelAll = stringResource(R.string.label_all)
+    var selectedCategory by remember { mutableStateOf(labelAll) }
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
 
     val filteredItems = remember(searchQuery, selectedCategory, stockItems) {
         stockItems.filter {
             (it.productName.contains(searchQuery, ignoreCase = true) || it.category.contains(searchQuery, ignoreCase = true)) &&
-            (selectedCategory == "Tout" || it.category == selectedCategory)
+            (selectedCategory == labelAll || it.category == selectedCategory)
         }
     }
 
@@ -542,23 +553,23 @@ fun ProductPickerDialog(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Rechercher...") },
+                    placeholder = { Text(stringResource(R.string.hint_search)) },
                     leadingIcon = { Icon(Icons.Default.Search, null) },
                     singleLine = true,
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                 )
                 
                 ScrollableTabRow(
-                    selectedTabIndex = if (selectedCategory == "Tout") 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
+                    selectedTabIndex = if (selectedCategory == labelAll) 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
                     edgePadding = 0.dp,
                     containerColor = Color.Transparent,
                     divider = {},
                     indicator = {}
                 ) {
                     Tab(
-                        selected = selectedCategory == "Tout",
-                        onClick = { selectedCategory = "Tout" },
-                        text = { Text("Tout", style = MaterialTheme.typography.labelSmall) }
+                        selected = selectedCategory == labelAll,
+                        onClick = { selectedCategory = labelAll },
+                        text = { Text(stringResource(R.string.label_all), style = MaterialTheme.typography.labelSmall) }
                     )
                     categories.forEach { category ->
                         Tab(
@@ -573,7 +584,7 @@ fun ProductPickerDialog(
         text = {
             Box(modifier = Modifier.heightIn(max = 400.dp)) {
                 if (filteredItems.isEmpty()) {
-                    Text("Aucun produit trouvé", modifier = Modifier.padding(16.dp), color = Color.Gray)
+                    Text(stringResource(R.string.error_no_product_found), modifier = Modifier.padding(16.dp), color = Color.Gray)
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(filteredItems) { item ->
@@ -584,7 +595,7 @@ fun ProductPickerDialog(
                                 Column(modifier = Modifier.padding(12.dp)) {
                                     val price = if (isCustomerVip && item.vipPrice > 0) item.vipPrice else item.unitPrice
                                     Text(item.productName, fontWeight = FontWeight.Bold)
-                                    Text("$price $currency / ${item.unit}", style = MaterialTheme.typography.bodySmall)
+                                    Text(stringResource(R.string.label_price_unit_sep, price.toString(), currency, item.unit), style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                             if (item.isBulk && item.retailUnit != null) {
@@ -597,8 +608,8 @@ fun ProductPickerDialog(
                                         Icon(Icons.Default.SubdirectoryArrowRight, null, modifier = Modifier.size(16.dp))
                                         Spacer(modifier = Modifier.width(8.dp))
                                         Column {
-                                            Text("Détail: ${item.retailUnit}", style = MaterialTheme.typography.labelMedium)
-                                            Text("${item.retailPrice} $currency", style = MaterialTheme.typography.labelSmall)
+                                            Text(stringResource(R.string.label_retail, item.retailUnit!!), style = MaterialTheme.typography.labelMedium)
+                                            Text(stringResource(R.string.label_price_f, item.retailPrice.toString()), style = MaterialTheme.typography.labelSmall)
                                         }
                                     }
                                 }
@@ -609,7 +620,7 @@ fun ProductPickerDialog(
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Fermer") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         }
     )
 }
@@ -624,7 +635,15 @@ fun CartRow(
         Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(item.product.productName, fontWeight = FontWeight.Bold, maxLines = 1)
-                Text("${FormatUtil.formatCurrency(item.priceAtSale)} / ${if (item.isRetail) item.product.retailUnit else item.product.unit}", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    text = stringResource(
+                        R.string.label_price_unit_sep,
+                        FormatUtil.formatCurrency(item.priceAtSale),
+                        "", // Currency is already in formatCurrency usually
+                        if (item.isRetail) item.product.retailUnit!! else item.product.unit
+                    ).replace("/ ", "/"),
+                    style = MaterialTheme.typography.bodySmall
+                )
             }
             
             Row(verticalAlignment = Alignment.CenterVertically) {

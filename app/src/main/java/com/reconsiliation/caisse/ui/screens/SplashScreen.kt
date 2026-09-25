@@ -18,6 +18,8 @@ import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import kotlinx.coroutines.delay
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @Composable
 fun SplashScreen(navController: NavController) {
@@ -61,15 +63,15 @@ fun SplashScreen(navController: NavController) {
         contentAlignment = Alignment.Center
     ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(text = "Mobile", color = Color.Yellow, fontSize = 48.sp, fontWeight = FontWeight.Bold)
-            Text(text = "Caisse", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.label_mobile), color = Color.Yellow, fontSize = 48.sp, fontWeight = FontWeight.Bold)
+            Text(text = stringResource(R.string.label_caisse), color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Bold)
         }
 
         if (showObsoleteDialog) {
             androidx.compose.material3.AlertDialog(
                 onDismissRequest = { },
-                title = { Text("Base de données obsolète") },
-                text = { Text("Votre base de données est trop ancienne pour être mise à jour automatiquement. Pour continuer, l'application doit être réinitialisée. Vos données actuelles seront perdues.") },
+                title = { Text(stringResource(R.string.dialog_obsolete_db_title)) },
+                text = { Text(stringResource(R.string.dialog_obsolete_db_desc)) },
                 confirmButton = {
                     androidx.compose.material3.TextButton(
                         onClick = {
@@ -80,14 +82,14 @@ fun SplashScreen(navController: NavController) {
                             }
                         }
                     ) {
-                        Text("Réinitialiser", color = RedError)
+                        Text(stringResource(R.string.action_reset), color = RedError)
                     }
                 },
                 dismissButton = {
                     androidx.compose.material3.TextButton(onClick = { 
                         // Fermer l'application si l'utilisateur refuse
                         android.os.Process.killProcess(android.os.Process.myPid())
-                    }) { Text("Quitter") }
+                    }) { Text(stringResource(R.string.action_exit)) }
                 }
             )
         }

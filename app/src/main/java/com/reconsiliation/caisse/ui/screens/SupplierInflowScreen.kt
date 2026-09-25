@@ -30,6 +30,8 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.state.InventoryUiState
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -61,7 +63,7 @@ fun SupplierInflowScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Nouvel Arrivage") },
+                title = { Text(stringResource(R.string.title_new_inflow)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -78,32 +80,32 @@ fun SupplierInflowScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.Inventory, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Votre stock est vide.", style = MaterialTheme.typography.titleMedium)
-                Text("Ajoutez d'abord des produits pour enregistrer un arrivage.", textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
+                Text(stringResource(R.string.error_empty_stock_title), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.error_empty_stock_desc), textAlign = androidx.compose.ui.text.style.TextAlign.Center, color = Color.Gray)
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = { navController.navigate(Screen.Stock.route) }) {
-                    Text("Aller au Stock")
+                    Text(stringResource(R.string.action_go_to_stock))
                 }
             }
         } else {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                 
-                Text("Informations sur l'arrivage", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_inflow_info), style = MaterialTheme.typography.titleMedium, color = Primary)
 
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = selectedSupplier?.name ?: "Choisir un fournisseur...",
+                        value = selectedSupplier?.name ?: stringResource(R.string.label_choose_supplier),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Fournisseur") },
+                        label = { Text(stringResource(R.string.label_supplier)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Business, null) },
                         enabled = false,
                         colors = textFieldColors,
                         trailingIcon = {
                             IconButton(onClick = { navController.navigate(Screen.Suppliers.route) }) {
-                                Icon(Icons.Default.Business, "Liste")
+                                Icon(Icons.Default.Business, stringResource(R.string.action_list))
                             }
                         }
                     )
@@ -117,10 +119,10 @@ fun SupplierInflowScreen(navController: NavController) {
                 // Product Selection
                 Box(modifier = Modifier.fillMaxWidth()) {
                     OutlinedTextField(
-                        value = selectedProduct?.productName ?: "Choisir un produit...",
+                        value = selectedProduct?.productName ?: stringResource(R.string.label_choose_product),
                         onValueChange = {},
                         readOnly = true,
-                        label = { Text("Produit") },
+                        label = { Text(stringResource(R.string.label_product)) },
                         modifier = Modifier.fillMaxWidth(),
                         leadingIcon = { Icon(Icons.Default.Inventory, null) },
                         enabled = false,
@@ -139,7 +141,7 @@ fun SupplierInflowScreen(navController: NavController) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Switch(checked = isRetailSupply, onCheckedChange = { isRetailSupply = it })
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Achat au détail (${selectedProduct?.retailUnit})", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.label_retail_supply, selectedProduct?.retailUnit ?: ""), style = MaterialTheme.typography.bodySmall)
                     }
                 }
 
@@ -147,7 +149,7 @@ fun SupplierInflowScreen(navController: NavController) {
                     OutlinedTextField(
                         value = quantity,
                         onValueChange = { quantity = it },
-                        label = { Text(if (isRetailSupply) "Quantité (${selectedProduct?.retailUnit})" else "Quantité (${selectedProduct?.unit ?: "Unité"})") },
+                        label = { Text(if (isRetailSupply) stringResource(R.string.label_quantity_unit, selectedProduct?.retailUnit ?: "") else stringResource(R.string.label_quantity_unit, selectedProduct?.unit ?: stringResource(R.string.label_unit))) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = textFieldColors
@@ -155,7 +157,7 @@ fun SupplierInflowScreen(navController: NavController) {
                     OutlinedTextField(
                         value = purchasePrice,
                         onValueChange = { purchasePrice = it },
-                        label = { Text(if (isRetailSupply) "Prix d'achat (Unité détail)" else "Prix d'achat (Unité gros)") },
+                        label = { Text(if (isRetailSupply) stringResource(R.string.label_purchase_price_retail) else stringResource(R.string.label_purchase_price_bulk)) },
                         modifier = Modifier.weight(1f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         colors = textFieldColors
@@ -165,15 +167,15 @@ fun SupplierInflowScreen(navController: NavController) {
                 OutlinedTextField(
                     value = expiryDateStr,
                     onValueChange = { expiryDateStr = it },
-                    label = { Text("Date d'expiration (JJ/MM/AAAA)") },
+                    label = { Text(stringResource(R.string.label_expiry_date)) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("Ex: 31/12/2025") },
+                    placeholder = { Text(stringResource(R.string.hint_date_example)) },
                     colors = textFieldColors
                 )
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = isPaid, onCheckedChange = { isPaid = it })
-                    Text("Stock payé au fournisseur (Sinon, ajout en dette)")
+                    Text(stringResource(R.string.label_stock_paid_notice))
                 }
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -233,7 +235,7 @@ fun SupplierInflowScreen(navController: NavController) {
                 ) {
                     Icon(Icons.Default.Add, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Valider l'entrée en stock")
+                    Text(stringResource(R.string.action_validate_inflow))
                 }
             }
         }
@@ -241,7 +243,7 @@ fun SupplierInflowScreen(navController: NavController) {
         if (showSupplierPicker) {
             AlertDialog(
                 onDismissRequest = { showSupplierPicker = false },
-                title = { Text("Sélectionner un fournisseur") },
+                title = { Text(stringResource(R.string.dialog_select_supplier)) },
                 text = {
                     LazyColumn {
                         items(allSuppliers) { supplier ->
@@ -256,14 +258,14 @@ fun SupplierInflowScreen(navController: NavController) {
                     }
                 },
                 confirmButton = {},
-                dismissButton = { TextButton(onClick = { showSupplierPicker = false }) { Text("Annuler") } }
+                dismissButton = { TextButton(onClick = { showSupplierPicker = false }) { Text(stringResource(R.string.action_cancel)) } }
             )
         }
 
         if (showProductPicker) {
             AlertDialog(
                 onDismissRequest = { showProductPicker = false },
-                title = { Text("Sélectionner un produit") },
+                title = { Text(stringResource(R.string.dialog_select_product)) },
                 text = {
                     LazyColumn {
                         items(allStock) { product ->
@@ -279,7 +281,7 @@ fun SupplierInflowScreen(navController: NavController) {
                     }
                 },
                 confirmButton = {},
-                dismissButton = { TextButton(onClick = { showProductPicker = false }) { Text("Annuler") } }
+                dismissButton = { TextButton(onClick = { showProductPicker = false }) { Text(stringResource(R.string.action_cancel)) } }
             )
         }
 
@@ -287,12 +289,12 @@ fun SupplierInflowScreen(navController: NavController) {
             var newName by remember { mutableStateOf("") }
             AlertDialog(
                 onDismissRequest = { showAddSupplierDialog = false },
-                title = { Text("Nouveau Fournisseur") },
+                title = { Text(stringResource(R.string.dialog_new_supplier)) },
                 text = {
                     OutlinedTextField(
                         value = newName,
                         onValueChange = { newName = it },
-                        label = { Text("Nom du fournisseur") },
+                        label = { Text(stringResource(R.string.label_supplier_name)) },
                         modifier = Modifier.fillMaxWidth(),
                         colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                     )
@@ -303,9 +305,9 @@ fun SupplierInflowScreen(navController: NavController) {
                             viewModel.addSupplier(SupplierEntity(name = newName))
                             showAddSupplierDialog = false
                         }
-                    }) { Text("Ajouter") }
+                    }) { Text(stringResource(R.string.action_add)) }
                 },
-                dismissButton = { TextButton(onClick = { showAddSupplierDialog = false }) { Text("Annuler") } }
+                dismissButton = { TextButton(onClick = { showAddSupplierDialog = false }) { Text(stringResource(R.string.action_cancel)) } }
             )
         }
     }

@@ -26,6 +26,8 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @Composable
 fun BarcodeScannerDialog(onDismiss: () -> Unit, onBarcodeScanned: (String) -> Unit, continuous: Boolean = false) {
@@ -33,11 +35,11 @@ fun BarcodeScannerDialog(onDismiss: () -> Unit, onBarcodeScanned: (String) -> Un
         onDismissRequest = onDismiss,
         confirmButton = {
             if (continuous) {
-                TextButton(onClick = onDismiss) { Text("Terminer") }
+                TextButton(onClick = onDismiss) { Text(stringResource(com.reconsiliation.caisse.R.string.action_finish)) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(if (continuous) "Annuler" else "Fermer") } },
-        title = { Text(if (continuous) "Scan en Rafale" else "Scanner un Code-barres") },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (continuous) stringResource(com.reconsiliation.caisse.R.string.action_cancel) else stringResource(com.reconsiliation.caisse.R.string.action_close)) } },
+        title = { Text(if (continuous) stringResource(com.reconsiliation.caisse.R.string.title_continuous_scan) else stringResource(com.reconsiliation.caisse.R.string.title_scan_barcode)) },
         text = {
             Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
                 BarcodeScannerView(onBarcodeScanned, continuous, onDismiss)
@@ -77,9 +79,9 @@ fun BarcodeScannerView(onBarcodeScanned: (String) -> Unit, continuous: Boolean =
     if (!hasCameraPermission) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("Permission caméra requise")
+                Text(stringResource(com.reconsiliation.caisse.R.string.error_camera_permission_required))
                 Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
-                    Text("Autoriser")
+                    Text(stringResource(com.reconsiliation.caisse.R.string.action_authorize))
                 }
             }
         }

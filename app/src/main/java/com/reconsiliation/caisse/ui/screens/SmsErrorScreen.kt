@@ -17,7 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -29,6 +28,8 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.OrangeWarning
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,7 +49,7 @@ fun SmsErrorScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Journal des SMS $operatorName") },
+                title = { Text(stringResource(R.string.title_sms_log, operatorName)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = null)
@@ -65,7 +66,7 @@ fun SmsErrorScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.SmsFailed, contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Aucun SMS non reconnu", color = Color.Gray)
+                Text(stringResource(R.string.error_unrecognized_sms), color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -74,13 +75,13 @@ fun SmsErrorScreen(navController: NavController) {
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 item {
-                    Text("Ces SMS $operatorName n'ont pas pu être traités automatiquement (Format inconnu ou sécurité).", style = MaterialTheme.typography.bodyMedium, color = OrangeWarning)
+                    Text(stringResource(R.string.error_sms_not_processed, operatorName), style = MaterialTheme.typography.bodyMedium, color = OrangeWarning)
                     
                     var clipboardText by remember { mutableStateOf("") }
                     OutlinedTextField(
                         value = clipboardText,
                         onValueChange = { clipboardText = it },
-                        label = { Text("Coller un texte MoMo (WhatsApp/SMS)") },
+                        label = { Text(stringResource(R.string.hint_paste_momo_text)) },
                         modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
                         trailingIcon = {
                             if (clipboardText.isNotBlank()) {
@@ -88,7 +89,7 @@ fun SmsErrorScreen(navController: NavController) {
                                     com.reconsiliation.caisse.sms.SmsReceiver.processSms(context, listOf(clipboardText to "MANUAL_CLIPBOARD"))
                                     clipboardText = ""
                                 }) {
-                                    Icon(Icons.Default.Send, "Analyser")
+                                    Icon(Icons.Default.Send, stringResource(R.string.action_analyze))
                                 }
                             }
                         },
@@ -100,7 +101,7 @@ fun SmsErrorScreen(navController: NavController) {
                     Card(modifier = Modifier.fillMaxWidth()) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                                Text(error.sender ?: "Inconnu", style = MaterialTheme.typography.labelLarge, color = Color.Gray)
+                                Text(error.sender ?: stringResource(R.string.label_unknown), style = MaterialTheme.typography.labelLarge, color = Color.Gray)
                                 Text(FormatUtil.formatDate(error.date), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
@@ -116,7 +117,7 @@ fun SmsErrorScreen(navController: NavController) {
                                 ) {
                                     Icon(Icons.Default.Link, contentDescription = null, modifier = Modifier.size(16.dp))
                                     Spacer(modifier = Modifier.width(4.dp))
-                                    Text("Lier à une vente")
+                                    Text(stringResource(R.string.action_link_sale))
                                 }
                             }
                         }
@@ -128,18 +129,18 @@ fun SmsErrorScreen(navController: NavController) {
         if (showResolveDialog && selectedError != null) {
             AlertDialog(
                 onDismissRequest = { showResolveDialog = false },
-                title = { Text("Sélectionner la vente") },
+                title = { Text(stringResource(R.string.dialog_select_sale)) },
                 text = {
                     if (pendingVentes.isEmpty()) {
-                        Text("Aucune vente MoMo en attente trouvée.")
+                        Text(stringResource(R.string.error_no_pending_momo_sales))
                     } else {
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("Choisissez la vente correspondant à ce SMS :")
+                            Text(stringResource(R.string.dialog_choose_sale_desc))
                             LazyColumn(modifier = Modifier.heightIn(max = 300.dp)) {
                                 items(pendingVentes) { vente ->
                                     ListItem(
                                         headlineContent = { Text(vente.description) },
-                                        supportingContent = { Text("${FormatUtil.formatCurrency(vente.amount)} - ${FormatUtil.formatDate(vente.date)}") },
+                                        supportingContent = { Text(stringResource(R.string.label_amount_date_sep, FormatUtil.formatCurrency(vente.amount), FormatUtil.formatDate(vente.date))) },
                                         modifier = Modifier.fillMaxWidth().clickable {
                                             selectedError?.let { err ->
                                                 viewModel.resolveSmsError(err, vente.id)
@@ -156,7 +157,7 @@ fun SmsErrorScreen(navController: NavController) {
                 },
                 confirmButton = {},
                 dismissButton = {
-                    TextButton(onClick = { showResolveDialog = false }) { Text("Annuler") }
+                    TextButton(onClick = { showResolveDialog = false }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }

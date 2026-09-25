@@ -28,6 +28,8 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.state.InventoryUiState
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -35,6 +37,7 @@ fun SupplierListScreen(navController: NavController) {
     val mainViewModel: MainViewModel = hiltViewModel()
     val viewModel: InventoryViewModel = hiltViewModel()
     val suppliers by viewModel.allSuppliers.collectAsState()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
 
     LaunchedEffect(uiState) {
@@ -51,7 +54,7 @@ fun SupplierListScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Mes Fournisseurs") },
+                title = { Text(stringResource(R.string.title_my_suppliers)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -59,7 +62,7 @@ fun SupplierListScreen(navController: NavController) {
                 },
                 actions = {
                     IconButton(onClick = { showAddDialog = true }) {
-                        Icon(Icons.Default.Add, "Nouveau Fournisseur")
+                        Icon(Icons.Default.Add, stringResource(R.string.dialog_new_supplier))
                     }
                 }
             )
@@ -67,7 +70,7 @@ fun SupplierListScreen(navController: NavController) {
     ) { padding ->
         if (suppliers.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
-                Text("Aucun fournisseur enregistré", color = Color.Gray)
+                Text(stringResource(R.string.no_supplier_registered), color = Color.Gray)
             }
         } else {
             LazyColumn(
@@ -113,7 +116,7 @@ fun SupplierListScreen(navController: NavController) {
                 inventoryViewModel = viewModel,
                 onDismiss = { supplierToReturn = null },
                 onConfirm = { product, qty, price ->
-                    viewModel.adjustStock(product, product.quantity - qty, "Retour Fournisseur: ${supplierToReturn!!.name}", mainViewModel.userRole.value)
+                    viewModel.adjustStock(product, product.quantity - qty, "${context.getString(R.string.action_return_to_supplier)}: ${supplierToReturn!!.name}", mainViewModel.userRole.value)
                     viewModel.updateSupplierDebt(supplierToReturn!!.id, -(qty * price))
                     supplierToReturn = null
                 }
@@ -123,15 +126,15 @@ fun SupplierListScreen(navController: NavController) {
         if (supplierToDelete != null) {
             AlertDialog(
                 onDismissRequest = { supplierToDelete = null },
-                title = { Text("Supprimer le fournisseur ?") },
-                text = { Text("Voulez-vous vraiment supprimer ${supplierToDelete!!.name} ?") },
+                title = { Text(stringResource(R.string.dialog_delete_supplier_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_supplier_desc, supplierToDelete!!.name)) },
                 confirmButton = {
                     Button(onClick = { viewModel.deleteSupplier(supplierToDelete!!); supplierToDelete = null }, colors = ButtonDefaults.buttonColors(containerColor = RedError)) {
-                        Text("Supprimer")
+                        Text(stringResource(R.string.action_delete))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { supplierToDelete = null }) { Text("Annuler") }
+                    TextButton(onClick = { supplierToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -147,17 +150,17 @@ fun SupplierCard(supplier: SupplierEntity, onPay: () -> Unit, onReturn: () -> Un
             Column(modifier = Modifier.weight(1f)) {
                 Text(supplier.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 if (!supplier.phone.isNullOrBlank()) Text(supplier.phone, style = MaterialTheme.typography.bodySmall)
-                Text("Dette: ${FormatUtil.formatCurrency(supplier.totalDebt)}", color = if (supplier.totalDebt > 0) RedError else Color.Gray, fontWeight = FontWeight.Bold)
+                Text(stringResource(R.string.label_debt_colon, FormatUtil.formatCurrency(supplier.totalDebt)), color = if (supplier.totalDebt > 0) RedError else Color.Gray, fontWeight = FontWeight.Bold)
             }
             Row {
                 IconButton(onClick = onReturn) {
-                    Icon(Icons.Default.RemoveShoppingCart, "Retour", tint = RedError)
+                    Icon(Icons.Default.RemoveShoppingCart, stringResource(R.string.action_return_to_supplier), tint = RedError)
                 }
                 IconButton(onClick = onPay) {
-                    Icon(Icons.Default.Payments, "Payer", tint = Primary)
+                    Icon(Icons.Default.Payments, stringResource(R.string.action_pay_supplier), tint = Primary)
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Default.Delete, "Supprimer", tint = Color.Gray)
+                    Icon(Icons.Default.Delete, stringResource(R.string.action_delete), tint = Color.Gray)
                 }
             }
         }
@@ -171,18 +174,18 @@ fun AddSupplierDialog(onDismiss: () -> Unit, onConfirm: (String, String) -> Unit
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Nouveau Fournisseur") },
+        title = { Text(stringResource(R.string.dialog_new_supplier)) },
         text = {
             val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nom") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Téléphone") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.label_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text(stringResource(R.string.label_phone)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             }
         },
         confirmButton = {
-            Button(onClick = { if (name.isNotBlank()) onConfirm(name, phone) }) { Text("Ajouter") }
+            Button(onClick = { if (name.isNotBlank()) onConfirm(name, phone) }) { Text(stringResource(R.string.action_add)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -191,14 +194,14 @@ fun RepaySupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfi
     var amount by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Rembourser ${supplier.name}") },
+        title = { Text(stringResource(R.string.dialog_repay_supplier_title, supplier.name)) },
         text = {
             Column {
-                Text("Dette actuelle: ${FormatUtil.formatCurrency(supplier.totalDebt)}")
+                Text(stringResource(R.string.label_current_debt, FormatUtil.formatCurrency(supplier.totalDebt)))
                 OutlinedTextField(
                     value = amount,
                     onValueChange = { amount = it },
-                    label = { Text("Montant payé") },
+                    label = { Text(stringResource(R.string.label_amount_paid)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
@@ -209,9 +212,9 @@ fun RepaySupplierDialog(supplier: SupplierEntity, onDismiss: () -> Unit, onConfi
             Button(onClick = {
                 val amt = amount.toDoubleOrNull() ?: 0.0
                 if (amt > 0) onConfirm(amt)
-            }) { Text("Confirmer") }
+            }) { Text(stringResource(R.string.action_confirm)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -227,13 +230,13 @@ fun ReturnToSupplierDialog(supplier: SupplierEntity, inventoryViewModel: Invento
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Retour Fournisseur : ${supplier.name}") },
+        title = { Text(stringResource(R.string.dialog_return_supplier_title, supplier.name)) },
         text = {
             val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box {
                     OutlinedTextField(
-                        value = selectedProduct?.productName ?: "Choisir produit...",
+                        value = selectedProduct?.productName ?: stringResource(R.string.label_select_product_hint),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth().clickable { expanded = true },
@@ -250,8 +253,8 @@ fun ReturnToSupplierDialog(supplier: SupplierEntity, inventoryViewModel: Invento
                         }
                     }
                 }
-                OutlinedTextField(value = qty, onValueChange = { qty = it }, label = { Text("Quantité retournée") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text("Prix d'achat unitaire (déduction)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = qty, onValueChange = { qty = it }, label = { Text(stringResource(R.string.label_quantity_returned)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = price, onValueChange = { price = it }, label = { Text(stringResource(R.string.label_purchase_price_deduction)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             }
         },
         confirmButton = {
@@ -259,8 +262,8 @@ fun ReturnToSupplierDialog(supplier: SupplierEntity, inventoryViewModel: Invento
                 val q = qty.toDoubleOrNull() ?: 0.0
                 val p = price.toDoubleOrNull() ?: 0.0
                 if (selectedProduct != null && q > 0) onConfirm(selectedProduct!!, q, p)
-            }) { Text("Valider le Retour") }
+            }) { Text(stringResource(R.string.action_validate_return)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

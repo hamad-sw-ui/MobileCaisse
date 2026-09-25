@@ -25,6 +25,8 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.state.InventoryUiState
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -58,7 +60,7 @@ fun AuditScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Audit d'Inventaire") },
+                title = { Text(stringResource(R.string.title_audit_inventory)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -66,7 +68,7 @@ fun AuditScreen(navController: NavController) {
                 },
                 actions = {
                     IconButton(onClick = { showConfirmDialog = true }) {
-                        Icon(Icons.Default.Save, contentDescription = "Enregistrer l'audit")
+                        Icon(Icons.Default.Save, contentDescription = stringResource(R.string.action_save_audit))
                     }
                 }
             )
@@ -74,7 +76,7 @@ fun AuditScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             Text(
-                "Saisissez les quantités réelles comptées physiquement.",
+                stringResource(R.string.audit_instruction),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(16.dp)
             )
@@ -99,15 +101,15 @@ fun AuditScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(16.dp),
                 colors = ButtonDefaults.buttonColors(containerColor = GreenSuccess)
             ) {
-                Text("Finaliser l'Audit")
+                Text(stringResource(R.string.action_finish_audit))
             }
         }
 
         if (showConfirmDialog) {
             AlertDialog(
                 onDismissRequest = { showConfirmDialog = false },
-                title = { Text("Confirmer l'Audit") },
-                text = { Text("Le stock sera ajusté selon les quantités saisies. Des dépenses de pertes seront créées si nécessaire.") },
+                title = { Text(stringResource(R.string.dialog_confirm_audit_title)) },
+                text = { Text(stringResource(R.string.dialog_confirm_audit_desc)) },
                 confirmButton = {
                     TextButton(onClick = {
                         val auditItems = stock.mapIndexed { index, product ->
@@ -125,11 +127,11 @@ fun AuditScreen(navController: NavController) {
                         viewModel.performAudit(null, auditItems)
                         showConfirmDialog = false
                     }, enabled = uiState !is InventoryUiState.Processing) {
-                        Text("Confirmer")
+                        Text(stringResource(R.string.action_confirm))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showConfirmDialog = false }) { Text("Annuler") }
+                    TextButton(onClick = { showConfirmDialog = false }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -149,9 +151,16 @@ fun AuditItemRow(productName: String, systemQty: Double, physicalQty: String, on
         ) {
             Column(modifier = Modifier.weight(1f)) {
                 Text(productName, fontWeight = FontWeight.Bold)
-                Text("Système: $systemQty", style = MaterialTheme.typography.bodySmall)
+                Text(
+                    stringResource(
+                        R.string.label_theoretical_actual,
+                        systemQty.toString(),
+                        physicalQty.ifBlank { "0" }
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
                 if (diff != 0.0) {
-                    Text("Écart: ${if (diff > 0) "+" else ""}$diff", color = diffColor, style = MaterialTheme.typography.labelSmall)
+                    Text(stringResource(R.string.label_diff) + " ${if (diff > 0) "+" else ""}$diff", color = diffColor, style = MaterialTheme.typography.labelSmall)
                 }
             }
             
@@ -159,7 +168,7 @@ fun AuditItemRow(productName: String, systemQty: Double, physicalQty: String, on
                 value = physicalQty,
                 onValueChange = onQtyChange,
                 modifier = Modifier.width(100.dp),
-                label = { Text("Réel") },
+                label = { Text(stringResource(R.string.label_actual)) },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 singleLine = true,
                 colors = CaisseTextFieldDefaults.outlinedTextFieldColors()

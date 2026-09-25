@@ -19,6 +19,8 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.AddCategoryDialog
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.CategoryViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -32,7 +34,7 @@ fun CategoryManagementScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Gestion des Catégories") },
+                title = { Text(stringResource(R.string.title_category_mgmt)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -48,13 +50,13 @@ fun CategoryManagementScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.padding(padding).fillMaxSize()) {
             TabRow(selectedTabIndex = if (selectedType == "PRODUCT") 0 else 1) {
-                Tab(selected = selectedType == "PRODUCT", onClick = { selectedType = "PRODUCT" }, text = { Text("Produits") })
-                Tab(selected = selectedType == "EXPENSE", onClick = { selectedType = "EXPENSE" }, text = { Text("Dépenses") })
+                Tab(selected = selectedType == "PRODUCT", onClick = { selectedType = "PRODUCT" }, text = { Text(stringResource(R.string.tab_products)) })
+                Tab(selected = selectedType == "EXPENSE", onClick = { selectedType = "EXPENSE" }, text = { Text(stringResource(R.string.tab_expenses)) })
             }
 
             if (categories.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucune catégorie enregistrée", color = Color.Gray)
+                    Text(stringResource(R.string.no_category_registered), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {

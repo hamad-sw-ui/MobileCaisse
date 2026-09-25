@@ -19,6 +19,8 @@ import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -42,7 +44,7 @@ fun SetupScreen(navController: NavController) {
     }
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Configuration Boutique") }) }
+        topBar = { TopAppBar(title = { Text(stringResource(R.string.title_setup_boutique)) }) }
     ) { padding ->
         Column(
             modifier = Modifier
@@ -64,23 +66,23 @@ fun SetupScreen(navController: NavController) {
                 }
             }
 
-            Text("Informations Générales", style = MaterialTheme.typography.titleMedium, color = Primary)
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nom de la boutique") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text("Nom du propriétaire") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text("Numéro de téléphone principal") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = textFieldColors)
+            Text(stringResource(R.string.setup_general_info), style = MaterialTheme.typography.titleMedium, color = Primary)
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.setup_shop_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text(stringResource(R.string.setup_owner_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text(stringResource(R.string.setup_main_phone)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = textFieldColors)
             
-            Text("Paiements Mobiles", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.setup_mobile_payments), style = MaterialTheme.typography.titleMedium, color = Primary)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text("MTN/OM") })
-                FilterChip(selected = operator == "ORANGE", onClick = { operator = "ORANGE" }, label = { Text("Orange Money") })
+                FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text(stringResource(R.string.label_operator_mtn)) })
+                FilterChip(selected = operator == "ORANGE", onClick = { operator = "ORANGE" }, label = { Text(stringResource(R.string.label_operator_orange)) })
             }
-            OutlinedTextField(value = momoNumber, onValueChange = { momoNumber = it }, label = { Text("Numéro de réception ($operator)") }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = textFieldColors)
+            OutlinedTextField(value = momoNumber, onValueChange = { momoNumber = it }, label = { Text(stringResource(R.string.setup_momo_reception_format, operator)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = textFieldColors)
             
-            Text("Sécurité", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.setup_security), style = MaterialTheme.typography.titleMedium, color = Primary)
             OutlinedTextField(
                 value = pin,
                 onValueChange = { if (it.length <= 4) pin = it },
-                label = { Text("Code PIN (4 chiffres)") },
+                label = { Text(stringResource(R.string.setup_pin_hint)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                 visualTransformation = PasswordVisualTransformation(),
@@ -89,7 +91,7 @@ fun SetupScreen(navController: NavController) {
 
             Spacer(modifier = Modifier.height(24.dp))
             BigButton(
-                text = "Finaliser la configuration",
+                text = stringResource(R.string.setup_action_finish),
                 onClick = {
                     if (name.isNotBlank() && pin.length == 4) {
                         setupError = null
@@ -108,8 +110,8 @@ fun SetupScreen(navController: NavController) {
         if (showRestoreDialog) {
             AlertDialog(
                 onDismissRequest = { showRestoreDialog = false },
-                title = { Text("Anciennes données trouvées") },
-                text = { Text("Une sauvegarde locale de votre boutique a été détectée. Voulez-vous restaurer vos produits, ventes et dettes ?") },
+                title = { Text(stringResource(R.string.dialog_restore_title)) },
+                text = { Text(stringResource(R.string.dialog_restore_desc)) },
                 confirmButton = {
                     TextButton(onClick = {
                         showRestoreDialog = false
@@ -117,13 +119,13 @@ fun SetupScreen(navController: NavController) {
                             if (restored) {
                                 navController.navigate(Screen.Splash.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
                             } else {
-                                setupError = "La restauration a échoué."
+                                setupError = context.getString(R.string.error_restoration_failed)
                             }
                         }
-                    }) { Text("Restaurer") }
+                    }) { Text(stringResource(R.string.action_restore)) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showRestoreDialog = false }) { Text("Ignorer") }
+                    TextButton(onClick = { showRestoreDialog = false }) { Text(stringResource(R.string.action_ignore)) }
                 }
             )
         }

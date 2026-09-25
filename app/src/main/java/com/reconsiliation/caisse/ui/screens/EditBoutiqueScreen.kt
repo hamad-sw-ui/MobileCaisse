@@ -22,6 +22,8 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,6 +47,7 @@ fun EditBoutiqueScreen(navController: NavController) {
     var receiptFooter by remember { mutableStateOf("") }
     
     val pairedPrinters = remember { printerViewModel.getPairedPrinters() }
+    val context = androidx.compose.ui.platform.LocalContext.current
     var showPrinterDropdown by remember { mutableStateOf(false) }
 
     LaunchedEffect(boutique) {
@@ -67,7 +70,7 @@ fun EditBoutiqueScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Modifier la Boutique") },
+                title = { Text(stringResource(R.string.title_edit_boutique)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -87,37 +90,37 @@ fun EditBoutiqueScreen(navController: NavController) {
         ) {
             val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
 
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nom de la boutique") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text("Nom du propriétaire") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            OutlinedTextField(value = currency, onValueChange = { currency = it }, label = { Text("Devise (ex: FCFA, $, €)") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.setup_shop_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text(stringResource(R.string.setup_owner_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = currency, onValueChange = { currency = it }, label = { Text(stringResource(R.string.label_currency_hint)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             
-            Text("Opérateur MoMo principal", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.label_main_momo_operator), style = MaterialTheme.typography.titleMedium, color = Primary)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text("MTN/OM") })
-                FilterChip(selected = operator == "ORANGE", onClick = { operator = "ORANGE" }, label = { Text("Orange Money") })
+                FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text(stringResource(R.string.label_operator_mtn)) })
+                FilterChip(selected = operator == "ORANGE", onClick = { operator = "ORANGE" }, label = { Text(stringResource(R.string.label_operator_orange)) })
             }
             OutlinedTextField(
                 value = momoNumber,
                 onValueChange = { momoNumber = it },
-                label = { Text("Numéro MoMo de réception") },
+                label = { Text(stringResource(R.string.label_momo_reception_number)) },
                 modifier = Modifier.fillMaxWidth(),
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 colors = textFieldColors
             )
 
             HorizontalDivider()
-            Text("Matériel & Stock", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.settings_hardware_stock), style = MaterialTheme.typography.titleMedium, color = Primary)
             
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(
                     value = printerAddress,
                     onValueChange = { printerAddress = it },
-                    label = { Text("Adresse de l'imprimante (MAC)") },
-                    placeholder = { Text("Sélectionnez ou saisissez") },
+                    label = { Text(stringResource(R.string.label_printer_address)) },
+                    placeholder = { Text(stringResource(R.string.label_select_or_enter)) },
                     modifier = Modifier.fillMaxWidth(),
                     trailingIcon = {
                         IconButton(onClick = { showPrinterDropdown = true }) {
-                            Icon(Icons.Default.Print, contentDescription = "Liste")
+                            Icon(Icons.Default.Print, contentDescription = stringResource(R.string.action_list))
                         }
                     },
                     colors = textFieldColors
@@ -129,7 +132,7 @@ fun EditBoutiqueScreen(navController: NavController) {
                 ) {
                     if (pairedPrinters.isEmpty()) {
                         DropdownMenuItem(
-                            text = { Text("Aucune imprimante Bluetooth associée") },
+                            text = { Text(stringResource(R.string.no_bluetooth_printer)) },
                             onClick = { showPrinterDropdown = false }
                         )
                     } else {
@@ -138,7 +141,11 @@ fun EditBoutiqueScreen(navController: NavController) {
                                 text = {
                                     Column {
                                         @SuppressLint("MissingPermission")
-                                        val deviceName = try { device.name ?: "Inconnu" } catch (e: SecurityException) { "Inconnu" }
+                                        val deviceName = try {
+                                            device.name ?: context.getString(R.string.label_unknown)
+                                        } catch (e: SecurityException) {
+                                            context.getString(R.string.label_unknown)
+                                        }
                                         Text(deviceName)
                                         Text(device.address, style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                                     }
@@ -160,28 +167,28 @@ fun EditBoutiqueScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
                 ) {
-                    Text("Tester l'impression")
+                    Text(stringResource(R.string.action_test_print))
                 }
             }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Checkbox(checked = allowNegativeStock, onCheckedChange = { allowNegativeStock = it })
-                Text("Autoriser les ventes en stock négatif")
+                Text(stringResource(R.string.option_allow_negative_stock))
             }
 
             HorizontalDivider()
-            Text("Paramètres de Taxe", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.settings_tax_config), style = MaterialTheme.typography.titleMedium, color = Primary)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Switch(checked = isTaxEnabled, onCheckedChange = { isTaxEnabled = it })
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Activer les taxes (TVA/AIR)")
+                Text(stringResource(R.string.option_enable_taxes))
             }
             if (isTaxEnabled) {
-                OutlinedTextField(value = taxName, onValueChange = { taxName = it }, label = { Text("Nom de la Taxe") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+                OutlinedTextField(value = taxName, onValueChange = { taxName = it }, label = { Text(stringResource(R.string.label_tax_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
                 OutlinedTextField(
                     value = taxRate,
                     onValueChange = { taxRate = it },
-                    label = { Text("Taux (%)") },
+                    label = { Text(stringResource(R.string.label_tax_rate)) },
                     modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     colors = textFieldColors
@@ -189,14 +196,14 @@ fun EditBoutiqueScreen(navController: NavController) {
             }
 
             HorizontalDivider()
-            Text("Personnalisation Reçus", style = MaterialTheme.typography.titleMedium, color = Primary)
-            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text("Adresse de la boutique") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            OutlinedTextField(value = receiptFooter, onValueChange = { receiptFooter = it }, label = { Text("Message de fin (ex: Merci !)") }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            Text(stringResource(R.string.settings_receipt_customization), style = MaterialTheme.typography.titleMedium, color = Primary)
+            OutlinedTextField(value = address, onValueChange = { address = it }, label = { Text(stringResource(R.string.label_shop_address)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
+            OutlinedTextField(value = receiptFooter, onValueChange = { receiptFooter = it }, label = { Text(stringResource(R.string.label_receipt_footer)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
 
             Spacer(modifier = Modifier.weight(1f))
             
             BigButton(
-                text = "Enregistrer les modifications",
+                text = stringResource(R.string.action_save_changes),
                 onClick = {
                     boutique?.let {
                         viewModel.updateBoutique(it.copy(

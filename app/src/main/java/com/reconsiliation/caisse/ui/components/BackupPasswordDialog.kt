@@ -31,6 +31,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 /**
  * Dialogue de saisie du mot de passe de sauvegarde, partagé par les trois
@@ -69,24 +71,27 @@ fun BackupPasswordDialog(
         onDismissRequest = onDismiss,
         icon = { Icon(Icons.Default.Lock, contentDescription = null) },
         title = {
-            Text(if (isExport) "Protéger la sauvegarde" else "Mot de passe de la sauvegarde")
+            Text(
+                stringResource(
+                    if (isExport) R.string.dialog_protect_backup
+                    else R.string.dialog_backup_password_title
+                )
+            )
         },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    text = subtitle ?: if (isExport) {
-                        "Choisissez un mot de passe. Il sera demandé pour restaurer " +
-                            "cette sauvegarde."
-                    } else {
-                        "Saisissez le mot de passe utilisé lors de l'export."
-                    },
+                    text = subtitle ?: stringResource(
+                        if (isExport) R.string.dialog_backup_password_export_desc
+                        else R.string.dialog_backup_password_import_desc
+                    ),
                     style = MaterialTheme.typography.bodyMedium
                 )
 
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Mot de passe") },
+                    label = { Text(stringResource(R.string.label_password)) },
                     singleLine = true,
                     visualTransformation = if (visible) {
                         VisualTransformation.None
@@ -102,11 +107,10 @@ fun BackupPasswordDialog(
                                 } else {
                                     Icons.Default.Visibility
                                 },
-                                contentDescription = if (visible) {
-                                    "Masquer le mot de passe"
-                                } else {
-                                    "Afficher le mot de passe"
-                                }
+                                contentDescription = stringResource(
+                                    if (visible) R.string.action_hide_password
+                                    else R.string.action_show_password
+                                )
                             )
                         }
                     },
@@ -114,7 +118,7 @@ fun BackupPasswordDialog(
                     supportingText = if (isExport) {
                         {
                             Text(
-                                "8 caractères minimum, avec majuscule, minuscule et chiffre",
+                                stringResource(R.string.password_policy_hint),
                                 style = MaterialTheme.typography.bodySmall
                             )
                         }
@@ -144,8 +148,7 @@ fun BackupPasswordDialog(
                                 tint = MaterialTheme.colorScheme.onErrorContainer
                             )
                             Text(
-                                "Ce mot de passe ne peut pas être récupéré. " +
-                                    "Sans lui, la sauvegarde sera définitivement illisible.",
+                                stringResource(R.string.backup_password_warning),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onErrorContainer
                             )
@@ -159,11 +162,11 @@ fun BackupPasswordDialog(
                 onClick = { onConfirm(password) },
                 enabled = canConfirm
             ) {
-                Text(if (isExport) "Exporter" else "Restaurer")
+                Text(stringResource(if (isExport) R.string.action_export else R.string.action_restore))
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }

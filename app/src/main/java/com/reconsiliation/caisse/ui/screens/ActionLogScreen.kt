@@ -16,6 +16,8 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun ActionLogScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Journal d'Audit") },
+                title = { Text(stringResource(R.string.title_audit_log)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -47,14 +49,14 @@ fun ActionLogScreen(navController: NavController) {
                 modifier = Modifier.fillMaxWidth().padding(8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                FilterChip(selected = filterLevel == "ALL", onClick = { filterLevel = "ALL" }, label = { Text("Tout") })
-                FilterChip(selected = filterLevel == "INFO", onClick = { filterLevel = "INFO" }, label = { Text("Infos") })
-                FilterChip(selected = filterLevel == "CRITICAL", onClick = { filterLevel = "CRITICAL" }, label = { Text("Alertes") })
+                FilterChip(selected = filterLevel == "ALL", onClick = { filterLevel = "ALL" }, label = { Text(stringResource(R.string.filter_all)) })
+                FilterChip(selected = filterLevel == "INFO", onClick = { filterLevel = "INFO" }, label = { Text(stringResource(R.string.filter_infos)) })
+                FilterChip(selected = filterLevel == "CRITICAL", onClick = { filterLevel = "CRITICAL" }, label = { Text(stringResource(R.string.filter_alerts)) })
             }
 
             if (filteredLogs.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = androidx.compose.ui.Alignment.Center) {
-                    Text("Aucun log pour ce filtre", color = Color.Gray)
+                    Text(stringResource(R.string.error_no_log_found), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {

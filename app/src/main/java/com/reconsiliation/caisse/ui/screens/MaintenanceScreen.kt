@@ -18,6 +18,8 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -33,7 +35,7 @@ fun MaintenanceScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Maintenance & Optimisation") },
+                title = { Text(stringResource(com.reconsiliation.caisse.R.string.title_maintenance)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -58,34 +60,34 @@ fun MaintenanceScreen(navController: NavController) {
                     Icon(Icons.Default.Info, null, tint = Primary)
                     Spacer(modifier = Modifier.width(16.dp))
                     Text(
-                        "L'accumulation de données sur plusieurs années peut ralentir l'application. Utilisez ces outils pour garder votre caisse rapide.",
+                        stringResource(com.reconsiliation.caisse.R.string.maintenance_info_desc),
                         style = MaterialTheme.typography.bodySmall
                     )
                 }
             }
 
-            Text("Nettoyage des données", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(com.reconsiliation.caisse.R.string.label_data_cleanup), style = MaterialTheme.typography.titleMedium, color = Primary)
             
             ListItem(
-                headlineContent = { Text("Purge des archives") },
-                supportingContent = { Text("Supprime les anciennes ventes clôturées et les logs système pour libérer de l'espace.") },
+                headlineContent = { Text(stringResource(com.reconsiliation.caisse.R.string.label_purge_archives)) },
+                supportingContent = { Text(stringResource(com.reconsiliation.caisse.R.string.purge_archives_desc)) },
                 leadingContent = { Icon(Icons.Default.DeleteSweep, null, tint = RedError) },
                 trailingContent = {
                     Button(
                         onClick = { showPurgeDialog = true },
                         colors = ButtonDefaults.buttonColors(containerColor = RedError)
                     ) {
-                        Text("Purger")
+                        Text(stringResource(com.reconsiliation.caisse.R.string.action_purge))
                     }
                 }
             )
 
             HorizontalDivider()
 
-            Text("Statistiques de stockage", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(com.reconsiliation.caisse.R.string.label_storage_stats), style = MaterialTheme.typography.titleMedium, color = Primary)
             ListItem(
-                headlineContent = { Text("Base de données") },
-                supportingContent = { Text("Stockage local actif") },
+                headlineContent = { Text(stringResource(com.reconsiliation.caisse.R.string.label_database)) },
+                supportingContent = { Text(stringResource(com.reconsiliation.caisse.R.string.label_active_local_storage)) },
                 leadingContent = { Icon(Icons.Default.Storage, null) }
             )
         }
@@ -94,11 +96,11 @@ fun MaintenanceScreen(navController: NavController) {
             val userRole by mainViewModel.userRole.collectAsState()
             AlertDialog(
                 onDismissRequest = { showPurgeDialog = false },
-                title = { Text("Confirmer la purge") },
+                title = { Text(stringResource(com.reconsiliation.caisse.R.string.dialog_confirm_purge_title)) },
                 text = {
                     Column {
-                        Text("Supprimer les données de plus de ${purgeMonths.toInt()} mois ?")
-                        Text("Cette action est irréversible. Assurez-vous d'avoir fait un export de sauvegarde avant.", style = MaterialTheme.typography.bodySmall, color = RedError)
+                        Text(stringResource(com.reconsiliation.caisse.R.string.dialog_confirm_purge_desc, purgeMonths.toInt()))
+                        Text(stringResource(com.reconsiliation.caisse.R.string.dialog_confirm_purge_warning), style = MaterialTheme.typography.bodySmall, color = RedError)
                         Spacer(modifier = Modifier.height(16.dp))
                         Slider(
                             value = purgeMonths,
@@ -106,24 +108,25 @@ fun MaintenanceScreen(navController: NavController) {
                             valueRange = 1f..36f,
                             steps = 35
                         )
-                        Text("${purgeMonths.toInt()} mois", modifier = Modifier.align(Alignment.CenterHorizontally))
+                        Text(stringResource(com.reconsiliation.caisse.R.string.label_count_plural, purgeMonths.toInt(), stringResource(com.reconsiliation.caisse.R.string.filter_this_month).lowercase()), modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
                 },
                 confirmButton = {
+                    val successMsg = stringResource(com.reconsiliation.caisse.R.string.purge_success)
                     TextButton(
                         onClick = {
                             scope.launch {
                                 val count = viewModel.purgeOldData(purgeMonths.toInt(), userRole)
-                                snackbarHostState.showSnackbar("$count entrées supprimées avec succès.")
+                                snackbarHostState.showSnackbar(successMsg.format(count))
                                 showPurgeDialog = false
                             }
                         }
                     ) {
-                        Text("Confirmer la Purge", color = RedError)
+                        Text(stringResource(com.reconsiliation.caisse.R.string.action_confirm_purge), color = RedError)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showPurgeDialog = false }) { Text("Annuler") }
+                    TextButton(onClick = { showPurgeDialog = false }) { Text(stringResource(com.reconsiliation.caisse.R.string.action_cancel)) }
                 }
             )
         }

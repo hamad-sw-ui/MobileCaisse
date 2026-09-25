@@ -24,6 +24,8 @@ import com.reconsiliation.caisse.utils.HapticHelper
 
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @Composable
 fun PinScreen(navController: NavController) {
@@ -39,9 +41,9 @@ fun PinScreen(navController: NavController) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text("Code PIN requis", fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Primary)
+        Text(stringResource(R.string.pin_required), fontSize = 24.sp, fontWeight = FontWeight.Bold, color = Primary)
         Spacer(modifier = Modifier.height(8.dp))
-        Text("Entrez votre code à 4 chiffres", color = Color.Gray)
+        Text(stringResource(R.string.pin_enter_desc), color = Color.Gray)
         
         Spacer(modifier = Modifier.height(32.dp))
         
@@ -59,7 +61,7 @@ fun PinScreen(navController: NavController) {
         }
 
         if (error) {
-            Text("Code PIN incorrect", color = RedError, modifier = Modifier.padding(top = 8.dp))
+            Text(stringResource(R.string.pin_invalid), color = RedError, modifier = Modifier.padding(top = 8.dp))
         }
 
         Spacer(modifier = Modifier.height(48.dp))

@@ -87,12 +87,12 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     if (showSessionDialog) {
         AlertDialog(
             onDismissRequest = { },
-            title = { Text("Ouverture de Session") },
+            title = { Text(stringResource(R.string.session_opening)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text("Veuillez ouvrir une session pour commencer à vendre.")
-                    OutlinedTextField(value = sellerName, onValueChange = { sellerName = it }, label = { Text("Nom du vendeur") }, modifier = Modifier.fillMaxWidth())
-                    OutlinedTextField(value = openingBalance, onValueChange = { openingBalance = it }, label = { Text("Fond de caisse initial") }, modifier = Modifier.fillMaxWidth())
+                    Text(stringResource(R.string.session_opening_desc))
+                    OutlinedTextField(value = sellerName, onValueChange = { sellerName = it }, label = { Text(stringResource(R.string.label_seller_name)) }, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = openingBalance, onValueChange = { openingBalance = it }, label = { Text(stringResource(R.string.label_initial_balance)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
                 }
             },
             confirmButton = {
@@ -101,7 +101,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                         sessionViewModel.openSession(sellerName, openingBalance.toDoubleOrNull() ?: 0.0, viewModel.staffId.value)
                         showSessionDialog = false
                     }
-                }) { Text("Ouvrir") }
+                }) { Text(stringResource(R.string.action_open)) }
             }
         )
     }
@@ -112,11 +112,11 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 title = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(boutique?.name ?: stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        activeSession?.let { Text("Vendeur: ${it.sellerName}", style = MaterialTheme.typography.labelSmall) }
+                        activeSession?.let { Text(stringResource(R.string.label_seller_colon, it.sellerName), style = MaterialTheme.typography.labelSmall) }
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.catchUpSms(context.applicationContext as Application) }) {
+                    IconButton(onClick = { viewModel.catchUpSms(context.applicationContext as android.app.Application) }) {
                         Icon(Icons.Default.Sync, null)
                     }
                     IconButton(onClick = {
@@ -138,9 +138,9 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             if (daysLeft in 0..5 || lowStock.isNotEmpty() || smsErrors.isNotEmpty()) {
                 Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp), tonalElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        if (daysLeft in 0..5) AlertItem(icon = Icons.Default.Timer, text = "Abonnement", subtext = "Expire dans $daysLeft jour(s)", color = com.reconsiliation.caisse.ui.theme.OrangeWarning, onClick = { navController.navigate(Screen.Support.route) })
-                        if (smsErrors.isNotEmpty()) AlertItem(icon = Icons.Default.SmsFailed, text = "SMS non réconciliés", subtext = "${smsErrors.size} messages à traiter", onClick = { navController.navigate(Screen.SmsErrors.route) })
-                        if (lowStock.isNotEmpty()) AlertItem(icon = Icons.Default.Inventory, text = "Stock Bas", subtext = "${lowStock.size} produits à commander", onClick = { navController.navigate(Screen.Stock.route) })
+                        if (daysLeft in 0..5) AlertItem(icon = Icons.Default.Timer, text = stringResource(R.string.label_subscription), subtext = stringResource(R.string.subscription_expires_in, daysLeft), color = com.reconsiliation.caisse.ui.theme.OrangeWarning, onClick = { navController.navigate(Screen.Support.route) })
+                        if (smsErrors.isNotEmpty()) AlertItem(icon = Icons.Default.SmsFailed, text = stringResource(R.string.label_unreconciled_sms), subtext = stringResource(R.string.sms_to_process, smsErrors.size), onClick = { navController.navigate(Screen.SmsErrors.route) })
+                        if (lowStock.isNotEmpty()) AlertItem(icon = Icons.Default.Inventory, text = stringResource(R.string.stock_low), subtext = stringResource(R.string.products_to_order, lowStock.size), onClick = { navController.navigate(Screen.Stock.route) })
                     }
                 }
             }
@@ -152,7 +152,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                             Icon(Icons.Default.AccountBalanceWallet, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.padding(8.dp))
                         }
                         Spacer(modifier = Modifier.width(12.dp))
-                        Text("Chiffre d'Affaires", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.label_revenue), style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.weight(1f))
                         IconButton(onClick = { navController.navigate(Screen.Reports.route) }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, null, modifier = Modifier.size(16.dp))
@@ -161,23 +161,23 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                     Text(FormatUtil.formatCurrency(totalRevenue, currency), style = MaterialTheme.typography.headlineLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.ExtraBold)
                     Spacer(modifier = Modifier.height(16.dp))
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        SummaryMiniItem(label = "Bénéfice Net", value = if (isStaffRestricted && userRole == "STAFF") "****" else FormatUtil.formatCurrency(netProfit, currency), color = GreenSuccess)
-                        SummaryMiniItem(label = "Sessions", value = if (activeSession != null) "Active" else "Close", color = MaterialTheme.colorScheme.secondary)
+                        SummaryMiniItem(label = stringResource(R.string.label_net_profit), value = if (isStaffRestricted && userRole == "STAFF") "****" else FormatUtil.formatCurrency(netProfit, currency), color = GreenSuccess)
+                        SummaryMiniItem(label = stringResource(R.string.label_sessions), value = if (activeSession != null) stringResource(R.string.status_active) else stringResource(R.string.status_closed), color = MaterialTheme.colorScheme.secondary)
                     }
                 }
             }
 
-            BigButton(text = "NOUVELLE VENTE", onClick = { viewModel.recordActivity(); navController.navigate(Screen.NewSale.route) }, containerColor = MaterialTheme.colorScheme.secondary, modifier = Modifier.height(72.dp))
+            BigButton(text = stringResource(R.string.action_new_sale), onClick = { viewModel.recordActivity(); navController.navigate(Screen.NewSale.route) }, containerColor = MaterialTheme.colorScheme.secondary, modifier = Modifier.height(72.dp))
 
-            Text("Gestion & Outils", style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
+            Text(stringResource(R.string.management_tools), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ModernQuickActionCard(title = "Historique", icon = Icons.Default.History, onClick = { viewModel.recordActivity(); navController.navigate(Screen.History.route) }, modifier = Modifier.weight(1f))
-                    ModernQuickActionCard(title = "Stock", icon = Icons.Default.Inventory, onClick = { onProtectedClick(Screen.Stock.route) }, modifier = Modifier.weight(1f))
+                    ModernQuickActionCard(title = stringResource(R.string.title_history), icon = Icons.Default.History, onClick = { viewModel.recordActivity(); navController.navigate(Screen.History.route) }, modifier = Modifier.weight(1f))
+                    ModernQuickActionCard(title = stringResource(R.string.title_stock), icon = Icons.Default.Inventory, onClick = { onProtectedClick(Screen.Stock.route) }, modifier = Modifier.weight(1f))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    ModernQuickActionCard(title = "Audit", icon = Icons.Default.Checklist, onClick = { onProtectedClick(Screen.Audit.route) }, modifier = Modifier.weight(1f))
-                    ModernQuickActionCard(title = "Fournisseurs", icon = Icons.Default.Business, onClick = { onProtectedClick(Screen.Suppliers.route) }, modifier = Modifier.weight(1f))
+                    ModernQuickActionCard(title = stringResource(R.string.title_audit), icon = Icons.Default.Checklist, onClick = { onProtectedClick(Screen.Audit.route) }, modifier = Modifier.weight(1f))
+                    ModernQuickActionCard(title = stringResource(R.string.title_suppliers), icon = Icons.Default.Business, onClick = { onProtectedClick(Screen.Suppliers.route) }, modifier = Modifier.weight(1f))
                 }
             }
             Spacer(modifier = Modifier.height(32.dp))

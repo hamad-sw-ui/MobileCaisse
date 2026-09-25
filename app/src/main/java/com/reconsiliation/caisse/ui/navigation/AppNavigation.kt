@@ -31,10 +31,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
+import androidx.annotation.StringRes
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 sealed class Screen(
-    val route: String, 
-    val title: String? = null, 
+    val route: String,
+    @StringRes val titleRes: Int? = null,
     val icon: androidx.compose.ui.graphics.vector.ImageVector? = null,
     val isManagerOnly: Boolean = false
 ) {
@@ -42,19 +45,19 @@ sealed class Screen(
     data object Onboarding : Screen("onboarding")
     data object Setup : Screen("setup")
     data object Pin : Screen("pin")
-    data object Home : Screen("home", "Accueil", Icons.Default.Home)
+    data object Home : Screen("home", R.string.title_home, Icons.Default.Home)
     data object NewSale : Screen("new_sale")
-    data object History : Screen("history", "Ventes", Icons.Default.History)
-    data object Stock : Screen("stock?barcode={barcode}", "Stock", Icons.Default.Inventory) {
+    data object History : Screen("history", R.string.nav_sales, Icons.Default.History)
+    data object Stock : Screen("stock?barcode={barcode}", R.string.nav_stock, Icons.Default.Inventory) {
         fun createRoute(barcode: String? = null) = if (barcode != null) "stock?barcode=$barcode" else "stock"
     }
     data object SmsErrors : Screen("sms_errors")
     data object Closure : Screen("closure")
     data object Debts : Screen("debts")
     data object Expenses : Screen("expenses")
-    data object Settings : Screen("settings", "Paramètres", Icons.Default.Settings, isManagerOnly = true)
+    data object Settings : Screen("settings", R.string.title_settings, Icons.Default.Settings, isManagerOnly = true)
     data object Support : Screen("support")
-    data object Reports : Screen("reports", "Rapports", Icons.Default.BarChart, isManagerOnly = true)
+    data object Reports : Screen("reports", R.string.nav_reports, Icons.Default.BarChart, isManagerOnly = true)
     data object EditBoutique : Screen("edit_boutique", isManagerOnly = true)
     data object PrintSettings : Screen("print_settings")
     data object RestorationWizard : Screen("restoration_wizard", isManagerOnly = true)
@@ -132,7 +135,7 @@ fun AppNavigation() {
                     items.forEach { screen ->
                         NavigationBarItem(
                             icon = { Icon(screen.icon!!, contentDescription = null) },
-                            label = { Text(screen.title!!) },
+                            label = { Text(stringResource(screen.titleRes!!)) },
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
                                 viewModel.recordActivity()
@@ -242,7 +245,7 @@ fun AppNavigation() {
                             modifier = Modifier.padding(24.dp),
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
-                            Text("Code PIN requis", style = MaterialTheme.typography.titleLarge)
+                            Text(stringResource(R.string.pin_required), style = MaterialTheme.typography.titleLarge)
                             Spacer(modifier = Modifier.height(16.dp))
                             
                             var isError by remember { mutableStateOf(false) }
@@ -299,7 +302,7 @@ fun AppNavigation() {
                                 viewModel.dismissPinDialog()
                                 pinInput = ""
                             }) {
-                                Text("Annuler")
+                                Text(stringResource(R.string.action_cancel))
                             }
                         }
                     }

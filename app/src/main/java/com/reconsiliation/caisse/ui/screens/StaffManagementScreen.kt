@@ -33,6 +33,8 @@ import com.reconsiliation.caisse.data.local.entity.StaffEntity
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.StaffViewModel
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 private const val ROLE_STAFF = "STAFF"
 private const val ROLE_MANAGER = "MANAGER"
@@ -52,10 +54,10 @@ fun StaffManagementScreen(navController: NavController) {
         snackbarHost = { SnackbarHost(snackbar) },
         topBar = {
             TopAppBar(
-                title = { Text("Gestion du personnel") },
+                title = { Text(stringResource(R.string.title_staff_mgmt)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Retour")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.action_back))
                     }
                 }
             )
@@ -64,7 +66,7 @@ fun StaffManagementScreen(navController: NavController) {
             ExtendedFloatingActionButton(
                 onClick = { editing = null; showForm = true },
                 icon = { Icon(Icons.Default.Add, null) },
-                text = { Text("Ajouter") },
+                text = { Text(stringResource(R.string.action_add)) },
                 containerColor = Primary
             )
         }
@@ -77,14 +79,12 @@ fun StaffManagementScreen(navController: NavController) {
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        "Aucun employé enregistré",
+                        stringResource(R.string.no_staff_registered),
                         style = MaterialTheme.typography.titleMedium
                     )
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "Ajoutez vos vendeurs pour qu'ils accèdent à la caisse " +
-                            "avec leur propre code PIN. Chaque vente sera associée " +
-                            "à son auteur.",
+                        stringResource(R.string.no_staff_registered_desc),
                         style = MaterialTheme.typography.bodyMedium
                     )
                 }
@@ -121,21 +121,18 @@ fun StaffManagementScreen(navController: NavController) {
             AlertDialog(
                 onDismissRequest = { toDeactivate = null },
                 icon = { Icon(Icons.Default.PersonOff, null, tint = RedError) },
-                title = { Text("Désactiver ${member.name} ?") },
+                title = { Text(stringResource(R.string.dialog_deactivate_staff_title, member.name)) },
                 text = {
-                    Text(
-                        "Cet employé ne pourra plus se connecter. Son historique " +
-                            "de ventes est conservé : rien n'est supprimé."
-                    )
+                    Text(stringResource(R.string.deactivate_staff_warning_desc))
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         viewModel.deactivateStaff(member)
                         toDeactivate = null
-                    }) { Text("Désactiver", color = RedError) }
+                    }) { Text(stringResource(R.string.action_deactivate), color = RedError) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { toDeactivate = null }) { Text("Annuler") }
+                    TextButton(onClick = { toDeactivate = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -160,15 +157,15 @@ private fun StaffCard(
                         Spacer(Modifier.padding(4.dp))
                         Icon(
                             Icons.Default.Shield,
-                            contentDescription = "Manager",
+                            contentDescription = stringResource(R.string.label_manager),
                             tint = Primary,
                             modifier = Modifier.height(16.dp)
                         )
                     }
                 }
                 Text(
-                    if (member.role == ROLE_MANAGER) "Manager — accès complet"
-                    else "Employé — accès caisse",
+                    if (member.role == ROLE_MANAGER) stringResource(R.string.label_role_manager_desc)
+                    else stringResource(R.string.label_role_staff_desc),
                     style = MaterialTheme.typography.bodySmall
                 )
                 member.phone?.takeIf { it.isNotBlank() }?.let {
@@ -176,10 +173,10 @@ private fun StaffCard(
                 }
             }
             IconButton(onClick = onEdit) {
-                Icon(Icons.Default.Edit, "Modifier")
+                Icon(Icons.Default.Edit, stringResource(R.string.action_edit))
             }
             IconButton(onClick = onDeactivate) {
-                Icon(Icons.Default.PersonOff, "Désactiver", tint = RedError)
+                Icon(Icons.Default.PersonOff, stringResource(R.string.action_deactivate), tint = RedError)
             }
         }
     }
@@ -201,20 +198,20 @@ private fun StaffFormDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (existing == null) "Nouvel employé" else "Modifier ${existing.name}") },
+        title = { Text(if (existing == null) stringResource(R.string.title_new_staff) else stringResource(R.string.action_edit)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Nom") },
+                    label = { Text(stringResource(R.string.label_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
                     value = phone,
                     onValueChange = { phone = it },
-                    label = { Text("Téléphone (facultatif)") },
+                    label = { Text(stringResource(R.string.label_phone_optional)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                     modifier = Modifier.fillMaxWidth()
@@ -223,8 +220,8 @@ private fun StaffFormDialog(
                     value = pin,
                     onValueChange = { if (it.length <= 4 && it.all(Char::isDigit)) pin = it },
                     label = {
-                        Text(if (existing == null) "Code PIN (4 chiffres)"
-                             else "Nouveau PIN (vide = inchangé)")
+                        Text(if (existing == null) stringResource(R.string.label_pin_4_digits)
+                             else stringResource(R.string.label_new_pin_hint))
                     },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
@@ -232,22 +229,22 @@ private fun StaffFormDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
-                Text("Rôle", style = MaterialTheme.typography.labelLarge)
+                Text(stringResource(R.string.label_role), style = MaterialTheme.typography.labelLarge)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     FilterChip(
                         selected = role == ROLE_STAFF,
                         onClick = { role = ROLE_STAFF },
-                        label = { Text("Employé") }
+                        label = { Text(stringResource(R.string.label_staff)) }
                     )
                     FilterChip(
                         selected = role == ROLE_MANAGER,
                         onClick = { role = ROLE_MANAGER },
-                        label = { Text("Manager") }
+                        label = { Text(stringResource(R.string.label_manager)) }
                     )
                 }
                 if (role == ROLE_MANAGER) {
                     Text(
-                        "Un manager accède aux rapports, aux paramètres et peut supprimer des ventes.",
+                        stringResource(R.string.label_manager_warning),
                         style = MaterialTheme.typography.bodySmall,
                         color = RedError
                     )
@@ -258,8 +255,8 @@ private fun StaffFormDialog(
             TextButton(
                 onClick = { onSave(name, pin, role, phone.takeIf { it.isNotBlank() }) },
                 enabled = canSave
-            ) { Text("Enregistrer") }
+            ) { Text(stringResource(R.string.action_save)) }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }

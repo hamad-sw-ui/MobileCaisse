@@ -23,6 +23,8 @@ import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -38,7 +40,7 @@ fun SupportScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Support & Abonnement") },
+                title = { Text(stringResource(R.string.title_support_subscription)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -57,15 +59,15 @@ fun SupportScreen(navController: NavController) {
         ) {
             Card(modifier = Modifier.fillMaxWidth()) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Statut de l'abonnement", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.label_subscription_status), style = MaterialTheme.typography.titleSmall)
                     subscription?.let {
-                        Text(if (it.isActive) "ACTIF jusqu'au ${com.reconsiliation.caisse.utils.FormatUtil.formatDate(it.endDate)}" else "EXPIRÉ",
+                        Text(if (it.isActive) stringResource(R.string.status_active_until, FormatUtil.formatDate(it.endDate)) else stringResource(R.string.status_expired),
                             color = if (it.isActive) com.reconsiliation.caisse.ui.theme.GreenSuccess else com.reconsiliation.caisse.ui.theme.RedError,
                             fontWeight = FontWeight.Bold)
-                    } ?: Text("Aucun abonnement", color = androidx.compose.ui.graphics.Color.Gray)
+                    } ?: Text(stringResource(R.string.no_subscription), color = androidx.compose.ui.graphics.Color.Gray)
                     
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Identifiant de l'appareil", style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(R.string.label_device_id), style = MaterialTheme.typography.titleSmall)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
@@ -73,34 +75,34 @@ fun SupportScreen(navController: NavController) {
                     ) {
                         Text(deviceId, fontWeight = FontWeight.Bold, color = Primary)
                         IconButton(onClick = { clipboardManager.setText(AnnotatedString(deviceId)) }) {
-                            Icon(Icons.Default.ContentCopy, contentDescription = "Copier")
+                            Icon(Icons.Default.ContentCopy, contentDescription = stringResource(R.string.action_copy))
                         }
                     }
                 }
             }
 
-            Text("Renouvellement Automatique", style = MaterialTheme.typography.titleMedium, color = Primary)
+            Text(stringResource(R.string.label_auto_renewal), style = MaterialTheme.typography.titleMedium, color = Primary)
             Text(
-                "Choisissez un forfait et payez via Mobile Money. L'activation sera instantanée après confirmation.",
+                stringResource(R.string.subscription_instruction),
                 style = MaterialTheme.typography.bodySmall
             )
 
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 SubscriptionPlanCard(
-                    title = "1 Mois",
-                    price = "5 000 F",
+                    title = stringResource(R.string.plan_1_month),
+                    price = stringResource(R.string.label_price_f, "5 000"),
                     modifier = Modifier.weight(1f),
                     onClick = { initiatePayment(context, viewModel, boutique?.operator ?: "MTN", 5000) }
                 )
                 SubscriptionPlanCard(
-                    title = "6 Mois",
-                    price = "25 000 F",
+                    title = stringResource(R.string.plan_6_months),
+                    price = stringResource(R.string.label_price_f, "25 000"),
                     modifier = Modifier.weight(1f),
                     onClick = { initiatePayment(context, viewModel, boutique?.operator ?: "MTN", 25000) }
                 )
                 SubscriptionPlanCard(
-                    title = "12 Mois",
-                    price = "45 000 F",
+                    title = stringResource(R.string.plan_12_months),
+                    price = stringResource(R.string.label_price_f, "45 000"),
                     modifier = Modifier.weight(1f),
                     onClick = { initiatePayment(context, viewModel, boutique?.operator ?: "MTN", 45000) }
                 )
@@ -110,18 +112,18 @@ fun SupportScreen(navController: NavController) {
 
             var showManual by remember { mutableStateOf(false) }
             TextButton(onClick = { showManual = !showManual }) {
-                Text(if (showManual) "Masquer l'activation manuelle" else "Activation manuelle (Clé)")
+                Text(if (showManual) stringResource(R.string.action_hide_manual_activation) else stringResource(R.string.action_manual_activation))
             }
 
             if (showManual) {
                 Text(
-                    "Entrez la clé reçue par SMS si l'activation automatique n'a pas fonctionné.",
+                    stringResource(R.string.manual_activation_instruction),
                     style = MaterialTheme.typography.bodySmall
                 )
                 OutlinedTextField(
                     value = activationKey,
                     onValueChange = { activationKey = it },
-                    label = { Text("Clé d'activation") },
+                    label = { Text(stringResource(R.string.label_activation_key)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                 )
@@ -130,7 +132,7 @@ fun SupportScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth(),
                     enabled = activationKey.isNotBlank()
                 ) {
-                    Text("Activer manuellement")
+                    Text(stringResource(R.string.action_activate_manually))
                 }
             }
 
@@ -144,8 +146,8 @@ fun SupportScreen(navController: NavController) {
                     Icon(Icons.Default.Help, null, tint = Primary)
                     Spacer(modifier = Modifier.width(12.dp))
                     Column {
-                        Text("Besoin d'aide ?", fontWeight = FontWeight.Bold)
-                        Text("Contactez le support au 692971991 (WhatsApp/Appel)", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.label_need_help), fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.support_contact_info, "692971991"), style = MaterialTheme.typography.bodySmall)
                     }
                 }
             }
@@ -167,7 +169,7 @@ fun SubscriptionPlanCard(title: String, price: String, modifier: Modifier, onCli
             Text(title, fontWeight = FontWeight.Bold)
             Text(price, color = Primary, style = MaterialTheme.typography.titleMedium)
             Spacer(modifier = Modifier.height(4.dp))
-            Text("Acheter", style = MaterialTheme.typography.labelSmall)
+            Text(stringResource(R.string.action_buy), style = MaterialTheme.typography.labelSmall)
         }
     }
 }

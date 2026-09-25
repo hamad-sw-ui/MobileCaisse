@@ -25,6 +25,8 @@ import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import java.io.File
 import java.io.FileOutputStream
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -57,7 +59,7 @@ fun RestorationWizardScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Restauration de Données") },
+                title = { Text(stringResource(com.reconsiliation.caisse.R.string.title_restoration)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -77,23 +79,23 @@ fun RestorationWizardScreen(navController: NavController) {
             if (step == 1) {
                 Icon(Icons.Default.FileOpen, null, modifier = Modifier.size(64.dp), tint = Primary)
                 Text(
-                    "Étape 1 : Sélectionnez votre fichier de sauvegarde",
+                    stringResource(com.reconsiliation.caisse.R.string.restoration_step1_title),
                     style = MaterialTheme.typography.titleMedium,
                     textAlign = TextAlign.Center
                 )
                 Text(
-                    "Cherchez le fichier '.db' que vous avez sauvegardé précédemment (ex: dans votre dossier Téléchargements ou Google Drive).",
+                    stringResource(com.reconsiliation.caisse.R.string.restoration_step1_desc),
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = androidx.compose.ui.graphics.Color.Gray
                 )
                 Button(onClick = { launcher.launch("application/octet-stream") }) {
-                    Text("Choisir le fichier")
+                    Text(stringResource(com.reconsiliation.caisse.R.string.action_choose_file))
                 }
             } else {
                 Icon(Icons.Default.Warning, null, modifier = Modifier.size(64.dp), tint = RedError)
                 Text(
-                    "Étape 2 : Confirmation de l'écrasement",
+                    stringResource(com.reconsiliation.caisse.R.string.restoration_step2_title),
                     style = MaterialTheme.typography.titleMedium,
                     color = RedError
                 )
@@ -104,7 +106,7 @@ fun RestorationWizardScreen(navController: NavController) {
                         Icon(Icons.Default.Security, null, tint = RedError)
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(
-                            "ATTENTION : Cette opération supprimera toutes vos données actuelles pour les remplacer par celles du fichier sélectionné.",
+                            stringResource(com.reconsiliation.caisse.R.string.restoration_warning_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onErrorContainer
                         )
@@ -113,9 +115,9 @@ fun RestorationWizardScreen(navController: NavController) {
                 
                 Text(
                     text = if (isEncrypted) {
-                        "🔒 Sauvegarde chiffrée : le mot de passe sera demandé."
+                        stringResource(com.reconsiliation.caisse.R.string.restoration_encrypted_info)
                     } else {
-                        "Sauvegarde non chiffrée (format ancien)."
+                        stringResource(com.reconsiliation.caisse.R.string.restoration_legacy_info)
                     },
                     style = MaterialTheme.typography.bodySmall
                 )
@@ -136,8 +138,8 @@ fun RestorationWizardScreen(navController: NavController) {
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(
-                        if (backupState is BackupUiState.Working) "Restauration en cours…"
-                        else "Confirmer la restauration"
+                        if (backupState is BackupUiState.Working) stringResource(com.reconsiliation.caisse.R.string.status_restoring)
+                        else stringResource(com.reconsiliation.caisse.R.string.action_confirm_restore)
                     )
                 }
 
@@ -151,7 +153,7 @@ fun RestorationWizardScreen(navController: NavController) {
                     stagedFile = null
                     viewModel.clearBackupState()
                 }) {
-                    Text("Choisir un autre fichier")
+                    Text(stringResource(com.reconsiliation.caisse.R.string.action_choose_another))
                 }
             }
 

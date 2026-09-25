@@ -23,6 +23,8 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.theme.Primary
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @Composable
 fun OnboardingScreen(navController: NavController) {
@@ -77,7 +79,7 @@ fun OnboardingScreen(navController: NavController) {
             modifier = Modifier.fillMaxWidth().padding(24.dp).height(56.dp),
             colors = ButtonDefaults.buttonColors(containerColor = Primary)
         ) {
-            Text(if (pagerState.currentPage < 2) "Suivant" else "Autoriser & Démarrer")
+            Text(if (pagerState.currentPage < 2) stringResource(R.string.action_next) else stringResource(R.string.action_start))
         }
     }
 }
@@ -85,14 +87,14 @@ fun OnboardingScreen(navController: NavController) {
 @Composable
 fun OnboardingPage(page: Int) {
     val title = when(page) {
-        0 -> "Gérez votre Caisse"
-        1 -> "Réconciliation Mobile"
-        else -> "Stock en temps réel"
+        0 -> stringResource(R.string.onboarding_title_1)
+        1 -> stringResource(R.string.onboarding_title_2)
+        else -> stringResource(R.string.onboarding_title_3)
     }
     val description = when(page) {
-        0 -> "Enregistrez vos ventes Cash, Mobile Money et Crédit en un clic."
-        1 -> "L'application écoute les SMS de paiement et valide automatiquement vos ventes."
-        else -> "Soyez alerté dès qu'un produit atteint son seuil critique."
+        0 -> stringResource(R.string.onboarding_desc_1)
+        1 -> stringResource(R.string.onboarding_desc_2)
+        else -> stringResource(R.string.onboarding_desc_3)
     }
 
     Column(

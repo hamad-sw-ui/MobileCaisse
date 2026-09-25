@@ -30,6 +30,8 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 import kotlinx.coroutines.launch
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,7 +61,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Détail de la Vente") },
+                title = { Text(stringResource(R.string.title_sale_detail)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -71,7 +73,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             printerViewModel.printTicket(venteId, address)
                         }
                     }) {
-                        Icon(Icons.Default.Print, "Imprimer")
+                        Icon(Icons.Default.Print, stringResource(R.string.action_print))
                     }
                     IconButton(onClick = {
                         venteWithItems?.let { data ->
@@ -81,11 +83,11 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                                     type = "text/plain"
                                     putExtra(Intent.EXTRA_TEXT, text)
                                 }
-                                context.startActivity(Intent.createChooser(intent, "Partager le reçu"))
+                                context.startActivity(Intent.createChooser(intent, context.getString(R.string.action_share_receipt)))
                             }
                         }
                     }) {
-                        Icon(Icons.Default.Share, "Partager le reçu")
+                        Icon(Icons.Default.Share, stringResource(R.string.action_share_receipt))
                     }
                 }
             )
@@ -96,33 +98,33 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
             Column(modifier = Modifier.padding(padding).padding(16.dp).fillMaxSize()) {
                 Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("Chiffre d'Affaires", style = MaterialTheme.typography.labelMedium)
+                        Text(stringResource(R.string.label_revenue_summary), style = MaterialTheme.typography.labelMedium)
                         Text(FormatUtil.formatCurrency(vente.amount), style = MaterialTheme.typography.headlineMedium, color = Primary, fontWeight = FontWeight.Bold)
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text("Date: ${FormatUtil.formatDate(vente.date)}", style = MaterialTheme.typography.bodySmall)
+                        Text(stringResource(R.string.label_date_colon, FormatUtil.formatDate(vente.date)), style = MaterialTheme.typography.bodySmall)
                         val methodDisplay = if (vente.paymentMethod == "MOMO") operatorName else vente.paymentMethod
-                        Text("Mode: $methodDisplay", style = MaterialTheme.typography.bodySmall)
-                        if (vente.discount > 0) Text("Remise: -${FormatUtil.formatCurrency(vente.discount, currency)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        if (vente.taxAmount > 0) Text("Taxe: ${FormatUtil.formatCurrency(vente.taxAmount, currency)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        if (vente.fees > 0) Text("Frais: ${FormatUtil.formatCurrency(vente.fees, currency)}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-                        Text("Statut: ${vente.status}", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        Text(stringResource(R.string.label_mode_colon, methodDisplay), style = MaterialTheme.typography.bodySmall)
+                        if (vente.discount > 0) Text(stringResource(R.string.label_discount_prefix, FormatUtil.formatCurrency(vente.discount, currency)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        if (vente.taxAmount > 0) Text(stringResource(R.string.label_tax_colon, FormatUtil.formatCurrency(vente.taxAmount, currency)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        if (vente.fees > 0) Text(stringResource(R.string.label_fees_colon, FormatUtil.formatCurrency(vente.fees, currency)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                        Text(stringResource(R.string.label_status_colon, vente.status), style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                     }
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
-                Text("Articles achetés", style = MaterialTheme.typography.titleMedium, color = Primary)
+                Text(stringResource(R.string.label_items_purchased), style = MaterialTheme.typography.titleMedium, color = Primary)
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (data.items.isEmpty()) {
                     Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                        Text("Aucun détail d'article disponible", color = Color.Gray)
+                        Text(stringResource(R.string.error_no_items_available), color = Color.Gray)
                     }
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f)) {
                         items(data.items) { item ->
                             ListItem(
                                 headlineContent = { Text(item.productName) },
-                                supportingContent = { Text("${item.quantity.toInt()} x ${item.unitPrice} $currency") },
+                                supportingContent = { Text(stringResource(R.string.label_qty_unit_price, item.quantity.toInt(), item.unitPrice.toString(), currency)) },
                                 trailingContent = {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(FormatUtil.formatCurrency(item.quantity * item.unitPrice, currency), fontWeight = FontWeight.Bold)
@@ -135,7 +137,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                                                     pinAction = "RETURN"
                                                 }
                                             }) {
-                                                Icon(Icons.Default.Delete, "Retourner", tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
+                                                Icon(Icons.Default.Delete, stringResource(R.string.action_return), tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                                             }
                                         }
                                     }
@@ -152,7 +154,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                         Row(modifier = Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Default.Info, null, tint = Primary)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Réf $operatorName: ${vente.transactionId}", style = MaterialTheme.typography.bodySmall)
+                            Text(stringResource(R.string.label_ref_operator, operatorName, vente.transactionId!!), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
@@ -172,7 +174,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                     ) {
                         Icon(Icons.Default.Delete, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Annuler la Vente")
+                        Text(stringResource(R.string.action_cancel_sale))
                     }
                 }
             }
@@ -183,17 +185,17 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
         if (showCancelDialog) {
             AlertDialog(
                 onDismissRequest = { showCancelDialog = false },
-                title = { Text("Confirmer l'annulation ?") },
-                text = { Text("Les articles seront remis en stock et le montant sera déduit du chiffre d'affaires.") },
+                title = { Text(stringResource(R.string.dialog_cancel_sale_title)) },
+                text = { Text(stringResource(R.string.dialog_cancel_sale_desc)) },
                 confirmButton = {
                     TextButton(onClick = {
                         venteWithItems?.let { viewModel.cancelVente(it.vente) }
                         showCancelDialog = false
                         navController.popBackStack()
-                    }) { Text("Confirmer", color = MaterialTheme.colorScheme.error) }
+                    }) { Text(stringResource(R.string.action_confirm), color = MaterialTheme.colorScheme.error) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showCancelDialog = false }) { Text("Annuler") }
+                    TextButton(onClick = { showCancelDialog = false }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -205,10 +207,10 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
             
             AlertDialog(
                 onDismissRequest = { showReturnDialog = null },
-                title = { Text("Retourner ${item.productName}?") },
+                title = { Text(stringResource(R.string.dialog_return_item_title, item.productName)) },
                 text = {
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Quantité à retourner (Max: ${item.quantity})")
+                        Text(stringResource(R.string.label_return_quantity, item.quantity.toString()))
                         OutlinedTextField(
                             value = returnQty,
                             onValueChange = { returnQty = it },
@@ -216,10 +218,10 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                         )
-                        Text("Mode de remboursement")
+                        Text(stringResource(R.string.label_refund_method))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(selected = refundMethod == "AVOIR", onClick = { refundMethod = "AVOIR" }, label = { Text("Avoir (Crédit)") })
-                            FilterChip(selected = refundMethod == "CASH", onClick = { refundMethod = "CASH" }, label = { Text("Espèces") })
+                            FilterChip(selected = refundMethod == "AVOIR", onClick = { refundMethod = "AVOIR" }, label = { Text(stringResource(R.string.method_credit_note)) })
+                            FilterChip(selected = refundMethod == "CASH", onClick = { refundMethod = "CASH" }, label = { Text(stringResource(R.string.method_cash)) })
                         }
                     }
                 },
@@ -231,10 +233,10 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                             showReturnDialog = null
                             navController.popBackStack()
                         }
-                    }) { Text("Confirmer le Retour", color = MaterialTheme.colorScheme.error) }
+                    }) { Text(stringResource(R.string.action_confirm_return), color = MaterialTheme.colorScheme.error) }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showReturnDialog = null }) { Text("Annuler") }
+                    TextButton(onClick = { showReturnDialog = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -242,7 +244,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
         if (showPinDialog) {
             AlertDialog(
                 onDismissRequest = { showPinDialog = false },
-                title = { Text("Code PIN Manager requis") },
+                title = { Text(stringResource(R.string.pin_manager_required)) },
                 text = {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         var isError by remember { mutableStateOf(false) }
@@ -281,7 +283,7 @@ fun SaleDetailScreen(navController: NavController, venteId: Long) {
                     }
                 },
                 confirmButton = {},
-                dismissButton = { TextButton(onClick = { showPinDialog = false }) { Text("Fermer") } }
+                dismissButton = { TextButton(onClick = { showPinDialog = false }) { Text(stringResource(R.string.action_close)) } }
             )
         }
     }

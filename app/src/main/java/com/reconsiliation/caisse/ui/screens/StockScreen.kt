@@ -61,13 +61,15 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
     val stockItems by viewModel.allStock.collectAsState()
     val isManager = mainViewModel.isManager()
     
-    var selectedCategory by remember { mutableStateOf("Tout") }
+    val labelAll = stringResource(R.string.label_all)
+    var selectedCategory by remember { mutableStateOf(labelAll) }
     var searchQuery by remember { mutableStateOf("") }
     val categories by viewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
     val uiState by viewModel.uiState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val context = androidx.compose.ui.platform.LocalContext.current
 
     LaunchedEffect(uiState) {
         if (uiState is InventoryUiState.Error) {
@@ -80,7 +82,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
     
     val filteredItems = remember(stockItems, selectedCategory, searchQuery) {
         stockItems.filter {
-            (selectedCategory == "Tout" || it.category == selectedCategory) &&
+            (selectedCategory == labelAll || it.category == selectedCategory) &&
             (it.productName.contains(searchQuery, ignoreCase = true) || it.barcode?.contains(searchQuery) == true)
         }
     }
@@ -109,11 +111,11 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
         floatingActionButton = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 FloatingActionButton(onClick = { navController.navigate(Screen.SupplierInflow.route) }, containerColor = MaterialTheme.colorScheme.secondary) {
-                    Icon(Icons.Default.Add, contentDescription = "Arrivage", tint = Color.White)
+                    Icon(Icons.Default.Add, contentDescription = stringResource(R.string.title_new_inflow), tint = Color.White)
                 }
                 if (isManager) {
                     FloatingActionButton(onClick = { showAddDialog = true }, containerColor = Primary) {
-                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_save), tint = MaterialTheme.colorScheme.onPrimary)
+                        Icon(Icons.Default.Add, contentDescription = stringResource(R.string.action_add), tint = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }
@@ -129,7 +131,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                 OutlinedTextField(
                     value = searchQuery,
                     onValueChange = { searchQuery = it },
-                    placeholder = { Text("Rechercher un produit...") },
+                    placeholder = { Text(stringResource(R.string.hint_search_product)) },
                     modifier = Modifier.weight(1f),
                     leadingIcon = { Icon(Icons.Default.Search, null) },
                     trailingIcon = if (searchQuery.isNotEmpty()) {
@@ -152,11 +154,11 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
-                        Text("Valeur Achat", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(stringResource(R.string.stock_summary_purchase), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(FormatUtil.formatCurrency(totalPurchaseValue), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                     }
                     Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
-                        Text("Valeur Vente", style = MaterialTheme.typography.labelSmall, color = Color.Gray)
+                        Text(stringResource(R.string.stock_summary_sale), style = MaterialTheme.typography.labelSmall, color = Color.Gray)
                         Text(FormatUtil.formatCurrency(totalSaleValue), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = Primary)
                     }
                 }
@@ -164,15 +166,15 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
 
             // Category Filter Bar
             ScrollableTabRow(
-                selectedTabIndex = if (selectedCategory == "Tout") 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
+                selectedTabIndex = if (selectedCategory == labelAll) 0 else categories.indexOfFirst { it.name == selectedCategory } + 1,
                 edgePadding = 16.dp,
                 containerColor = MaterialTheme.colorScheme.surface,
                 divider = {}
             ) {
                 Tab(
-                    selected = selectedCategory == "Tout",
-                    onClick = { selectedCategory = "Tout" },
-                    text = { Text("Tout") }
+                    selected = selectedCategory == labelAll,
+                    onClick = { selectedCategory = labelAll },
+                    text = { Text(labelAll) }
                 )
                 categories.forEach { category ->
                     Tab(
@@ -185,7 +187,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
 
             if (filteredItems.isEmpty()) {
                 Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Aucun article correspondant")
+                    Text(stringResource(R.string.no_item_matching))
                 }
             } else {
                 LazyColumn(
@@ -203,7 +205,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                         // Rapid Checkout Logic (Point 4)
                                         val vente = com.reconsiliation.caisse.data.local.entity.VenteEntity(
                                             amount = item.unitPrice,
-                                            description = "${item.productName} x1 (Vente Rapide)",
+                                            description = context.getString(R.string.label_rapid_sale_desc, item.productName),
                                             date = java.util.Date(),
                                             paymentMethod = "CASH",
                                             status = "CONFIRMED",
@@ -218,7 +220,11 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                             purchasePrice = item.purchasePrice
                                         )
                                         mainViewModel.addVenteWithItems(vente, listOf(venteItem))
-                                        scope.launch { snackbarHostState.showSnackbar("Vente Rapide : ${item.productName} encaissé !") }
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar(
+                                                context.getString(R.string.label_rapid_sale_success, item.productName)
+                                            )
+                                        }
                                     }
                                 )
                         ) {
@@ -243,8 +249,8 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                             )
                                         }
                                     }
-                                    Text("Stock: ${item.quantity} ${item.unit}", color = if (item.quantity <= item.alertThreshold) RedError else MaterialTheme.colorScheme.onSurface)
-                                    Text("Code: ${item.barcode ?: "Non défini"}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Text(stringResource(R.string.label_stock_qty, item.quantity.toString(), item.unit), color = if (item.quantity <= item.alertThreshold) RedError else MaterialTheme.colorScheme.onSurface)
+                                    Text(stringResource(R.string.label_barcode, item.barcode ?: stringResource(R.string.label_no_barcode)), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                                 }
                                 
                                 Column(horizontalAlignment = Alignment.End) {
@@ -256,16 +262,16 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                                 printerViewModel.testPrint(address) // Or dedicated printShelfLabel logic
                                             }
                                         }) {
-                                            Icon(Icons.Default.Label, "Étiquette", tint = Color.Gray)
+                                            Icon(Icons.Default.Label, stringResource(R.string.action_label), tint = Color.Gray)
                                         }
                                         IconButton(onClick = { navController.navigate(Screen.StockMovements.createRoute(item.id)) }) {
-                                            Icon(Icons.Default.Info, "Mouvements", tint = Color.Gray)
+                                            Icon(Icons.Default.Info, stringResource(R.string.action_movements), tint = Color.Gray)
                                         }
                                         IconButton(onClick = { navController.navigate(Screen.PriceHistory.createRoute(item.id)) }) {
-                                            Icon(Icons.Default.History, "Historique des prix", tint = Color.Gray)
+                                            Icon(Icons.Default.History, stringResource(R.string.action_price_history), tint = Color.Gray)
                                         }
                                         IconButton(onClick = { itemForRecipe = item }) {
-                                            Icon(Icons.Default.Kitchen, "Composition", tint = Primary)
+                                            Icon(Icons.Default.Kitchen, stringResource(R.string.action_composition), tint = Primary)
                                         }
                                         IconButton(onClick = { itemToReportLoss = item }) {
                                             Icon(Icons.Default.WarningAmber, stringResource(R.string.loss_declared), tint = OrangeWarning)
@@ -318,8 +324,9 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                 onConfirm = { qty, reason ->
                     viewModel.adjustStock(itemToReportLoss!!, itemToReportLoss!!.quantity - qty, reason, mainViewModel.userRole.value)
                     itemToReportLoss = null
-                    val msg = "Perte enregistrée"
-                    scope.launch { snackbarHostState.showSnackbar(msg) }
+                    scope.launch {
+                        snackbarHostState.showSnackbar(context.getString(R.string.label_loss_recorded))
+                    }
                 }
             )
         }
@@ -336,15 +343,15 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
         if (itemToDelete != null) {
             AlertDialog(
                 onDismissRequest = { itemToDelete = null },
-                title = { Text("Supprimer le produit ?") },
-                text = { Text("Voulez-vous vraiment supprimer ${itemToDelete!!.productName} ?") },
+                title = { Text(stringResource(R.string.dialog_delete_product_title)) },
+                text = { Text(stringResource(R.string.dialog_delete_product_desc, itemToDelete!!.productName)) },
                 confirmButton = {
                     Button(onClick = { viewModel.deleteStock(itemToDelete!!); itemToDelete = null }, colors = ButtonDefaults.buttonColors(containerColor = RedError)) {
-                        Text("Supprimer")
+                        Text(stringResource(R.string.action_delete))
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { itemToDelete = null }) { Text("Annuler") }
+                    TextButton(onClick = { itemToDelete = null }) { Text(stringResource(R.string.action_cancel)) }
                 }
             )
         }
@@ -358,11 +365,11 @@ fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, invent
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Composition de : ${parentProduct.productName}") },
+        title = { Text(stringResource(R.string.recipe_title, parentProduct.productName)) },
         text = {
             Column(modifier = Modifier.fillMaxWidth().heightIn(max = 400.dp)) {
                 if (recipeItems.isEmpty()) {
-                    Text("Ce produit n'a pas encore d'ingrédients définis.", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                    Text(stringResource(R.string.recipe_empty), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                 } else {
                     LazyColumn(modifier = Modifier.weight(1f, fill = false), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         items(recipeItems) { item ->
@@ -373,7 +380,7 @@ fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, invent
                             ) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(item.ingredient.productName, fontWeight = FontWeight.Bold)
-                                    Text("Quantité à déduire : ${item.recipe.quantityRequired} ${item.ingredient.unit}", style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.recipe_quantity_required, item.recipe.quantityRequired.toString(), item.ingredient.unit), style = MaterialTheme.typography.labelSmall)
                                 }
                                 IconButton(onClick = { inventoryViewModel.deleteRecipeComponent(item.recipe) }) {
                                     Icon(Icons.Default.Delete, null, tint = RedError)
@@ -388,12 +395,12 @@ fun RecipeDialog(parentProduct: StockEntity, allStock: List<StockEntity>, invent
                     modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
                 ) {
                     Icon(Icons.Default.Add, null)
-                    Text("Ajouter un ingrédient")
+                    Text(stringResource(R.string.action_add_ingredient))
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) { Text("Fermer") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_close)) }
         }
     )
 
@@ -417,12 +424,12 @@ fun AddIngredientDialog(allStock: List<StockEntity>, onDismiss: () -> Unit, onCo
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Choisir l'ingrédient") },
+        title = { Text(stringResource(R.string.dialog_choose_ingredient)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box {
                     OutlinedTextField(
-                        value = selectedProduct?.productName ?: "Sélectionner...",
+                        value = selectedProduct?.productName ?: stringResource(R.string.label_select_product_hint),
                         onValueChange = {},
                         readOnly = true,
                         modifier = Modifier.fillMaxWidth().clickable { expanded = true },
@@ -442,8 +449,8 @@ fun AddIngredientDialog(allStock: List<StockEntity>, onDismiss: () -> Unit, onCo
                 OutlinedTextField(
                     value = qty,
                     onValueChange = { qty = it },
-                    label = { Text("Quantité nécessaire") },
-                    placeholder = { Text("Ex: 0.1 pour 100g/ml") },
+                    label = { Text(stringResource(R.string.label_quantity_needed)) },
+                    placeholder = { Text(stringResource(R.string.hint_quantity_needed)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
@@ -459,10 +466,10 @@ fun AddIngredientDialog(allStock: List<StockEntity>, onDismiss: () -> Unit, onCo
                     }
                 },
                 enabled = selectedProduct != null && qty.isNotBlank()
-            ) { Text("Ajouter") }
+            ) { Text(stringResource(R.string.action_add)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }
@@ -470,19 +477,20 @@ fun AddIngredientDialog(allStock: List<StockEntity>, onDismiss: () -> Unit, onCo
 @Composable
 fun ReportLossDialog(productName: String, onDismiss: () -> Unit, onConfirm: (Double, String) -> Unit) {
     var qty by remember { mutableStateOf("") }
-    var reason by remember { mutableStateOf("Casse/Perte") }
+    val defaultReason = stringResource(R.string.reason_breakage_loss)
+    var reason by remember { mutableStateOf(defaultReason) }
     val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
     
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Déclarer une perte") },
+        title = { Text(stringResource(R.string.dialog_loss_title)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Produit : $productName", fontWeight = FontWeight.Bold)
+                Text(productName, fontWeight = FontWeight.Bold)
                 OutlinedTextField(
                     value = qty,
                     onValueChange = { qty = it },
-                    label = { Text("Quantité perdue") },
+                    label = { Text(stringResource(R.string.label_loss_qty)) },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
@@ -490,7 +498,7 @@ fun ReportLossDialog(productName: String, onDismiss: () -> Unit, onConfirm: (Dou
                 OutlinedTextField(
                     value = reason,
                     onValueChange = { reason = it },
-                    label = { Text("Raison (optionnel)") },
+                    label = { Text(stringResource(R.string.label_reason)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
                 )
@@ -503,10 +511,10 @@ fun ReportLossDialog(productName: String, onDismiss: () -> Unit, onConfirm: (Dou
                     if (q > 0) onConfirm(q, reason)
                 },
                 colors = ButtonDefaults.buttonColors(containerColor = RedError)
-            ) { Text("Confirmer la perte") }
+            ) { Text(stringResource(R.string.action_confirm_loss)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 }
@@ -523,7 +531,8 @@ fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: Inven
     var alert by remember { mutableStateOf(initialItem?.alertThreshold?.toString() ?: "5") }
     var barcode by remember { mutableStateOf(initialItem?.barcode ?: "") }
     
-    var category by remember { mutableStateOf(initialItem?.category ?: "Général") }
+    val defaultCategory = stringResource(R.string.category_general)
+    var category by remember { mutableStateOf(initialItem?.category ?: defaultCategory) }
     val productCategories by inventoryViewModel.getCategories("PRODUCT").collectAsState(initial = emptyList())
     var expandedCategory by remember { mutableStateOf(false) }
     var showAddCategoryDialog by remember { mutableStateOf(false) }
@@ -539,20 +548,20 @@ fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: Inven
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initialItem == null) "Ajouter un produit" else "Modifier le produit") },
+        title = { Text(if (initialItem == null) stringResource(R.string.dialog_add_product_title) else stringResource(R.string.dialog_edit_product_title)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nom du produit") }, colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.label_product_name)) }, colors = textFieldColors, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(modifier = Modifier.weight(1f)) {
                         OutlinedTextField(
                             value = category,
                             onValueChange = { },
                             readOnly = true,
-                            label = { Text("Catégorie") },
+                            label = { Text(stringResource(R.string.label_category)) },
                             colors = textFieldColors,
                             modifier = Modifier.fillMaxWidth().clickable { expandedCategory = true },
                             trailingIcon = { Icon(Icons.Default.ArrowDropDown, null) }
@@ -562,7 +571,7 @@ fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: Inven
                                 DropdownMenuItem(text = { Text(cat.name) }, onClick = { category = cat.name; expandedCategory = false })
                             }
                             if (productCategories.isEmpty()) {
-                                DropdownMenuItem(text = { Text("Aucune catégorie") }, onClick = { expandedCategory = false })
+                                DropdownMenuItem(text = { Text(stringResource(R.string.no_category_registered)) }, onClick = { expandedCategory = false })
                             }
                         }
                     }
@@ -570,42 +579,42 @@ fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: Inven
                         onClick = { showAddCategoryDialog = true },
                         modifier = Modifier.padding(top = 8.dp)
                     ) {
-                        Icon(Icons.Default.Add, "Nouvelle catégorie", tint = Primary)
+                        Icon(Icons.Default.Add, stringResource(R.string.dialog_new_category), tint = Primary)
                     }
                 }
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = isBulk, onCheckedChange = { isBulk = it })
-                    Text("Vente au détail (ex: Sac -> Kg)", style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(R.string.label_retail_sale), style = MaterialTheme.typography.bodySmall)
                 }
                 
                 if (isBulk) {
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        OutlinedTextField(value = retailUnit, onValueChange = { retailUnit = it }, label = { Text("Unité détail") }, colors = textFieldColors, modifier = Modifier.weight(1f))
-                        OutlinedTextField(value = conversionFactor, onValueChange = { conversionFactor = it }, label = { Text("Facteur conv.") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
+                        OutlinedTextField(value = retailUnit, onValueChange = { retailUnit = it }, label = { Text(stringResource(R.string.label_retail_unit)) }, colors = textFieldColors, modifier = Modifier.weight(1f))
+                        OutlinedTextField(value = conversionFactor, onValueChange = { conversionFactor = it }, label = { Text(stringResource(R.string.label_conversion_factor)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
                     }
-                    OutlinedTextField(value = retailPrice, onValueChange = { retailPrice = it }, label = { Text("Prix de vente au détail") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                    OutlinedTextField(value = retailPrice, onValueChange = { retailPrice = it }, label = { Text(stringResource(R.string.label_retail_price)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
                 }
                 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp))
 
-                OutlinedTextField(value = qty, onValueChange = { qty = it }, label = { Text("Quantité en stock ($unit)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = qty, onValueChange = { qty = it }, label = { Text(stringResource(R.string.label_stock_level, unit)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = pPrice, onValueChange = { pPrice = it }, label = { Text("Prix d'achat") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
-                    OutlinedTextField(value = sPrice, onValueChange = { sPrice = it }, label = { Text("Prix de vente") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = pPrice, onValueChange = { pPrice = it }, label = { Text(stringResource(R.string.label_purchase_price)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
+                    OutlinedTextField(value = sPrice, onValueChange = { sPrice = it }, label = { Text(stringResource(R.string.label_sale_price)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.weight(1f))
                 }
-                OutlinedTextField(value = vPrice, onValueChange = { vPrice = it }, label = { Text("Prix VIP (Optionnel)") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
-                OutlinedTextField(value = alert, onValueChange = { alert = it }, label = { Text("Seuil d'alerte") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = vPrice, onValueChange = { vPrice = it }, label = { Text(stringResource(R.string.label_vip_price)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = alert, onValueChange = { alert = it }, label = { Text(stringResource(R.string.label_alert_threshold)) }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), colors = textFieldColors, modifier = Modifier.fillMaxWidth())
                 
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(value = barcode, onValueChange = { barcode = it }, label = { Text("Code-barres") }, modifier = Modifier.weight(1f), colors = textFieldColors)
+                    OutlinedTextField(value = barcode, onValueChange = { barcode = it }, label = { Text(stringResource(R.string.label_barcode_simple)) }, modifier = Modifier.weight(1f), colors = textFieldColors)
                     IconButton(onClick = { showScanner = true }) {
                         Icon(Icons.Default.QrCodeScanner, null, tint = Primary)
                     }
                 }
                 
-                OutlinedTextField(value = unit, onValueChange = { unit = it }, label = { Text("Unité (ex: pcs, kg)") }, colors = textFieldColors, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(value = unit, onValueChange = { unit = it }, label = { Text(stringResource(R.string.label_unit_hint)) }, colors = textFieldColors, modifier = Modifier.fillMaxWidth())
             }
         },
         confirmButton = {
@@ -636,10 +645,10 @@ fun AddProductDialog(initialItem: StockEntity? = null, inventoryViewModel: Inven
                         )
                     )
                 }
-            }) { Text(if (initialItem == null) "Ajouter" else "Enregistrer") }
+            }) { Text(if (initialItem == null) stringResource(R.string.action_add) else stringResource(R.string.action_save)) }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("Annuler") }
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) }
         }
     )
 

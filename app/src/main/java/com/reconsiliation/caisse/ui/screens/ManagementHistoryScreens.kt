@@ -26,6 +26,8 @@ import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
 import com.reconsiliation.caisse.ui.viewmodel.ExpenseViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -36,7 +38,7 @@ fun ClosureHistoryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Archives de Gestion") },
+                title = { Text(stringResource(R.string.title_management_archives)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -52,23 +54,23 @@ fun ClosureHistoryScreen(navController: NavController) {
                 containerColor = MaterialTheme.colorScheme.surface,
                 contentColor = Primary
             ) {
-                Tab(selected = true, onClick = { }, text = { Text("Clôtures") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text("Sessions") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text("Audits") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text("Arrivages") })
+                Tab(selected = true, onClick = { }, text = { Text(stringResource(R.string.tab_closures)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text(stringResource(R.string.tab_sessions)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text(stringResource(R.string.tab_audits)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text(stringResource(R.string.tab_supplies)) })
             }
 
             if (closures.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucune clôture archivée", color = Color.Gray)
+                    Text(stringResource(R.string.no_closure_archived), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(closures) { closure ->
                         ListItem(
-                            headlineContent = { Text("Clôture du ${FormatUtil.formatDate(closure.date)}") },
+                            headlineContent = { Text(stringResource(R.string.closure_on_date, FormatUtil.formatDate(closure.date))) },
                             supportingContent = {
-                                Text("Système: ${FormatUtil.formatCurrency(closure.theoreticalCash)}\nRéel: ${FormatUtil.formatCurrency(closure.actualCash)}")
+                                Text(stringResource(R.string.label_theoretical_actual, FormatUtil.formatCurrency(closure.theoreticalCash), FormatUtil.formatCurrency(closure.actualCash)))
                             },
                             trailingContent = {
                                 val diff = closure.actualCash - closure.theoreticalCash
@@ -98,7 +100,7 @@ fun SessionHistoryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Registre des Sessions") },
+                title = { Text(stringResource(R.string.title_session_registry)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -109,15 +111,15 @@ fun SessionHistoryScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = 1, edgePadding = 16.dp) {
-                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text("Clôtures") })
-                Tab(selected = true, onClick = { }, text = { Text("Sessions") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text("Audits") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text("Arrivages") })
+                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text(stringResource(R.string.tab_closures)) })
+                Tab(selected = true, onClick = { }, text = { Text(stringResource(R.string.tab_sessions)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text(stringResource(R.string.tab_audits)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text(stringResource(R.string.tab_supplies)) })
             }
 
             if (sessions.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucune session trouvée", color = Color.Gray)
+                    Text(stringResource(R.string.no_session_found), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
@@ -126,18 +128,18 @@ fun SessionHistoryScreen(navController: NavController) {
                             headlineContent = { Text(session.sellerName) },
                             supportingContent = {
                                 val start = FormatUtil.formatDate(session.startTime)
-                                val end = session.endTime?.let { FormatUtil.formatDate(it) } ?: "En cours"
-                                Text("Début: $start\nFin: $end")
+                                val end = session.endTime?.let { FormatUtil.formatDate(it) } ?: stringResource(R.string.status_in_progress)
+                                Text(stringResource(R.string.label_start_end_date, start, end))
                             },
                             trailingContent = {
                                 Column(horizontalAlignment = Alignment.End) {
-                                    Text("Fond: ${FormatUtil.formatCurrency(session.openingBalance)}", style = MaterialTheme.typography.labelSmall)
+                                    Text(stringResource(R.string.label_opening_balance, FormatUtil.formatCurrency(session.openingBalance)), style = MaterialTheme.typography.labelSmall)
                                     session.closingBalance?.let {
-                                        Text("Fin: ${FormatUtil.formatCurrency(it)}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                        Text(stringResource(R.string.label_closing_balance, FormatUtil.formatCurrency(it)), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
                                     }
                                     if (session.endTime != null) {
                                         IconButton(onClick = { showCommissionDialog = session }, modifier = Modifier.size(24.dp)) {
-                                            Icon(Icons.Default.Calculate, "Commissions", tint = Primary, modifier = Modifier.size(16.dp))
+                                            Icon(Icons.Default.Calculate, stringResource(R.string.action_calculate), tint = Primary, modifier = Modifier.size(16.dp))
                                         }
                                     }
                                 }
@@ -161,26 +163,27 @@ fun SessionHistoryScreen(navController: NavController) {
 @Composable
 fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
     val expenseViewModel: ExpenseViewModel = hiltViewModel()
+    val context = androidx.compose.ui.platform.LocalContext.current
     var rate by remember { mutableStateOf("2") }
     val revenue = (session.closingBalance ?: 0.0) - session.openingBalance
     val commission = (revenue * (rate.toDoubleOrNull() ?: 0.0)) / 100.0
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Calcul Commission - ${session.sellerName}") },
+        title = { Text(stringResource(R.string.dialog_commission_title, session.sellerName)) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text("Chiffre d'affaires : ${FormatUtil.formatCurrency(revenue)}")
+                Text(stringResource(R.string.label_revenue_amount, FormatUtil.formatCurrency(revenue)))
                 OutlinedTextField(
                     value = rate,
                     onValueChange = { rate = it },
-                    label = { Text("Taux de commission (%)") },
+                    label = { Text(stringResource(R.string.label_commission_rate)) },
                     keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number),
                     modifier = Modifier.fillMaxWidth(),
                     colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                 )
                 Text(
-                    "Montant à payer : ${FormatUtil.formatCurrency(commission)}",
+                    stringResource(R.string.label_amount_to_pay, FormatUtil.formatCurrency(commission)),
                     fontWeight = FontWeight.Bold,
                     color = Primary,
                     style = MaterialTheme.typography.titleMedium
@@ -189,20 +192,24 @@ fun CommissionDialog(session: SessionEntity, onDismiss: () -> Unit) {
                 Button(
                     onClick = {
                         expenseViewModel.addExpense(
-                            label = "Commission : ${session.sellerName} (${FormatUtil.formatDate(session.startTime)})",
+                            label = context.getString(
+                                R.string.label_commission,
+                                session.sellerName,
+                                FormatUtil.formatDate(session.startTime)
+                            ),
                             amount = commission,
-                            category = "Salaires"
+                            category = context.getString(R.string.category_salaries)
                         )
                         onDismiss()
                     },
                     modifier = Modifier.fillMaxWidth(),
                     colors = ButtonDefaults.buttonColors(containerColor = com.reconsiliation.caisse.ui.theme.GreenSuccess)
                 ) {
-                    Text("Enregistrer comme payé (Dépense)")
+                    Text(stringResource(R.string.action_record_as_paid))
                 }
             }
         },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("Annuler") } }
+        confirmButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_cancel)) } }
     )
 }
 
@@ -215,7 +222,7 @@ fun AuditHistoryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historique des Audits") },
+                title = { Text(stringResource(R.string.title_audit_history)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -226,22 +233,22 @@ fun AuditHistoryScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = 2, edgePadding = 16.dp) {
-                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text("Clôtures") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text("Sessions") })
-                Tab(selected = true, onClick = { }, text = { Text("Audits") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text("Arrivages") })
+                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text(stringResource(R.string.tab_closures)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text(stringResource(R.string.tab_sessions)) })
+                Tab(selected = true, onClick = { }, text = { Text(stringResource(R.string.tab_audits)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SupplyHistory.route) }, text = { Text(stringResource(R.string.tab_supplies)) })
             }
 
             if (audits.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucun audit enregistré", color = Color.Gray)
+                    Text(stringResource(R.string.no_audit_recorded), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(audits) { data ->
                         ListItem(
-                            headlineContent = { Text("Audit du ${FormatUtil.formatDate(data.audit.date)}") },
-                            supportingContent = { Text(data.audit.note ?: "Pas de note") },
+                            headlineContent = { Text(stringResource(R.string.audit_on_date, FormatUtil.formatDate(data.audit.date))) },
+                            supportingContent = { Text(data.audit.note ?: stringResource(R.string.label_no_note)) },
                             trailingContent = {
                                 Text(
                                     FormatUtil.formatCurrency(data.audit.totalDiscrepancy),
@@ -267,7 +274,7 @@ fun SupplyHistoryScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Historique des Arrivages") },
+                title = { Text(stringResource(R.string.title_supply_history)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -278,23 +285,23 @@ fun SupplyHistoryScreen(navController: NavController) {
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding)) {
             ScrollableTabRow(selectedTabIndex = 3, edgePadding = 16.dp) {
-                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text("Clôtures") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text("Sessions") })
-                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text("Audits") })
-                Tab(selected = true, onClick = { }, text = { Text("Arrivages") })
+                Tab(selected = false, onClick = { navController.navigate(Screen.ClosureHistory.route) }, text = { Text(stringResource(R.string.tab_closures)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.SessionHistory.route) }, text = { Text(stringResource(R.string.tab_sessions)) })
+                Tab(selected = false, onClick = { navController.navigate(Screen.AuditHistory.route) }, text = { Text(stringResource(R.string.tab_audits)) })
+                Tab(selected = true, onClick = { }, text = { Text(stringResource(R.string.tab_supplies)) })
             }
 
             if (supplies.isEmpty()) {
                 Box(modifier = Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text("Aucun arrivage enregistré", color = Color.Gray)
+                    Text(stringResource(R.string.no_supply_recorded), color = Color.Gray)
                 }
             } else {
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(supplies) { supply ->
                         ListItem(
-                            headlineContent = { Text("${supply.productName} (+${supply.quantity})") },
+                            headlineContent = { Text(stringResource(R.string.label_inflow_headline, supply.productName, supply.quantity.toString())) },
                             supportingContent = {
-                                Text("Fournisseur: ${supply.supplierName ?: "Inconnu"}\nDate: ${FormatUtil.formatDate(supply.date)}")
+                                Text(stringResource(R.string.label_supplier_date, supply.supplierName ?: stringResource(R.string.label_unknown), FormatUtil.formatDate(supply.date)))
                             },
                             trailingContent = {
                                 Text(FormatUtil.formatCurrency(supply.quantity * supply.purchasePrice), fontWeight = FontWeight.Bold)

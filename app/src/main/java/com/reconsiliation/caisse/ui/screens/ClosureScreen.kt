@@ -29,6 +29,8 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.*
 import com.reconsiliation.caisse.utils.FormatUtil
 import java.util.*
+import androidx.compose.ui.res.stringResource
+import com.reconsiliation.caisse.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -65,7 +67,7 @@ fun ClosureScreen(navController: NavController) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Clôture de Journée") },
+                title = { Text(stringResource(R.string.title_closure)) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
@@ -82,11 +84,11 @@ fun ClosureScreen(navController: NavController) {
             ) {
                 Icon(Icons.Default.Summarize, null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
                 Spacer(modifier = Modifier.height(16.dp))
-                Text("Aucune activité aujourd'hui.", style = MaterialTheme.typography.titleMedium)
-                Text("Enregistrez d'abord une vente pour pouvoir clôturer votre journée.", textAlign = TextAlign.Center, color = Color.Gray)
+                Text(stringResource(R.string.error_no_activity_today), style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.error_no_activity_desc), textAlign = TextAlign.Center, color = Color.Gray)
                 Spacer(modifier = Modifier.height(24.dp))
                 Button(onClick = { navController.navigate(Screen.NewSale.route) }) {
-                    Text("Faire une Vente")
+                    Text(stringResource(R.string.action_make_sale))
                 }
             }
         } else {
@@ -98,30 +100,30 @@ fun ClosureScreen(navController: NavController) {
                     .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("Résumé du ${FormatUtil.formatDate(Date())}", style = MaterialTheme.typography.titleLarge, color = Primary)
+                Text(stringResource(R.string.closure_summary_date, FormatUtil.formatDate(Date())), style = MaterialTheme.typography.titleLarge, color = Primary)
                 
-                ClosureCard("Confirmé $operatorName", momoTotal)
-                ClosureCard("Dettes du jour", creditTotal)
+                ClosureCard(stringResource(R.string.closure_confirmed_momo, operatorName), momoTotal)
+                ClosureCard(stringResource(R.string.closure_debts_today), creditTotal)
                 
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Validation du Cash", style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(R.string.closure_cash_validation), style = MaterialTheme.typography.titleMedium)
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Attendu système:")
+                            Text(stringResource(R.string.label_expected_system))
                             Text(FormatUtil.formatCurrency(cashTotal), fontWeight = FontWeight.Bold)
                         }
                         OutlinedTextField(
                             value = realCash,
                             onValueChange = { realCash = it },
-                            label = { Text("Montant réel compté") },
+                            label = { Text(stringResource(R.string.label_actual_counted)) },
                             modifier = Modifier.fillMaxWidth(),
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            prefix = { Text("FCFA ") },
+                            prefix = { Text(stringResource(R.string.label_unit_fcfa)) },
                             colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                         )
                         if (realCash.isNotEmpty()) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                Text("Écart:")
+                                Text(stringResource(R.string.label_diff))
                                 Text(
                                     FormatUtil.formatCurrency(cashDiff),
                                     color = if (cashDiff < 0) RedError else if (cashDiff > 0) com.reconsiliation.caisse.ui.theme.GreenSuccess else Color.Gray,
@@ -134,7 +136,7 @@ fun ClosureScreen(navController: NavController) {
 
                 HorizontalDivider()
                 
-                Text("Actions de fin de journée", style = MaterialTheme.typography.titleMedium)
+                Text(stringResource(R.string.closure_end_actions), style = MaterialTheme.typography.titleMedium)
                 
                 Button(
                     onClick = { 
@@ -148,7 +150,7 @@ fun ClosureScreen(navController: NavController) {
                 ) {
                     Icon(Icons.Default.Description, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Exporter les ventes (CSV)")
+                    Text(stringResource(R.string.action_export_sales_csv))
                 }
 
                 Button(
@@ -158,7 +160,7 @@ fun ClosureScreen(navController: NavController) {
                 ) {
                     Icon(Icons.Default.Backup, null)
                     Spacer(modifier = Modifier.width(8.dp))
-                    Text("Sauvegarde Totale (.db)")
+                    Text(stringResource(R.string.action_total_backup))
                 }
                 
                 if (!isLocked) {
@@ -166,9 +168,9 @@ fun ClosureScreen(navController: NavController) {
                         onClick = {
                             if (cashDiff < 0) {
                                 expenseViewModel.addExpense(
-                                    label = "Manquant de caisse (${FormatUtil.formatDate(Date())})",
+                                    label = context.getString(R.string.expense_cash_missing, FormatUtil.formatDate(Date())),
                                     amount = kotlin.math.abs(cashDiff),
-                                    category = "Pertes"
+                                    category = context.getString(R.string.category_losses)
                                 )
                             }
                             sessionViewModel.closeSession(realCash.toDoubleOrNull() ?: cashTotal, viewModel.userRole.value)
@@ -180,14 +182,14 @@ fun ClosureScreen(navController: NavController) {
                     ) {
                         Icon(Icons.Default.Lock, null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Clôturer et Verrouiller")
+                        Text(stringResource(R.string.action_close_and_lock))
                     }
                 } else {
                     Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
                         Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.Center) {
                             Icon(Icons.Default.Lock, null, tint = Color.Gray)
                             Spacer(modifier = Modifier.width(8.dp))
-                            Text("Journée clôturée et sécurisée", color = Color.Gray)
+                            Text(stringResource(R.string.status_day_closed), color = Color.Gray)
                         }
                     }
                 }
@@ -197,8 +199,7 @@ fun ClosureScreen(navController: NavController) {
         if (showBackupPasswordDialog) {
             BackupPasswordDialog(
                 isExport = true,
-                subtitle = "Sauvegarde complète de la base après clôture. " +
-                    "Choisissez un mot de passe pour la protéger.",
+                subtitle = stringResource(R.string.backup_password_notice),
                 onConfirm = { password ->
                     showBackupPasswordDialog = false
                     backupViewModel.exportEncryptedBackup(context, password, viewModel.userRole.value)
