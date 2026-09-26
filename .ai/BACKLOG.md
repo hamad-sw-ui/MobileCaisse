@@ -113,14 +113,14 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (dépend de B-101 : on n'envoie que des archives `BackupManager`)
 
 - ☑ **B-070** Écran de gestion du personnel — CRUD, rôles, désactivation sans perte d'historique
-- □ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **NEXT / NOT STARTED.** Un travail préparatoire a été séparé du working tree avant J6.1A ; il n'est pas intégré. Patch hors dépôt : `j6.2-mixed-files-before-split.diff`, SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`.
+- ☑ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **J6.2 terminé** (`8658ab5`). Session unique, mutex, comptage obligatoire, écart réel, manque après clôture. Patch historique non appliqué.
 - □ **B-072** Enrichir `AnomalyEngine` et exposer les alertes dans l'UI
 - ☑ **B-073** Externaliser les textes d'écran vers `strings.xml` — **J6.1A terminé** (`82f05be`). 684 clés FR. Les messages des ViewModels restent en français.
 - ☑ **B-074** Traduction `values-en/` — **J6.1A terminé** (`82f05be`). 684 clés EN, parité complète, placeholders cohérents.
 - ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
 - □ **B-076** Remplacer `Toast`/messages bruts par des `Snackbar` Material 3 cohérents
 - □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)
-- □ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)*
+- □ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)* — **NEXT / NOT STARTED** (J6.3)
 
 ## P7 — Software Factory *(construite au fil des besoins réels)*
 
@@ -169,12 +169,12 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P1 — Sécurité | 10 | 2 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
-| P4 — Fonctionnalités | 12 | 1 |
+| P4 — Fonctionnalités | 12 | 2 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **114** | **48** |
+| **TOTAL** | **114** | **49** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-07-28 (rév. 4 — Phase 6 : environnement Docker)*
+*Dernière mise à jour : 2026-09-26 (B-071 / J6.2 terminé — commit 8658ab5). Totaux P4 : +1 sur cette clôture seulement.*

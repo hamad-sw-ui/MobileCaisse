@@ -86,7 +86,7 @@ J7 Industrialisation (CI, release)
 **Séquençage J6** :
 1.  **Phase 0** : Assainissement et Sécurité (Bugs bloquants) ✅ (e0ceb2c)
 2.  **Phase 1** : Socle de Communication — i18n UI **J6.1A ✅ (82f05be)** ; Snackbars (6.5) encore ouverts
-3.  **Phase 2** : Processus Métier (Sessions & Permissions)
+3.  **Phase 2** : Processus Métier — sessions **J6.2 ✅ (8658ab5)** ; permissions (6.3) encore ouvertes
 4.  **Phase 3** : Monitoring & Surveillance
 5.  **Phase 4** : Connectivité Cloud
 6.  **Phase 5** : Refonte Structurelle (Monétaire)
@@ -95,8 +95,8 @@ J7 Industrialisation (CI, release)
 |---|---|---|---|
 | **6.0** | **Phase 0 : Assainissement (BUG-009, 010, 012, 013)** | — | ✅ (e0ceb2c) |
 | 6.1 | Écran de gestion du personnel (débloqué au J5.8.6) | B-070 | ✅ |
-| 6.2 | Pilotage complet des sessions de caisse | B-071 | **NEXT / NOT STARTED** |
-| 6.3 | Refonte du parcours de permissions | B-078 | □ |
+| 6.2 | Pilotage complet des sessions de caisse | B-071 | ✅ (8658ab5) |
+| 6.3 | Refonte du parcours de permissions | B-078 | **NEXT / NOT STARTED** |
 | 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
 | 6.5 | Snackbars cohérents | B-076 | □ |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | □ |
@@ -127,12 +127,26 @@ Commit technique `82f05be` (`82f05be50795cfe361eaee2c209a9451371291cd`), message
 - Build SUCCESSFUL. 118/118 tests lors de la validation.
 - Aucune modification de ViewModel, Repository, Manager, Gradle, Room/KSP ni de test.
 
-### J6.2 — Sessions / clôture de caisse : NEXT / NOT STARTED
+### J6.2 — Sessions / clôture de caisse : DONE
 
-J6.2 n'est pas terminé et n'est pas dans le code au commit `82f05be`.
+Commit technique `8658ab59eaef16c9937b3e9e740813d15d06a42f`, message `feat(j6): implement J6.2 session management`. Parent `c0b2fda` (sync documentaire J6.1A). 9 fichiers techniques. Aucun fichier `.ai/` dans ce commit.
 
-Un travail préparatoire (session unique, aperçu de caisse, cash attendu, comptage obligatoire, validation du fond, vendeur prérempli, affichage de l'écart, tests associés) a été présent dans un working tree antérieur, puis séparé avant le commit J6.1A. Il est conservé hors dépôt dans le patch `j6.2-mixed-files-before-split.diff`, SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`. Ce patch ne fait pas partie du code actuel.
+Comportement livré :
+- une seule session active ; `openSession` refuse si une session existe déjà ;
+- concurrence : `openSessionMutex` sur le `SalesRepository` `@Singleton`, contrôle + insertion dans `runInTransaction` ; le bouton d'ouverture ignore un second clic pendant `Processing` ;
+- fond d'ouverture : vide / non numérique / négatif refusés ; `0` et `1500,5` acceptés (`SessionAmounts`) ;
+- aperçu de la session active (`previewActiveSession` / `SessionPreview`) ;
+- formule unique `expectedCash = openingBalance + sessionCash - sessionExpenses` (`expectedSessionCash`) ;
+- clôture : comptage obligatoire ; `closingBalance = countedCash` ; `expectedBalance` figé avant toute écriture de manque ; écart = `closingBalance - expectedBalance` ;
+- le manque (`addExpense`) n'est enregistré qu'après le retour de `closeSession`, pour ne pas fausser l'attendu ;
+- vendeur prérempli via `getStaffName` si le personnel existe ; historique avec `label_session_gap`.
+
+Validation : 128/128 tests, `compileDebugKotlin` OK, KSP OK, `assembleDebug` OK. I18n J6.1A conservée (684/684, missing 0, extra 0, placeholder 0). Aucun `UiText` / `uiText` / `uiTextOr` / `Context` pour traduire.
+
+Le patch historique `j6.2-mixed-files-before-split.diff` (SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`) n'a pas été appliqué. J6.2 a été reconstruit sur le HEAD post-J6.1A. Un premier audit a exigé deux corrections (ordre du manque, concurrence) avant le GO FOR COMMIT.
+
+J6.3, J6.4 (déjà J6.1A), J6.5–J6.8 et J7 restent dans leur état réel. Prochaine étape fonctionnelle : **6.3 permissions (B-078)**.
 
 ---
 
-*Document mis à jour le 2026-09-26 (J6.1A TERMINÉ — commit 82f05be). Mise à jour précédente : 2026-09-06 (J6 Phase 0 TERMINÉE - commit e0ceb2c).*
+*Document mis à jour le 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5). Mise à jour précédente : 2026-09-26 (J6.1A TERMINÉ — commit 82f05be).*

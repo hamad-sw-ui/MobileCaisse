@@ -247,3 +247,14 @@ Il n'y a **pas de synchronisation serveur**. Ce qui porte ce nom dans le code :
 | A6 | Doublon `NotificationHelper` | Une seule classe | BACKLOG P1 |
 | A7 | Textes d'écran externalisés (J6.1A, `82f05be`, 684/684 FR/EN). Messages ViewModel encore en français. Snackbars (B-076) ouverts. | `strings.xml` systématique, y compris hors UI | BACKLOG P4 |
 | A8 | `exportSchema = false` | `true` + schémas versionnés en Git | BACKLOG P1 |
+
+---
+
+## 12. Acquis J6.2 (sessions) — 2026-09-26
+
+Faits réellement présents dans le commit `8658ab5`. Pas de changement Room / schéma.
+
+- Une seule session active. L'unicité est applicative : `SalesRepository` est `@Singleton` ; `openSession` sérialise via `openSessionMutex` puis contrôle + insertion dans `runInTransaction`.
+- Le calcul d'espèce attendue est unique : `expectedSessionCash` = `openingBalance + sessionCash - sessionExpenses`, utilisé par `previewActiveSession` et `closeSession`.
+- `closingBalance` = comptage saisi ; `expectedBalance` est figé dans la transaction de clôture. Le manque (`addExpense`) est écrit seulement après ce retour.
+- J6.1A inchangé : pas de `UiText`, pas de `Context` dans Repository/ViewModel pour traduire. Les écrans restent sur `stringResource`.

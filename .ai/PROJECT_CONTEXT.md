@@ -35,7 +35,7 @@ automatiquement d'une vente. D'où le nom du package : `reconsiliation`.
 | **Clients & dettes** | Fiches clients, statut VIP, crédits, remboursements, relances SMS, relevé de compte PDF |
 | **Dépenses** | Saisie, catégories, rattachement à une session |
 | **Fournisseurs** | Fiches, approvisionnements, dette fournisseur |
-| **Caisse** | Sessions (ouverture/fermeture avec fonds de caisse), clôture de journée, inventaire (audit), écart théorique/réel |
+| **Caisse** | Sessions (une seule active ; fond validé ; comptage obligatoire ; écart = compté − attendu, J6.2 `8658ab5`), clôture de journée, inventaire (audit), écart théorique/réel |
 | **SMS / MoMo** | Réception temps réel, rattrapage des SMS manqués, déduplication, file des SMS non reconnus à traiter manuellement |
 | **Impression** | Ticket ESC/POS via Bluetooth, copie marchand, pied de ticket personnalisable |
 | **Rapports** | Statistiques par période, export CSV, partage PDF, résumé quotidien |

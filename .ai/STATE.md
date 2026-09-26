@@ -5,15 +5,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 82f05be50795cfe361eaee2c209a9451371291cd
-- **HEAD actuel** : 82f05be50795cfe361eaee2c209a9451371291cd
+- **Dernier commit fonctionnel** : 8658ab59eaef16c9937b3e9e740813d15d06a42f
+- **HEAD actuel** : 8658ab59eaef16c9937b3e9e740813d15d06a42f
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-26 (SUCCESS, validation J6.1A)
-- **Dernière exécution des tests** : 2026-09-26 (118/118 SUCCESS, validation J6.1A)
+- **Dernière compilation** : 2026-09-26 (SUCCESS, `compileDebugKotlin` + `assembleDebug`, validation J6.2)
+- **Dernière exécution des tests** : 2026-09-26 (128/128 SUCCESS, validation J6.2)
 - **KSP** : PASS
-- **Working Tree** : CLEAN après le commit J6.1A (`82f05be`)
+- **Working Tree** : CLEAN après le commit technique J6.2 (`8658ab5`), avant cette synchronisation documentaire (non committée)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -28,10 +28,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - BUG-008 (Date Anomaly) reste à traiter en tâche 6.6.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.1A — internationalisation UI FR/EN (TERMINÉE TECHNIQUEMENT — commit `82f05be50795cfe361eaee2c209a9451371291cd`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture.
-- **Prochaine tâche prévue** : J6.2 — sessions / clôture de caisse. **NEXT / NOT STARTED**. Le travail préparatoire séparé avant J6.1A n'est pas dans le code ; il reste dans le patch `j6.2-mixed-files-before-split.diff` (SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`).
-- **Hors de ce commit** : snackbars (6.5 / B-076) toujours ouverts. Aucun ViewModel, Repository, Manager, Gradle, Room/KSP ni test modifié par J6.1A.
+- **Dernière tâche terminée** : J6.2 — pilotage des sessions de caisse (TERMINÉE TECHNIQUEMENT — commit `8658ab59eaef16c9937b3e9e740813d15d06a42f`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée).
+- **Prochaine tâche prévue** : J6.3 — refonte du parcours de permissions (B-078). **NEXT / NOT STARTED**. Snackbars (6.5 / B-076) restent ouverts.
+- **Hors de ce commit** : J6.3, J6.5, J6.6, J6.7, J6.8, J7. J6.1A (`82f05be`) reste le commit i18n UI ; J6.2 n'a pas touché aux ressources ni réintroduit `UiText`.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-008.
@@ -42,9 +42,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Découpage J5 terminé : isolation totale des domaines fonctionnels.
     - Séquençage J6 validé : approche par phases (Bugs -> i18n -> Métier -> Monitoring -> Cloud -> Monétaire).
     - Scope Coroutines : Utilisation d'un `@ApplicationScope` injecté pour les traitements asynchrones de longue durée (SMS).
+    - J6.2 : unicité de session au niveau applicatif (`SalesRepository` singleton + mutex + transaction). Pas de changement de schéma Room.
 - **Risques connus** : 
     - Permissions contextuelles : l'UX doit être soignée pour éviter le blocage Android 14+.
 
 ## 🕒 Dernière Mise à jour
 - **Date** : 2026-09-26
-- **Agent** : AI-DOS — synchronisation documentaire après J6.1A
+- **Agent** : AI-DOS — synchronisation documentaire après J6.2 (non committée)

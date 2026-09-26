@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-09-26 — J6.2 sessions / clôture de caisse
+
+**Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.2** terminé techniquement. Commit `8658ab59eaef16c9937b3e9e740813d15d06a42f`, message `feat(j6): implement J6.2 session management`. Parent `c0b2fda`.
+- 9 fichiers : `MainRepository`, `SalesRepository`, `SessionViewModel`, `SessionUiState`, `HomeScreen`, `ClosureScreen`, `ManagementHistoryScreens`, `SalesRepositoryTest`, `SessionViewModelTest`.
+- Session unique, mutex + transaction, garde UI, fond validé, aperçu, attendu unique, comptage obligatoire, écart réel, manque après clôture, vendeur prérempli, historique.
+- Cette entrée de journal ne committe pas la documentation.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : 22 suites, 128 tests, 0 échec, 0 erreur, 0 ignoré. `compileDebugKotlin` OK. KSP OK. `assembleDebug` OK. FR/EN 684/684, missing 0, extra 0, placeholder 0.
+
+### Problèmes rencontrés
+Le patch historique mélangé à de l'i18n n'a pas été appliqué. Reconstruction depuis la cartographie. Premier audit : NO-GO (manque écrit avant `closeSession` ; ouverture non atomique). Corrections dans le même working tree, second audit GO, puis commit technique seul.
+
+### Étape suivante
+J6.3 — permissions (B-078). **NEXT / NOT STARTED.** Snackbars (6.5 / B-076) restent ouverts. Synchronisation AI-DOS en working tree, pas encore committée.
+
+---
+
 ## 2026-09-26 — J6.1A internationalisation UI FR/EN
 
 **Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`

@@ -1,5 +1,15 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-26 — J6.2 sessions / clôture de caisse
+### Actions réalisées :
+- **J6.2 terminé techniquement** : commit `8658ab59eaef16c9937b3e9e740813d15d06a42f` (`feat(j6): implement J6.2 session management`). Parent `c0b2fda`. 9 fichiers techniques. Aucun `.ai/` dans ce commit.
+- **Pourquoi ce n'est pas le patch historique** : `j6.2-mixed-files-before-split.diff` mélangeait le métier et `UiText`. Il a servi de source de comportement seulement. Reconstruction sur le HEAD post-J6.1A, `stringResource` conservé.
+- **Premier audit** : NO-GO. (1) `addExpense` du manque avant `closeSession` pouvait baisser `expectedBalance`. (2) `getActiveSession` puis insert n'était pas atomique ; le bouton n'était pas protégé.
+- **Corrections** : manque uniquement dans `afterClose`, après retour de `closeSession` ; `openSessionMutex` + `runInTransaction` ; `Processing` posé avant `launch` ; bouton désactivé.
+- **Second audit** : GO FOR COMMIT J6.2.
+- **Preuve** : 128/128 tests (dont manque après clôture et 8 ouvertures concurrentes). `compileDebugKotlin` / KSP / `assembleDebug` OK. I18n 684/684. Aucun `UiText`.
+- **Séparation** : commit technique `8658ab5` d'abord. Cette synchronisation AI-DOS est un working tree distinct, **pas encore committée**.
+
 ## 🗓️ 2026-09-26 — J6.1A internationalisation UI
 ### Actions réalisées :
 - **J6.1A terminé techniquement** : commit `82f05be50795cfe361eaee2c209a9451371291cd` (`feat(j6): implement J6.1A UI internationalization`).
