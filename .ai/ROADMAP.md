@@ -86,7 +86,7 @@ J7 Industrialisation (CI, release)
 **Séquençage J6** :
 1.  **Phase 0** : Assainissement et Sécurité (Bugs bloquants) ✅ (e0ceb2c)
 2.  **Phase 1** : Socle de Communication — i18n UI **J6.1A ✅ (82f05be)** ; Snackbars (6.5) encore ouverts
-3.  **Phase 2** : Processus Métier — sessions **J6.2 ✅ (8658ab5)** ; permissions (6.3) encore ouvertes
+3.  **Phase 2** : Processus Métier — sessions **J6.2 ✅ (8658ab5)** ; permissions **J6.3 ✅ (52b4090)**
 4.  **Phase 3** : Monitoring & Surveillance
 5.  **Phase 4** : Connectivité Cloud
 6.  **Phase 5** : Refonte Structurelle (Monétaire)
@@ -96,7 +96,7 @@ J7 Industrialisation (CI, release)
 | **6.0** | **Phase 0 : Assainissement (BUG-009, 010, 012, 013)** | — | ✅ (e0ceb2c) |
 | 6.1 | Écran de gestion du personnel (débloqué au J5.8.6) | B-070 | ✅ |
 | 6.2 | Pilotage complet des sessions de caisse | B-071 | ✅ (8658ab5) |
-| 6.3 | Refonte du parcours de permissions | B-078 | **NEXT / NOT STARTED** |
+| 6.3 | Refonte du parcours de permissions | B-078 | ✅ (52b4090) |
 | 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
 | 6.5 | Snackbars cohérents | B-076 | □ |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | □ |
@@ -145,8 +145,30 @@ Validation : 128/128 tests, `compileDebugKotlin` OK, KSP OK, `assembleDebug` OK.
 
 Le patch historique `j6.2-mixed-files-before-split.diff` (SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`) n'a pas été appliqué. J6.2 a été reconstruit sur le HEAD post-J6.1A. Un premier audit a exigé deux corrections (ordre du manque, concurrence) avant le GO FOR COMMIT.
 
-J6.3, J6.4 (déjà J6.1A), J6.5–J6.8 et J7 restent dans leur état réel. Prochaine étape fonctionnelle : **6.3 permissions (B-078)**.
+### J6.3 — Permissions Android modernes / BUG-010 : DONE
+
+Commit technique `52b4090917c02df6d83bde2f4beeab8657e361e2`, message `feat(j6): implement J6.3 permission handling`. Parent `082f2e0` (sync documentaire J6.2). 16 fichiers techniques. Aucun fichier `.ai/` dans ce commit.
+
+Comportement livré :
+- plus de demande groupée au démarrage (`MainActivity.checkAppPermissions` retiré) ;
+- demandes unitaires au point d'usage : `RECEIVE_SMS` (onboarding), `READ_SMS` (rattrapage / Sync), `CAMERA` (scanner), `POST_NOTIFICATIONS` (onboarding, API ≥ 33), `BLUETOOTH_CONNECT` (écrans imprimante, API ≥ 31) ;
+- refus simple, refus définitif, bouton Paramètres, relecture `checkSelfPermission` au `ON_RESUME` ;
+- `SmsSyncManager.syncMissedSms` mappe `SecurityException` → `PermissionDenied` ; pas de crash sans `READ_SMS` ;
+- caméra : pas de bind CameraX sans permission ; saisie manuelle possible ;
+- Bluetooth : garde avant `bondedDevices` / `connect` ;
+- i18n 699/699 (15 clés ajoutées en paire FR/EN). J6.1A et J6.2 inchangés.
+
+Validation : 141 tests JVM, `compileDebugKotlin` OK, `testDebugUnitTest` OK. **`assembleDebug` n'a pas été exécuté.** Aucun `UiText` / `uiText` / `uiTextOr`.
+
+Résidus ouverts (non clos) :
+- `BLUETOOTH_SCAN` déclaré, jamais demandé ni utilisé ;
+- `POST_NOTIFICATIONS` non redemandée aux utilisateurs déjà onboardés ;
+- bannière `READ_SMS` non rafraîchie automatiquement après retour Paramètres (Sync relance) ;
+- tests permission = logique JVM, pas instrumentés ;
+- B-039 (WorkManager hors de `MainActivity`) hors scope.
+
+J6.4 reste J6.1A (déjà terminé). J6.5–J6.8 et J7 restent ouverts. Prochaine étape fonctionnelle : **6.5 snackbars (B-076)**.
 
 ---
 
-*Document mis à jour le 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5). Mise à jour précédente : 2026-09-26 (J6.1A TERMINÉ — commit 82f05be).*
+*Document mis à jour le 2026-09-26 (J6.3 TERMINÉ — commit 52b4090). Mise à jour précédente : 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*

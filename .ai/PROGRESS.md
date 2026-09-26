@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-09-26 — J6.3 permissions Android / BUG-010
+
+**Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.3** terminé techniquement. Commit `52b4090917c02df6d83bde2f4beeab8657e361e2`, message `feat(j6): implement J6.3 permission handling`. Parent `082f2e0`.
+- 16 fichiers : `PermissionPolicy`, `PermissionUi`, `PermissionPolicyTest`, `MainActivity`, `OnboardingScreen`, `HomeScreen`, `BarcodeScanner`, `SmsSyncManager`, `MainViewModel`, `NotificationHelper`, `EscPosPrinter`, `PrinterViewModel`, `PrintSettingsScreen`, `EditBoutiqueScreen`, `values/strings.xml`, `values-en/strings.xml`.
+- Demandes au point d'usage, refus / Paramètres / resume, `READ_SMS` sans crash, garde Bluetooth, caméra dégradée. B-078 et BUG-010 traités.
+- Cette entrée de journal ne committe pas la documentation.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : 141 tests, 0 échec. `compileDebugKotlin` OK. **`assembleDebug` non exécuté.** FR/EN 699/699, missing 0, extra 0, placeholder 0.
+
+### Problèmes rencontrés
+Premier compile : `LocalActivity` absent du classpath → remplacé par `findActivity()`. Résidus documentés, non corrigés dans ce cycle : `BLUETOOTH_SCAN` inutilisé, notifications des comptes déjà onboardés, bannière SMS après Paramètres, tests JVM seulement, B-039 hors scope.
+
+### Étape suivante
+J6.5 — snackbars (B-076). **NEXT / NOT STARTED.** Synchronisation AI-DOS en working tree, pas encore committée.
+
+---
+
 ## 2026-09-26 — J6.2 sessions / clôture de caisse
 
 **Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`

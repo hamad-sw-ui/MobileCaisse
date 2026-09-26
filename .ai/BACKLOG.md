@@ -120,7 +120,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
 - □ **B-076** Remplacer `Toast`/messages bruts par des `Snackbar` Material 3 cohérents
 - □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)
-- □ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)* — **NEXT / NOT STARTED** (J6.3)
+- ☑ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)* — **J6.3 terminé** (`52b4090`). Demandes au point d'usage, refus / Paramètres / resume. Résidus : `BLUETOOTH_SCAN` déclaré inutilisé ; notifications des comptes déjà onboardés ; bannière SMS après Paramètres ; tests JVM seulement. B-039 reste ouvert.
 
 ## P7 — Software Factory *(construite au fil des besoins réels)*
 
@@ -177,4 +177,4 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-09-26 (B-071 / J6.2 terminé — commit 8658ab5). Totaux P4 : +1 sur cette clôture seulement.*
+*Dernière mise à jour : 2026-09-26 (B-078 / J6.3 terminé — commit 52b4090). Totaux P4 : +1 sur cette clôture seulement. B-039 reste ouvert.*

@@ -11,7 +11,7 @@
 | Version | `versionCode = 1`, `versionName = "1.0"` |
 | Plateforme | Android natif, 100 % Kotlin + Jetpack Compose |
 | minSdk / targetSdk / compileSdk | 24 / 35 / 35 |
-| Langue de l'UI | **Français** par défaut, anglais dans `values-en/` (J6.1A, `82f05be`, 684 clés de chaque côté). Les messages produits par les ViewModels restent en français. |
+| Langue de l'UI | **Français** par défaut, anglais dans `values-en/` (J6.1A `82f05be` + clés J6.3, 699/699). Les messages produits par les ViewModels restent en français. |
 | Marché visé | Cameroun (FCFA, MTN MoMo, Orange Money, n° à 9 chiffres commençant par 6) |
 | Historique Git | 1 commit initial ; branche de travail `arena/019fa5ec-mobilecaisse` |
 
@@ -36,7 +36,7 @@ automatiquement d'une vente. D'où le nom du package : `reconsiliation`.
 | **Dépenses** | Saisie, catégories, rattachement à une session |
 | **Fournisseurs** | Fiches, approvisionnements, dette fournisseur |
 | **Caisse** | Sessions (une seule active ; fond validé ; comptage obligatoire ; écart = compté − attendu, J6.2 `8658ab5`), clôture de journée, inventaire (audit), écart théorique/réel |
-| **SMS / MoMo** | Réception temps réel, rattrapage des SMS manqués, déduplication, file des SMS non reconnus à traiter manuellement |
+| **SMS / MoMo** | Réception temps réel (`RECEIVE_SMS` à l'activation), rattrapage inbox (`READ_SMS` au Sync, sans crash si refusé, J6.3 `52b4090`), déduplication, file des SMS non reconnus |
 | **Impression** | Ticket ESC/POS via Bluetooth, copie marchand, pied de ticket personnalisable |
 | **Rapports** | Statistiques par période, export CSV, partage PDF, résumé quotidien |
 | **Sécurité / accès** | PIN Manager et PIN Staff, rôles `MANAGER` / `STAFF`, routes protégées, verrouillage après tentatives, journal d'actions |

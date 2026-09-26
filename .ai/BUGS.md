@@ -367,11 +367,15 @@ ou délégation à un `OneTimeWorkRequest`.
 
 ## 🟡 BUG-010 — Permissions demandées en bloc, résultat ignoré
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `MainActivity.kt`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-09-26** · **Gravité** : 🟡 MINEUR · **Fichier** : `MainActivity.kt` (demande groupée retirée)
 
-Toutes les permissions (SMS, caméra, Bluetooth, notifications) sont demandées au
-premier lancement, sans explication, et `onRequestPermissionsResult` n'est pas
-implémenté : l'app ignore les refus.
+**Cause racine** : `checkAppPermissions()` demandait SMS, caméra, Bluetooth et notifications au premier lancement ; `onRequestPermissionsResult` ignorait le résultat.
+
+**Correctif (J6.3, `52b4090`)** : plus de demande groupée. Demandes unitaires au point d'usage, rationale, refus simple / définitif, Paramètres, relecture au resume. `READ_SMS` : `SecurityException` capturée.
+
+**Preuve** : `compileDebugKotlin` + `:app:testDebugUnitTest` 141/141. `assembleDebug` non exécuté. Audits pré/post-commit GO.
+
+**Résidus** (non clos) : `BLUETOOTH_SCAN` déclaré inutilisé ; notifications non redemandées aux comptes déjà onboardés ; bannière `READ_SMS` après Paramètres ; tests JVM seulement.
 
 ---
 

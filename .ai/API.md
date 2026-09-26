@@ -146,8 +146,7 @@ Planifiés dans `MainActivity.onCreate` ⚠️ (à déplacer dans `Application` 
 `RECEIVE_SMS`, `READ_SMS`, `VIBRATE`, `CAMERA`, `BLUETOOTH`, `BLUETOOTH_ADMIN`,
 `BLUETOOTH_CONNECT`, `BLUETOOTH_SCAN`, `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`.
 
-Demandées en bloc dans `MainActivity.checkAppPermissions()` (requestCode 101),
-⚠️ sans traitement du résultat ni explication pédagogique (BUG-010).
+Déclarées dans le Manifest. Demandées au point d'usage depuis J6.3 (`52b4090`, BUG-010 / B-078) : `RECEIVE_SMS` onboarding, `READ_SMS` rattrapage, `CAMERA` scanner, `POST_NOTIFICATIONS` onboarding API ≥ 33, `BLUETOOTH_CONNECT` impression API ≥ 31. `BLUETOOTH_SCAN` déclaré, jamais demandé.
 
 ---
 

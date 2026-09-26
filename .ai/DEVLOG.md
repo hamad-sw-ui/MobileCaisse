@@ -1,5 +1,14 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-26 — J6.3 permissions Android / BUG-010
+### Actions réalisées :
+- **J6.3 terminé techniquement** : commit `52b4090917c02df6d83bde2f4beeab8657e361e2` (`feat(j6): implement J6.3 permission handling`). Parent `082f2e0`. 16 fichiers techniques. Aucun `.ai/` dans ce commit.
+- **BUG-010 / B-078** : plus de demande groupée au lancement. Demandes unitaires au point d'usage, rationale, refus simple / définitif, Paramètres, relecture au `ON_RESUME`.
+- **Protections** : `SmsSyncManager` capture `SecurityException` ; CameraX seulement si `CAMERA` accordée ; `BLUETOOTH_CONNECT` vérifié avant `bondedDevices` / `connect` ; `NotificationHelper.deliver` ignore le refus.
+- **Preuve** : 141 tests JVM, `compileDebugKotlin` OK, `testDebugUnitTest` OK. **`assembleDebug` non exécuté.** I18n 699/699. J6.2 intact. Aucun `UiText`.
+- **Audits** : pré-commit GO FOR COMMIT J6.3 ; post-commit GO FOR AI-DOS SYNCHRONIZATION J6.3.
+- **Séparation** : commit technique `52b4090` d'abord. Cette synchronisation AI-DOS est un working tree distinct, **pas encore committée**.
+
 ## 🗓️ 2026-09-26 — J6.2 sessions / clôture de caisse
 ### Actions réalisées :
 - **J6.2 terminé techniquement** : commit `8658ab59eaef16c9937b3e9e740813d15d06a42f` (`feat(j6): implement J6.2 session management`). Parent `c0b2fda`. 9 fichiers techniques. Aucun `.ai/` dans ce commit.
