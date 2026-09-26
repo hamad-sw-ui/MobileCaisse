@@ -8,6 +8,8 @@ import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
 import com.reconsiliation.caisse.notification.NotificationHelper
+import com.reconsiliation.caisse.permissions.SmsSyncResult
+import com.reconsiliation.caisse.sms.SmsSyncManager
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -91,6 +93,8 @@ class MainViewModel @Inject constructor(
     val isDataLoaded = _isDataLoaded.asStateFlow()
     private val _uiError = MutableStateFlow<String?>(null)
     val uiError = _uiError.asStateFlow()
+    private val _smsCatchUpState = MutableStateFlow<SmsCatchUpState>(SmsCatchUpState.Idle)
+    val smsCatchUpState = _smsCatchUpState.asStateFlow()
 
     // Transversal Sale Primitives
     val allVentes: StateFlow<List<VenteEntity>> = salesRepository.allVentes.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
@@ -107,11 +111,21 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             combine(boutique, subscription) { _, _ -> true }.collect { _isDataLoaded.value = true }
         }
-        catchUpSms(application)
+        catchUpSms()
     }
 
-    fun catchUpSms(application: Application) {
-        viewModelScope.launch(Dispatchers.IO) { com.reconsiliation.caisse.sms.SmsSyncManager.syncMissedSms(application) }
+    fun catchUpSms(application: Application = getApplication(), userInitiated: Boolean = false) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _smsCatchUpState.value = SmsCatchUpState.Running
+            _smsCatchUpState.value = SmsCatchUpState.from(
+                SmsSyncManager.syncMissedSms(application),
+                userInitiated
+            )
+        }
+    }
+
+    fun clearSmsCatchUpState() {
+        _smsCatchUpState.value = SmsCatchUpState.Idle
     }
 
     fun addVenteWithItems(vente: VenteEntity, items: List<VenteItemEntity>) = viewModelScope.launch {
@@ -180,5 +194,21 @@ class MainViewModel @Inject constructor(
             com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication()).setSetupComplete(false)
             _isDataLoaded.value = false
         } catch (e: Exception) { _uiError.value = "Erreur: ${e.message}" }
+    }
+}
+
+sealed interface SmsCatchUpState {
+    object Idle : SmsCatchUpState
+    object Running : SmsCatchUpState
+    object PermissionRequired : SmsCatchUpState
+    data class Completed(val matchedCount: Int) : SmsCatchUpState
+    object Failed : SmsCatchUpState
+
+    companion object {
+        fun from(result: SmsSyncResult, userInitiated: Boolean): SmsCatchUpState = when (result) {
+            is SmsSyncResult.PermissionDenied -> PermissionRequired
+            is SmsSyncResult.Success -> if (userInitiated) Completed(result.matchedCount) else Idle
+            is SmsSyncResult.Failed -> if (userInitiated) Failed else Idle
+        }
     }
 }

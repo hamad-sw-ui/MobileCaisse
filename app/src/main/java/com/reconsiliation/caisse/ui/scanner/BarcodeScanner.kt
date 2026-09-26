@@ -23,23 +23,32 @@ import java.util.concurrent.Executors
 import android.os.Vibrator
 import android.content.Context
 import android.Manifest
-import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
+import com.reconsiliation.caisse.permissions.PermissionDecision
+import com.reconsiliation.caisse.permissions.PermissionPolicy
+import com.reconsiliation.caisse.ui.permissions.RefreshOnResume
+import com.reconsiliation.caisse.ui.permissions.findActivity
+import com.reconsiliation.caisse.ui.permissions.hasPermission
+import com.reconsiliation.caisse.ui.permissions.openApplicationSettings
 
 @Composable
-fun BarcodeScannerDialog(onDismiss: () -> Unit, onBarcodeScanned: (String) -> Unit, continuous: Boolean = false) {
+fun BarcodeScannerDialog(
+    onDismiss: () -> Unit,
+    onBarcodeScanned: (String) -> Unit,
+    continuous: Boolean = false
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         confirmButton = {
             if (continuous) {
-                TextButton(onClick = onDismiss) { Text(stringResource(com.reconsiliation.caisse.R.string.action_finish)) }
+                TextButton(onClick = onDismiss) { Text(stringResource(R.string.action_finish)) }
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(if (continuous) stringResource(com.reconsiliation.caisse.R.string.action_cancel) else stringResource(com.reconsiliation.caisse.R.string.action_close)) } },
-        title = { Text(if (continuous) stringResource(com.reconsiliation.caisse.R.string.title_continuous_scan) else stringResource(com.reconsiliation.caisse.R.string.title_scan_barcode)) },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(if (continuous) stringResource(R.string.action_cancel) else stringResource(R.string.action_close)) } },
+        title = { Text(if (continuous) stringResource(R.string.title_continuous_scan) else stringResource(R.string.title_scan_barcode)) },
         text = {
             Box(modifier = Modifier.fillMaxWidth().height(300.dp)) {
                 BarcodeScannerView(onBarcodeScanned, continuous, onDismiss)
@@ -52,36 +61,45 @@ fun BarcodeScannerDialog(onDismiss: () -> Unit, onBarcodeScanned: (String) -> Un
 @Composable
 fun BarcodeScannerView(onBarcodeScanned: (String) -> Unit, continuous: Boolean = false, onDismiss: () -> Unit = {}) {
     val context = LocalContext.current
+    val activity = context.findActivity()
     val lifecycleOwner = LocalLifecycleOwner.current
-    
-    var hasCameraPermission by remember {
-        mutableStateOf(
-            ContextCompat.checkSelfPermission(
-                context,
-                Manifest.permission.CAMERA
-            ) == PackageManager.PERMISSION_GRANTED
-        )
+
+    var hasCameraPermission by remember { mutableStateOf(context.hasPermission(Manifest.permission.CAMERA)) }
+    var requestAttempted by remember { mutableStateOf(false) }
+
+    fun refreshCameraPermission() {
+        hasCameraPermission = context.hasPermission(Manifest.permission.CAMERA)
     }
+
+    RefreshOnResume { refreshCameraPermission() }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission(),
         onResult = { granted ->
+            requestAttempted = true
             hasCameraPermission = granted
         }
     )
 
-    LaunchedEffect(Unit) {
-        if (!hasCameraPermission) {
-            launcher.launch(Manifest.permission.CAMERA)
-        }
-    }
+    val rationaleVisible = activity?.shouldShowRequestPermissionRationale(Manifest.permission.CAMERA) == true
+    val decision = PermissionPolicy.decide(hasCameraPermission, rationaleVisible, requestAttempted)
 
     if (!hasCameraPermission) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(stringResource(com.reconsiliation.caisse.R.string.error_camera_permission_required))
-                Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
-                    Text(stringResource(com.reconsiliation.caisse.R.string.action_authorize))
+            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text(stringResource(R.string.permission_camera_rationale))
+                if (decision == PermissionDecision.OpenSettings) {
+                    Text(stringResource(R.string.permission_denied_permanently))
+                    Button(onClick = { context.openApplicationSettings() }) {
+                        Text(stringResource(R.string.action_open_app_settings))
+                    }
+                } else {
+                    Button(onClick = { launcher.launch(Manifest.permission.CAMERA) }) {
+                        Text(stringResource(R.string.action_authorize))
+                    }
+                }
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.action_enter_barcode_manually))
                 }
             }
         }

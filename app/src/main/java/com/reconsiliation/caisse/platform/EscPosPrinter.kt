@@ -4,6 +4,10 @@ import android.annotation.SuppressLint
 import android.bluetooth.BluetoothManager
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.os.Build
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import com.reconsiliation.caisse.permissions.PermissionPolicy
 import java.io.OutputStream
 import java.text.SimpleDateFormat
 import java.util.*
@@ -27,6 +31,13 @@ class EscPosPrinter(private val context: Context) {
 
     @SuppressLint("MissingPermission")
     fun connect(address: String): Boolean {
+        if (PermissionPolicy.needsBluetoothConnect(Build.VERSION.SDK_INT)) {
+            val granted = ContextCompat.checkSelfPermission(
+                context,
+                PermissionPolicy.BLUETOOTH_CONNECT
+            ) == PackageManager.PERMISSION_GRANTED
+            if (!granted) return false
+        }
         val btManager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         val adapter = btManager.adapter
         val device = adapter?.getRemoteDevice(address) ?: return false

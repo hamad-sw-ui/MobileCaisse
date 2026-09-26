@@ -1,6 +1,9 @@
 package com.reconsiliation.caisse.ui.screens
 
 import android.annotation.SuppressLint
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -24,6 +27,11 @@ import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.PrinterViewModel
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
+import com.reconsiliation.caisse.permissions.PermissionDecision
+import com.reconsiliation.caisse.permissions.PermissionPolicy
+import com.reconsiliation.caisse.ui.permissions.RefreshOnResume
+import com.reconsiliation.caisse.ui.permissions.findActivity
+import com.reconsiliation.caisse.ui.permissions.openApplicationSettings
 
 @SuppressLint("MissingPermission")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,9 +54,28 @@ fun EditBoutiqueScreen(navController: NavController) {
     var address by remember { mutableStateOf("") }
     var receiptFooter by remember { mutableStateOf("") }
     
-    val pairedPrinters = remember { printerViewModel.getPairedPrinters() }
     val context = androidx.compose.ui.platform.LocalContext.current
+    val activity = context.findActivity()
+    val bluetoothPermission = PermissionPolicy.bluetoothConnectPermission(Build.VERSION.SDK_INT)
+    var bluetoothGranted by remember { mutableStateOf(printerViewModel.hasBluetoothAccess()) }
+    var bluetoothAsked by remember { mutableStateOf(false) }
+    var pairedPrinters by remember { mutableStateOf(printerViewModel.getPairedPrinters()) }
     var showPrinterDropdown by remember { mutableStateOf(false) }
+
+    fun refreshBluetooth() {
+        bluetoothGranted = printerViewModel.hasBluetoothAccess()
+        pairedPrinters = printerViewModel.getPairedPrinters()
+    }
+    RefreshOnResume { refreshBluetooth() }
+    val bluetoothLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        bluetoothAsked = true
+        bluetoothGranted = granted
+        pairedPrinters = printerViewModel.getPairedPrinters()
+    }
+    val bluetoothRationale = bluetoothPermission != null &&
+        activity?.shouldShowRequestPermissionRationale(bluetoothPermission) == true
+    val bluetoothDecision = if (bluetoothPermission == null) PermissionDecision.Granted
+    else PermissionPolicy.decide(bluetoothGranted, bluetoothRationale, bluetoothAsked)
 
     LaunchedEffect(boutique) {
         boutique?.let {
@@ -110,6 +137,21 @@ fun EditBoutiqueScreen(navController: NavController) {
 
             HorizontalDivider()
             Text(stringResource(R.string.settings_hardware_stock), style = MaterialTheme.typography.titleMedium, color = Primary)
+            if (!bluetoothGranted && bluetoothPermission != null) {
+                Text(stringResource(R.string.permission_bluetooth_rationale), color = Color.Gray)
+                Button(onClick = {
+                    if (bluetoothDecision == PermissionDecision.OpenSettings) context.openApplicationSettings()
+                    else bluetoothLauncher.launch(bluetoothPermission)
+                }) {
+                    Text(
+                        if (bluetoothDecision == PermissionDecision.OpenSettings) {
+                            stringResource(R.string.action_open_app_settings)
+                        } else {
+                            stringResource(R.string.action_authorize)
+                        }
+                    )
+                }
+            }
             
             Box(modifier = Modifier.fillMaxWidth()) {
                 OutlinedTextField(

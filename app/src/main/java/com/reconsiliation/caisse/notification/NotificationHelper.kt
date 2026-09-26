@@ -7,6 +7,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Build
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import com.reconsiliation.caisse.MainActivity
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
@@ -49,7 +50,7 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .build()
-        notificationManager.notify(System.currentTimeMillis().toInt(), notification)
+        deliver(System.currentTimeMillis().toInt(), notification)
     }
 
     fun showLowStockNotification(productName: String, remainingQty: Double) {
@@ -67,7 +68,7 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
             .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(productName.hashCode(), notification)
+        deliver(productName.hashCode(), notification)
     }
 
     fun showSubscriptionReminder(daysRemaining: Int) {
@@ -98,6 +99,15 @@ class NotificationHelper @Inject constructor(@ApplicationContext private val con
             .setContentIntent(pendingIntent)
             .build()
 
-        notificationManager.notify(1001, notification)
+        deliver(1001, notification)
+    }
+
+    private fun deliver(id: Int, notification: android.app.Notification) {
+        if (!NotificationManagerCompat.from(context).areNotificationsEnabled()) return
+        try {
+            notificationManager.notify(id, notification)
+        } catch (_: SecurityException) {
+            // API 33+ without POST_NOTIFICATIONS: skip, never crash.
+        }
     }
 }

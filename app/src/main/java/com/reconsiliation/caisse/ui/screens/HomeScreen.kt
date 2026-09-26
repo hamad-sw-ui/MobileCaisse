@@ -1,6 +1,5 @@
 package com.reconsiliation.caisse.ui.screens
 
-import android.app.Application
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -33,7 +32,17 @@ import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.SessionAmounts
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SmsCatchUpState
 import com.reconsiliation.caisse.utils.FormatUtil
+import com.reconsiliation.caisse.permissions.PermissionDecision
+import com.reconsiliation.caisse.permissions.PermissionPolicy
+import com.reconsiliation.caisse.ui.permissions.RefreshOnResume
+import com.reconsiliation.caisse.ui.permissions.findActivity
+import com.reconsiliation.caisse.ui.permissions.hasPermission
+import com.reconsiliation.caisse.ui.permissions.openApplicationSettings
+import android.Manifest
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -71,6 +80,25 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     }
 
     val snackbarHostState = remember { SnackbarHostState() }
+    val activity = context.findActivity()
+    val smsCatchUpState by viewModel.smsCatchUpState.collectAsState()
+    var readSmsGranted by remember { mutableStateOf(context.hasPermission(Manifest.permission.READ_SMS)) }
+    var readSmsAsked by remember { mutableStateOf(false) }
+    var showSmsPermissionDialog by remember { mutableStateOf(false) }
+
+    fun refreshReadSms() {
+        readSmsGranted = context.hasPermission(Manifest.permission.READ_SMS)
+    }
+    RefreshOnResume { refreshReadSms() }
+
+    val readSmsLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        readSmsAsked = true
+        readSmsGranted = granted
+        if (granted) viewModel.catchUpSms(context.applicationContext as android.app.Application, userInitiated = true)
+        else showSmsPermissionDialog = true
+    }
+    val readSmsRationale = activity?.shouldShowRequestPermissionRationale(Manifest.permission.READ_SMS) == true
+    val readSmsDecision = PermissionPolicy.decide(readSmsGranted, readSmsRationale, readSmsAsked)
     val daysLeft = if (subscription != null && subscription!!.isActive) {
         val diff = subscription!!.endDate.time - java.util.Date().time
         (diff / (1000 * 60 * 60 * 24)).toInt()
@@ -171,7 +199,14 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.catchUpSms(context.applicationContext as android.app.Application) }) {
+                    IconButton(onClick = {
+                        refreshReadSms()
+                        if (readSmsGranted) {
+                            viewModel.catchUpSms(context.applicationContext as android.app.Application, userInitiated = true)
+                        } else {
+                            showSmsPermissionDialog = true
+                        }
+                    }) {
                         Icon(Icons.Default.Sync, null)
                     }
                     IconButton(onClick = {
@@ -190,11 +225,19 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             modifier = Modifier.padding(padding).fillMaxSize().background(MaterialTheme.colorScheme.background).verticalScroll(rememberScrollState()).padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            if (daysLeft in 0..5 || lowStock.isNotEmpty() || smsErrors.isNotEmpty()) {
+            if (daysLeft in 0..5 || lowStock.isNotEmpty() || smsErrors.isNotEmpty() || smsCatchUpState is SmsCatchUpState.PermissionRequired) {
                 Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp), tonalElevation = 2.dp, modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         if (daysLeft in 0..5) AlertItem(icon = Icons.Default.Timer, text = stringResource(R.string.label_subscription), subtext = stringResource(R.string.subscription_expires_in, daysLeft), color = com.reconsiliation.caisse.ui.theme.OrangeWarning, onClick = { navController.navigate(Screen.Support.route) })
                         if (smsErrors.isNotEmpty()) AlertItem(icon = Icons.Default.SmsFailed, text = stringResource(R.string.label_unreconciled_sms), subtext = stringResource(R.string.sms_to_process, smsErrors.size), onClick = { navController.navigate(Screen.SmsErrors.route) })
+                        if (smsCatchUpState is SmsCatchUpState.PermissionRequired) {
+                            AlertItem(
+                                icon = Icons.Default.SmsFailed,
+                                text = stringResource(R.string.sms_catchup_unavailable),
+                                subtext = stringResource(R.string.permission_sms_read_rationale),
+                                onClick = { showSmsPermissionDialog = true }
+                            )
+                        }
                         if (lowStock.isNotEmpty()) AlertItem(icon = Icons.Default.Inventory, text = stringResource(R.string.stock_low), subtext = stringResource(R.string.products_to_order, lowStock.size), onClick = { navController.navigate(Screen.Stock.route) })
                     }
                 }
@@ -237,6 +280,68 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
             }
             Spacer(modifier = Modifier.height(32.dp))
         }
+    }
+
+    if (showSmsPermissionDialog && !readSmsGranted) {
+        AlertDialog(
+            onDismissRequest = { showSmsPermissionDialog = false },
+            title = { Text(stringResource(R.string.sms_catchup_unavailable)) },
+            text = {
+                Text(
+                    if (readSmsDecision == PermissionDecision.OpenSettings) {
+                        stringResource(R.string.permission_denied_permanently)
+                    } else {
+                        stringResource(R.string.permission_sms_read_rationale)
+                    }
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    if (readSmsDecision == PermissionDecision.OpenSettings) context.openApplicationSettings()
+                    else readSmsLauncher.launch(Manifest.permission.READ_SMS)
+                    showSmsPermissionDialog = false
+                }) {
+                    Text(
+                        if (readSmsDecision == PermissionDecision.OpenSettings) {
+                            stringResource(R.string.action_open_app_settings)
+                        } else {
+                            stringResource(R.string.action_authorize)
+                        }
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showSmsPermissionDialog = false }) {
+                    Text(stringResource(R.string.action_continue_without))
+                }
+            }
+        )
+    }
+
+    if (smsCatchUpState is SmsCatchUpState.Completed) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearSmsCatchUpState() },
+            title = { Text(stringResource(R.string.sms_catchup_done)) },
+            text = { Text(stringResource(R.string.sms_catchup_done)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearSmsCatchUpState() }) {
+                    Text(stringResource(R.string.action_close))
+                }
+            }
+        )
+    }
+
+    if (smsCatchUpState is SmsCatchUpState.Failed) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearSmsCatchUpState() },
+            title = { Text(stringResource(R.string.sms_catchup_unavailable)) },
+            text = { Text(stringResource(R.string.sms_catchup_failed)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.clearSmsCatchUpState() }) {
+                    Text(stringResource(R.string.action_close))
+                }
+            }
+        )
     }
 }
 

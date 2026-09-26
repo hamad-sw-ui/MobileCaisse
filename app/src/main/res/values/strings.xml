@@ -684,4 +684,19 @@
     <string name="category_general">Général</string>
     <string name="category_misc">Divers</string>
     <string name="suffix_manual"> (Manuel)</string>
+    <string name="permission_sms_receive_rationale">La réception des SMS permet de valider automatiquement les paiements Mobile Money. Sans cette autorisation, vous pouvez toujours enregistrer les ventes à la main.</string>
+    <string name="permission_sms_read_rationale">Le rattrapage lit la boîte SMS pour retrouver les paiements manqués. Sans cette autorisation, le reste de la caisse reste utilisable.</string>
+    <string name="permission_camera_rationale">La caméra sert uniquement à scanner un code-barres. Vous pouvez aussi saisir le code à la main.</string>
+    <string name="permission_notifications_rationale">Les notifications signalent un stock bas ou un paiement reçu. L\'application fonctionne sans elles.</string>
+    <string name="permission_bluetooth_rationale">Le Bluetooth sert à imprimer un ticket. Sans cette autorisation, l\'impression est indisponible.</string>
+    <string name="permission_denied_permanently">Cette autorisation a été refusée définitivement. Activez-la dans les paramètres de l\'application.</string>
+    <string name="permission_status_granted">Autorisation accordée</string>
+    <string name="permission_status_denied">Autorisation refusée</string>
+    <string name="permission_optional_continue">Vous pouvez continuer sans ces autorisations. Les fonctions concernées resteront limitées.</string>
+    <string name="action_open_app_settings">Ouvrir les paramètres</string>
+    <string name="action_enter_barcode_manually">Saisir le code-barres à la main</string>
+    <string name="action_continue_without">Continuer</string>
+    <string name="sms_catchup_unavailable">Rattrapage SMS indisponible</string>
+    <string name="sms_catchup_done">Rattrapage SMS terminé</string>
+    <string name="sms_catchup_failed">Le rattrapage SMS a échoué. Le reste de la caisse reste utilisable.</string>
 </resources>

@@ -1,14 +1,10 @@
 package com.reconsiliation.caisse
 
-import android.Manifest
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.ComponentActivity
 import dagger.hilt.android.AndroidEntryPoint
-import androidx.core.app.ActivityCompat
-import androidx.core.content.ContextCompat
 import androidx.work.*
 import com.reconsiliation.caisse.data.local.BackupWorker
 import com.reconsiliation.caisse.data.local.SubscriptionWorker
@@ -21,8 +17,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        
-        checkAppPermissions()
+
         scheduleBackup()
         scheduleSubscriptionCheck()
 
@@ -30,33 +25,6 @@ class MainActivity : ComponentActivity() {
             CAISSETheme {
                 AppNavigation()
             }
-        }
-    }
-
-    private fun checkAppPermissions() {
-        val permissions = mutableListOf(
-            Manifest.permission.RECEIVE_SMS,
-            Manifest.permission.READ_SMS,
-            Manifest.permission.CAMERA
-        )
-
-        // Bluetooth permissions for Android 12+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-            permissions.add(Manifest.permission.BLUETOOTH_SCAN)
-            permissions.add(Manifest.permission.BLUETOOTH_CONNECT)
-        }
-
-        // Notification permission for Android 13+
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-            permissions.add(Manifest.permission.POST_NOTIFICATIONS)
-        }
-
-        val missingPermissions = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (missingPermissions.isNotEmpty()) {
-            ActivityCompat.requestPermissions(this, missingPermissions.toTypedArray(), 101)
         }
     }
 
@@ -80,22 +48,5 @@ class MainActivity : ComponentActivity() {
             ExistingPeriodicWorkPolicy.KEEP,
             subRequest
         )
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 101) {
-            val deniedPermissions = permissions.zip(grantResults.toTypedArray())
-                .filter { it.second == PackageManager.PERMISSION_DENIED }
-                .map { it.first }
-
-            if (deniedPermissions.isNotEmpty()) {
-                android.util.Log.w("PERMISSIONS", "Certaines permissions ont été refusées : $deniedPermissions")
-            }
-        }
     }
 }

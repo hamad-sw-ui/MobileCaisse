@@ -684,4 +684,19 @@
     <string name="category_general">General</string>
     <string name="category_misc">Miscellaneous</string>
     <string name="suffix_manual"> (Manual)</string>
+    <string name="permission_sms_receive_rationale">Receiving SMS lets the app confirm Mobile Money payments automatically. Without it, you can still record sales by hand.</string>
+    <string name="permission_sms_read_rationale">Catch-up reads the SMS inbox to recover missed payments. Without it, the rest of the register still works.</string>
+    <string name="permission_camera_rationale">The camera is only used to scan a barcode. You can also type the code by hand.</string>
+    <string name="permission_notifications_rationale">Notifications warn about low stock or incoming payments. The app works without them.</string>
+    <string name="permission_bluetooth_rationale">Bluetooth is used to print a receipt. Without it, printing is unavailable.</string>
+    <string name="permission_denied_permanently">This permission was permanently denied. Enable it in the app settings.</string>
+    <string name="permission_status_granted">Permission granted</string>
+    <string name="permission_status_denied">Permission denied</string>
+    <string name="permission_optional_continue">You can continue without these permissions. The related features will stay limited.</string>
+    <string name="action_open_app_settings">Open settings</string>
+    <string name="action_enter_barcode_manually">Enter the barcode manually</string>
+    <string name="action_continue_without">Continue</string>
+    <string name="sms_catchup_unavailable">SMS catch-up unavailable</string>
+    <string name="sms_catchup_done">SMS catch-up finished</string>
+    <string name="sms_catchup_failed">SMS catch-up failed. The rest of the register still works.</string>
 </resources>
