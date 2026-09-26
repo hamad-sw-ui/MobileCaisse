@@ -5,15 +5,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 52b4090917c02df6d83bde2f4beeab8657e361e2
-- **HEAD actuel** : 52b4090917c02df6d83bde2f4beeab8657e361e2
+- **Dernier commit fonctionnel** : 498b9ba90509122b7e98d59c96879b0b933889bf
+- **HEAD actuel** : 498b9ba90509122b7e98d59c96879b0b933889bf
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-26 (SUCCESS, `compileDebugKotlin` seulement — validation J6.3). `assembleDebug` **n'a pas été exécuté** pour J6.3.
-- **Dernière exécution des tests** : 2026-09-26 (141/141 SUCCESS, `:app:testDebugUnitTest`, validation J6.3)
-- **KSP** : warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : CLEAN après le commit technique J6.3 (`52b4090`), avant cette synchronisation documentaire (non committée)
+- **Dernière compilation** : 2026-09-26 (SUCCESS, validation J6.5 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-09-26 (147/147 SUCCESS, `:app:testDebugUnitTest --rerun-tasks`, validation J6.5)
+- **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
+- **Working Tree** : CLEAN après le commit technique J6.5 (`498b9ba`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -24,16 +24,18 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Platform (Services Framework : ReportManager, PrinterManager, ShareManager)
     - ViewModels (Orchestration : MainViewModel, NewSaleViewModel, InventoryViewModel, CustomerViewModel, SessionViewModel, ReportsViewModel, ExpenseViewModel, StaffViewModel, BackupViewModel, PrinterViewModel, CategoryViewModel, MaintenanceViewModel)
     - Permissions (logique JVM : `PermissionPolicy` / `SmsSyncOutcome` / `SmsCatchUpState`)
+    - Feedback UI J6.5 (Snackbars locales, 5 suites ViewModel étendues)
 - **Dette technique** :
-    - `MainViewModel` purégé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
+    - `MainViewModel` purégé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique. **Non refactoré en J6.5.**
     - BUG-008 (Date Anomaly) reste à traiter en tâche 6.6.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
+    - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.3 — parcours de permissions / B-078 / BUG-010 (TERMINÉE TECHNIQUEMENT — commit `52b4090917c02df6d83bde2f4beeab8657e361e2`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée).
-- **Prochaine tâche prévue** : J6.5 — snackbars cohérents (B-076). **NEXT / NOT STARTED**.
-- **Hors de ce commit** : J6.5, J6.6, J6.7, J6.8, J7. J6.1A (`82f05be`) et J6.4 (même livrable i18n) restent terminés. J6.2 (`8658ab5`) reste intact.
+- **Dernière tâche terminée** : J6.5 — snackbars / feedback UI / B-076 (TERMINÉE TECHNIQUEMENT — commit `498b9ba90509122b7e98d59c96879b0b933889bf`). Post-commit audit **VALIDÉ**.
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée). **J6.6 / LOT 4 n'est pas commencé.**
+- **Prochaine tâche prévue** : audit documentaire indépendant, puis commit documentaire `.ai/`. Ensuite, jalon fonctionnel **J6.6** — alertes d'anomalie (B-072). **NEXT / NOT STARTED**.
+- **Hors de ce commit technique** : J6.6, J6.7, J6.8, J7. J6.1A (`82f05be`), J6.4 (même livrable i18n), J6.2 (`8658ab5`) et J6.3 (`52b4090`) restent terminés et intacts.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-008.
@@ -46,13 +48,18 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Scope Coroutines : Utilisation d'un `@ApplicationScope` injecté pour les traitements asynchrones de longue durée (SMS).
     - J6.2 : unicité de session au niveau applicatif (`SalesRepository` singleton + mutex + transaction). Pas de changement de schéma Room.
     - J6.3 : décisions runtime dans l'UI / Activity ; `PermissionPolicy` testable sans Android ; les Repositories ne demandent pas de permissions.
+    - J6.5 : feedback **local à l'écran** (`SnackbarHostState` + `LaunchedEffect` + clear). Pas de bus global, pas de `UiText`, pas de `Context` dans les ViewModels. `MainViewModel` non refactoré.
 - **Risques connus / résidus J6.3 (non clos)** : 
     - `BLUETOOTH_SCAN` déclaré, jamais demandé ni utilisé.
     - `POST_NOTIFICATIONS` non redemandée aux utilisateurs déjà onboardés.
     - Bannière `READ_SMS` non mise à jour automatiquement après retour Paramètres.
     - Tests permission uniquement JVM (pas instrumentés).
     - B-039 (WorkManager hors de `MainActivity`) hors scope.
+- **Résidus J6.5 (non clos, hors scope assumé)** :
+    - Erreurs silencieuses sur écrans qui `popBackStack` / naviguent immédiatement (SaleDetail, Settings/Splash).
+    - `convertErrorToOrphan` et `testPrint` sans canal de feedback.
+    - Overlay possible dialog / Snackbar à l'ouverture de session (Home).
 
 ## 🕒 Dernière Mise à jour
 - **Date** : 2026-09-26
-- **Agent** : AI-DOS — synchronisation documentaire après J6.3 (non committée)
+- **Agent** : AI-DOS — synchronisation documentaire après J6.5 (non committée)

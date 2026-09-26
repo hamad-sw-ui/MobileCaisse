@@ -11,7 +11,7 @@
 | Version | `versionCode = 1`, `versionName = "1.0"` |
 | Plateforme | Android natif, 100 % Kotlin + Jetpack Compose |
 | minSdk / targetSdk / compileSdk | 24 / 35 / 35 |
-| Langue de l'UI | **Français** par défaut, anglais dans `values-en/` (J6.1A `82f05be` + clés J6.3, 699/699). Les messages produits par les ViewModels restent en français. |
+| Langue de l'UI | **Français** par défaut, anglais dans `values-en/` (J6.1A `82f05be` + clés J6.3/J6.5, **700/700**). Snackbars J6.5 (`498b9ba`) via `stringResource`. Messages bruts restants hors écrans J6.5. |
 | Marché visé | Cameroun (FCFA, MTN MoMo, Orange Money, n° à 9 chiffres commençant par 6) |
 | Historique Git | 1 commit initial ; branche de travail `arena/019fa5ec-mobilecaisse` |
 

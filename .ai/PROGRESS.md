@@ -6,6 +6,27 @@
 
 ---
 
+## 2026-09-26 — J6.5 snackbars / feedback UI / B-076
+
+**Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.5** terminé techniquement. Commit `498b9ba90509122b7e98d59c96879b0b933889bf`, message `feat(j6): implement J6.5 snackbar and feedback handling`. Parent `d0e608e`.
+- LOT 1 : 19 fichiers. LOT 2 : 2 fichiers. LOT 3 : 4 fichiers. **Total 25 fichiers**, +264 / −38. Aucun `.ai/` dans ce commit.
+- Snackbars Material 3 locales, erreurs consommées puis cleared, i18n FR/EN, correction Staff / Reports / NewSale, `SessionUiState.Error` Home/Closure, `uiError` SalesList/Stock/SmsError/Support, vente rapide Stock via `Job.join()`.
+- Post-commit audit **VALIDÉ**. Cette entrée de journal ne committe pas la documentation.
+
+### Tests exécutés
+`:app:testDebugUnitTest --rerun-tasks` : **147/147**, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug). FR/EN 700/700.
+
+### Problèmes rencontrés
+Faux succès vente rapide Stock corrigé avant commit (`join()` + test `uiError == null`). Dettes hors scope conservées : SaleDetail / Settings-Splash, `convertErrorToOrphan`, `testPrint`, overlay dialog Home. **J6.6 / LOT 4 non commencé.**
+
+### Étape suivante
+Audit documentaire indépendant, puis commit documentaire `.ai/`. Jalon fonctionnel suivant : J6.6 — alertes d'anomalie (B-072). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-09-26 — J6.3 permissions Android / BUG-010
 
 **Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`

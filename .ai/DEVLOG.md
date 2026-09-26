@@ -1,5 +1,17 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-26 — J6.5 snackbars / feedback UI / B-076
+### Actions réalisées :
+- **J6.5 terminé techniquement** : commit `498b9ba90509122b7e98d59c96879b0b933889bf` (`feat(j6): implement J6.5 snackbar and feedback handling`). Parent `d0e608e`. 25 fichiers, +264 / −38. Aucun `.ai/` dans ce commit.
+- **Architecture retenue** : Snackbar Material 3 **locale** (`SnackbarHostState` + `LaunchedEffect` + `clearUiState` / `clearError`). Pas de bus global, pas de `SharedFlow` / `Channel` / `UiText` / `SnackbarManager`. ViewModels sans `Context`. `MainViewModel` non refactoré.
+- **LOT 1 (19)** : Customer, Debt, Expense, Reports (`@StringRes`), Staff (`onResult`, plus de faux succès), NewSale (`clearUiState()` = Idle seulement) + 5 tests + clé `error_staff_deactivate`.
+- **LOT 2 (2)** : Home / Closure — `SessionUiState.Error` → Snackbar → `clearUiState()`. J6.2 intact.
+- **LOT 3 (4)** : SalesList, Stock, SmsError, Support — `uiError` consommé. Succès optimiste `sale_deleted` retiré.
+- **Correction Stock** : `addVenteWithItems()` retourne un `Job` ; `join()` puis succès seulement si `uiError.value == null`. Empêche succès puis erreur.
+- **Preuve** : 147/147 tests JVM (`--rerun-tasks`), `compileDebugKotlin` / KSP / **`assembleDebug` SUCCESS**. I18n 700/700. J6.2 et J6.3 hors diff.
+- **Audits** : contrôle final pré-commit GO ; post-commit **VALIDÉ**.
+- **Séparation** : commit technique `498b9ba` d'abord. Cette synchronisation AI-DOS est un working tree distinct, **pas encore committée**. **J6.6 / LOT 4 non commencé.**
+
 ## 🗓️ 2026-09-26 — J6.3 permissions Android / BUG-010
 ### Actions réalisées :
 - **J6.3 terminé techniquement** : commit `52b4090917c02df6d83bde2f4beeab8657e361e2` (`feat(j6): implement J6.3 permission handling`). Parent `082f2e0`. 16 fichiers techniques. Aucun `.ai/` dans ce commit.

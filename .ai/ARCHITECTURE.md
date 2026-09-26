@@ -245,7 +245,7 @@ Il n'y a **pas de synchronisation serveur**. Ce qui porte ce nom dans le code :
 | A4 | Accès DB depuis l'UI (5 endroits) | Passer par ViewModel | BACKLOG P2 |
 | A5 | `CoroutineScope(Dispatchers.IO)` non annulable dans `SmsReceiver` | `goAsync` + scope maîtrisé / WorkManager | BACKLOG P2 |
 | A6 | Doublon `NotificationHelper` | Une seule classe | BACKLOG P1 |
-| A7 | Textes d'écran externalisés (J6.1A `82f05be` + clés J6.3, 699/699 FR/EN). Messages ViewModel encore en français. Snackbars (B-076) ouverts. | `strings.xml` systématique, y compris hors UI | BACKLOG P4 |
+| A7 | Textes d'écran externalisés (J6.1A `82f05be` + clés J6.3/J6.5, 700/700 FR/EN). Snackbars locales J6.5 (`498b9ba`). Messages bruts restants hors écrans J6.5 (`InventoryUiState`, `BackupUiState`). | `strings.xml` systématique, y compris hors UI | BACKLOG P4 |
 | A8 | `exportSchema = false` | `true` + schémas versionnés en Git | BACKLOG P1 |
 
 ---
@@ -268,3 +268,13 @@ Faits réellement présents dans le commit `52b4090`. Pas de changement Room / s
 - Points d'usage : `RECEIVE_SMS` onboarding ; `READ_SMS` Sync / rattrapage ; `CAMERA` scanner ; `POST_NOTIFICATIONS` onboarding API ≥ 33 ; `BLUETOOTH_CONNECT` écrans imprimante API ≥ 31.
 - `BLUETOOTH_SCAN` reste déclaré, aucun scan BLE / `startDiscovery` dans le code.
 - Repositories : aucune demande de permission.
+
+## 14. Acquis J6.5 (feedback UI) — 2026-09-26
+
+Faits réellement présents dans le commit `498b9ba`. Ce n'est **pas** une architecture globale nouvelle. `MainViewModel` n'a pas été refactoré.
+
+- Pattern **local à l'écran** : `SnackbarHostState` + `LaunchedEffect` sur l'état d'erreur + consommation explicite (`clearUiState` / `clearError`).
+- Pas de `SnackbarManager`, EventBus, `SharedFlow` / `Channel` global, `UiEvent`, `UiText`. Les ViewModels J6.5 n'utilisent pas `Context` pour traduire.
+- Producteurs : `*UiState.Error` (Customer, Expense, Reports `@StringRes`, NewSale, Session) et `MainViewModel.uiError` (SalesList, Stock, SmsError, Support).
+- Volontairement non câblés : écrans qui `popBackStack` / naviguent immédiatement (SaleDetail, Settings, Splash).
+- Vente rapide Stock : le succès attend `Job.join()` et n'est affiché que si `uiError.value == null`.

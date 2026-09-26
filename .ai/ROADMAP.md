@@ -85,7 +85,7 @@ J7 Industrialisation (CI, release)
 
 **Séquençage J6** :
 1.  **Phase 0** : Assainissement et Sécurité (Bugs bloquants) ✅ (e0ceb2c)
-2.  **Phase 1** : Socle de Communication — i18n UI **J6.1A ✅ (82f05be)** ; Snackbars (6.5) encore ouverts
+2.  **Phase 1** : Socle de Communication — i18n UI **J6.1A ✅ (82f05be)** ; Snackbars **J6.5 ✅ (498b9ba)**
 3.  **Phase 2** : Processus Métier — sessions **J6.2 ✅ (8658ab5)** ; permissions **J6.3 ✅ (52b4090)**
 4.  **Phase 3** : Monitoring & Surveillance
 5.  **Phase 4** : Connectivité Cloud
@@ -98,7 +98,7 @@ J7 Industrialisation (CI, release)
 | 6.2 | Pilotage complet des sessions de caisse | B-071 | ✅ (8658ab5) |
 | 6.3 | Refonte du parcours de permissions | B-078 | ✅ (52b4090) |
 | 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
-| 6.5 | Snackbars cohérents | B-076 | □ |
+| 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | □ |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | □ |
 | 6.7b | Implémenter la sauvegarde automatique distante | B-112 | □ |
@@ -167,8 +167,38 @@ Résidus ouverts (non clos) :
 - tests permission = logique JVM, pas instrumentés ;
 - B-039 (WorkManager hors de `MainActivity`) hors scope.
 
-J6.4 reste J6.1A (déjà terminé). J6.5–J6.8 et J7 restent ouverts. Prochaine étape fonctionnelle : **6.5 snackbars (B-076)**.
+J6.4 reste J6.1A (déjà terminé). **J6.5 est terminé** (`498b9ba`). J6.6–J6.8 et J7 restent ouverts. **J6.6 / LOT 4 n'est pas commencé.**
+
+### J6.5 — Snackbars / feedback UI / B-076 : DONE
+
+Commit technique `498b9ba90509122b7e98d59c96879b0b933889bf`, message `feat(j6): implement J6.5 snackbar and feedback handling`. Parent `d0e608e` (sync documentaire J6.3). **25 fichiers** techniques, **+264 / −38**. Aucun fichier `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+Découpage livré :
+- **LOT 1** (19 fichiers) : Customer, Debt, Expense, Reports, Staff, NewSale — Snackbars locales, i18n, `clearUiState()` / `onResult`, tests ViewModel.
+- **LOT 2** (2 fichiers) : Home + Closure — `SessionUiState.Error` → Snackbar → `clearUiState()`.
+- **LOT 3** (4 fichiers) : SalesList, Stock, SmsError, Support — `MainViewModel.uiError` → Snackbar → `clearError()`.
+
+Comportement livré :
+- Snackbar Material 3 **locale à l'écran** (`SnackbarHostState` + `LaunchedEffect`) ; erreur consommée puis cleared.
+- Pas de bus global, pas de `SharedFlow` / `Channel` / `UiText` / `SnackbarManager` ; pas de `Context` dans les ViewModels J6.5.
+- `MainViewModel`, `SessionViewModel`, `SalesRepository` et J6.3 **non refactorés**.
+- Staff : formulaire fermé seulement si `onResult` est `null` ; plus de faux succès.
+- Reports : `ReportsUiState.Error(@StringRes)`.
+- NewSale : `clearUiState()` remet Idle **sans** vider le panier.
+- Stock — vente rapide : `addVenteWithItems()` retourne un `Job` ; l'écran fait `join()` puis affiche le succès seulement si `uiError.value == null`.
+
+Validation : **147/147** tests JVM (`--rerun-tasks`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. I18n **700/700** (clé `error_staff_deactivate`). J6.2 et J6.3 hors diff.
+
+Hors périmètre / dettes conservées (non résolues) :
+- `SaleDetail` : annulation / retour + `popBackStack` immédiat — `uiError` non collecté (Snackbar inadapté).
+- Settings / Splash : reset + navigation immédiate — `uiError` non collecté.
+- `convertErrorToOrphan` : producteur non câblé (inutilisé à l'écran).
+- `PrintSettings` : `testPrint` silencieux.
+- Home : le `AlertDialog` d'ouverture peut masquer visuellement la Snackbar.
+- Messages bruts restants hors écrans J6.5 (`InventoryUiState`, `BackupUiState`).
+
+Prochaine étape fonctionnelle : **6.6 alertes d'anomalie (B-072)**. **NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-09-26 (J6.3 TERMINÉ — commit 52b4090). Mise à jour précédente : 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*
+*Document mis à jour le 2026-09-26 (J6.5 TERMINÉ — commit 498b9ba). Mises à jour précédentes : 2026-09-26 (J6.3 TERMINÉ — commit 52b4090) ; 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*
