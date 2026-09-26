@@ -34,8 +34,10 @@ class ReportsViewModelTest {
 
     class FakeReportManager(context: android.content.Context) : com.reconsiliation.caisse.platform.ReportManager(context) {
         var salesPassedToGenerateCsv: List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>? = null
+        var failCsv = false
         override fun generateSalesCsv(ventes: List<com.reconsiliation.caisse.data.local.dao.VenteWithItems>): java.io.File? {
             salesPassedToGenerateCsv = ventes
+            if (failCsv) return null
             return java.io.File("fake.csv")
         }
     }
@@ -136,6 +138,19 @@ class ReportsViewModelTest {
         
         assertEquals(1, reportManager.salesPassedToGenerateCsv?.size)
         assertEquals(99L, reportManager.salesPassedToGenerateCsv?.get(0)?.vente?.id)
+    }
+
+    @Test
+    fun `exportSalesData sets Error when csv creation fails then clearUiState returns Idle`() = runTest {
+        reportManager.failCsv = true
+        viewModel.exportSalesData(emptyList())
+        advanceUntilIdle()
+
+        val error = viewModel.uiState.value
+        assertTrue(error is ReportsUiState.Error)
+        assertEquals(com.reconsiliation.caisse.R.string.error_csv_create, (error as ReportsUiState.Error).messageRes)
+        viewModel.clearUiState()
+        assertTrue(viewModel.uiState.value is ReportsUiState.Idle)
     }
 
     @Test

@@ -31,15 +31,16 @@ class StaffViewModel @Inject constructor(
             repository.saveStaff(name, pin, role, phone, existing)
             onResult(null)
         } catch (e: Exception) {
-            onResult(e.message ?: "Enregistrement impossible")
+            onResult(e.message ?: "")
         }
     }
 
-    fun deactivateStaff(staff: StaffEntity) = viewModelScope.launch {
+    fun deactivateStaff(staff: StaffEntity, onResult: (String?) -> Unit = {}) = viewModelScope.launch {
         try {
             repository.deactivateStaff(staff)
+            onResult(null)
         } catch (e: Exception) {
-            // Error handling could be added to uiState if needed
+            onResult(e.message ?: "")
         }
     }
 }

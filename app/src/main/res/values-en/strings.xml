@@ -605,6 +605,7 @@
     <string name="error_supplier_delete">Could not delete the supplier</string>
     <string name="error_debt_update">Could not update the debt</string>
     <string name="error_staff_save">Could not save</string>
+    <string name="error_staff_deactivate">Could not deactivate the staff member</string>
     <string name="label_your_shop">your shop</string>
     <string name="error_restore_failed">Restoration failed</string>
     <string name="receipt_address">📍 %1$s</string>

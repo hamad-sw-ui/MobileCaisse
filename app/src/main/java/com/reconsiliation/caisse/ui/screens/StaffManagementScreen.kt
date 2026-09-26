@@ -35,6 +35,7 @@ import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.StaffViewModel
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
+import kotlinx.coroutines.launch
 
 private const val ROLE_STAFF = "STAFF"
 private const val ROLE_MANAGER = "MANAGER"
@@ -49,6 +50,9 @@ fun StaffManagementScreen(navController: NavController) {
     var showForm by remember { mutableStateOf(false) }
     var toDeactivate by remember { mutableStateOf<StaffEntity?>(null) }
     val snackbar = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    val staffSaveError = stringResource(R.string.error_staff_save)
+    val staffDeactivateError = stringResource(R.string.error_staff_deactivate)
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbar) },
@@ -110,8 +114,12 @@ fun StaffManagementScreen(navController: NavController) {
                 onDismiss = { showForm = false; editing = null },
                 onSave = { name, pin, role, phone ->
                     viewModel.saveStaff(name, pin, role, phone, editing) { error ->
-                        showForm = false
-                        editing = null
+                        if (error == null) {
+                            showForm = false
+                            editing = null
+                        } else {
+                            scope.launch { snackbar.showSnackbar(staffSaveError) }
+                        }
                     }
                 }
             )
@@ -127,8 +135,12 @@ fun StaffManagementScreen(navController: NavController) {
                 },
                 confirmButton = {
                     TextButton(onClick = {
-                        viewModel.deactivateStaff(member)
-                        toDeactivate = null
+                        viewModel.deactivateStaff(member) { error ->
+                            toDeactivate = null
+                            if (error != null) {
+                                scope.launch { snackbar.showSnackbar(staffDeactivateError) }
+                            }
+                        }
                     }) { Text(stringResource(R.string.action_deactivate), color = RedError) }
                 },
                 dismissButton = {

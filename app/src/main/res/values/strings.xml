@@ -605,6 +605,7 @@
     <string name="error_supplier_delete">Erreur suppression fournisseur</string>
     <string name="error_debt_update">Erreur mise à jour dette</string>
     <string name="error_staff_save">Enregistrement impossible</string>
+    <string name="error_staff_deactivate">Impossible de désactiver l\'employé</string>
     <string name="label_your_shop">votre boutique</string>
     <string name="error_restore_failed">Échec de la restauration</string>
     <string name="receipt_address">📍 %1$s</string>

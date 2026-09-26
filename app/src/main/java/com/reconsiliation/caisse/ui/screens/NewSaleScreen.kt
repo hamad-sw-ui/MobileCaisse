@@ -73,9 +73,12 @@ fun NewSaleScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
+    val saleErrorMessage = stringResource(R.string.error_generic)
+
     LaunchedEffect(uiState) {
         if (uiState is NewSaleUiState.Error) {
-            snackbarHostState.showSnackbar((uiState as NewSaleUiState.Error).message)
+            snackbarHostState.showSnackbar(saleErrorMessage)
+            viewModel.clearUiState()
         }
     }
 

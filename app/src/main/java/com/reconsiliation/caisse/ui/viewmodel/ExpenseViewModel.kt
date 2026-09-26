@@ -24,7 +24,7 @@ class ExpenseViewModel @Inject constructor(
 
     fun addExpense(label: String, amount: Double, category: String) {
         if (label.isBlank() || amount <= 0) {
-            _uiState.value = ExpenseUiState.Error("Libellé obligatoire et montant positif requis.")
+            _uiState.value = ExpenseUiState.Error("")
             return
         }
         
@@ -34,7 +34,7 @@ class ExpenseViewModel @Inject constructor(
                 repository.insertExpense(ExpenseEntity(label = label, amount = amount, category = category, date = java.util.Date()))
                 _uiState.value = ExpenseUiState.Success
             } catch (e: Exception) {
-                _uiState.value = ExpenseUiState.Error(e.message ?: "Erreur d'ajout de dépense")
+                _uiState.value = ExpenseUiState.Error(e.message ?: "")
             }
         }
     }
@@ -44,7 +44,7 @@ class ExpenseViewModel @Inject constructor(
             try {
                 repository.deleteExpense(expense)
             } catch (e: Exception) {
-                _uiState.value = ExpenseUiState.Error(e.message ?: "Erreur de suppression")
+                _uiState.value = ExpenseUiState.Error(e.message ?: "")
             }
         }
     }

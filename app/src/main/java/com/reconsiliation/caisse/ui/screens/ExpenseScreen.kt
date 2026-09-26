@@ -55,14 +55,22 @@ fun ExpenseScreen(navController: NavController) {
     
     var showAddDialog by remember { mutableStateOf(false) }
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorMessage = stringResource(R.string.error_expense_add)
 
     LaunchedEffect(uiState) {
-        if (uiState is ExpenseUiState.Success) {
-            viewModel.clearUiState()
+        when (uiState) {
+            is ExpenseUiState.Error -> {
+                snackbarHostState.showSnackbar(errorMessage)
+                viewModel.clearUiState()
+            }
+            is ExpenseUiState.Success -> viewModel.clearUiState()
+            else -> Unit
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_expenses)) },

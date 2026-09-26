@@ -8,6 +8,7 @@ import com.reconsiliation.caisse.data.local.dao.VenteWithItems
 import com.reconsiliation.caisse.data.local.entity.VenteEntity
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
+import com.reconsiliation.caisse.R
 import com.reconsiliation.caisse.platform.ReportManager
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.ui.state.ReportsUiState
@@ -110,10 +111,10 @@ class ReportsViewModel @Inject constructor(
                     shareManager.shareFile(file, "text/csv", "Partager le rapport")
                     _uiState.value = ReportsUiState.Success
                 } else {
-                    _uiState.value = ReportsUiState.Error("Erreur lors de la création du fichier CSV")
+                    _uiState.value = ReportsUiState.Error(R.string.error_csv_create)
                 }
             } catch (e: Exception) {
-                _uiState.value = ReportsUiState.Error(e.message ?: "Erreur d'exportation")
+                _uiState.value = ReportsUiState.Error(R.string.error_export)
             }
         }
     }

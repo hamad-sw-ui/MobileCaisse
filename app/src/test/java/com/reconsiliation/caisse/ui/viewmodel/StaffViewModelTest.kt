@@ -9,6 +9,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.*
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -78,6 +79,27 @@ class StaffViewModelTest {
         val updated = db.staffDao().getStaffById(1)
         assertEquals("Updated Name", updated?.name)
         assertEquals("MANAGER", updated?.role)
+    }
+
+    @Test
+    fun `saveStaff onResult receives error when name is blank`() = runTest {
+        var result: String? = "unset"
+        viewModel.saveStaff("", "1234", "STAFF") { error -> result = error }
+        advanceUntilIdle()
+
+        assertTrue(result != null)
+        assertTrue(result != "unset")
+        val active = db.staffDao().getAllActiveStaff().first()
+        assertEquals(0, active.size)
+    }
+
+    @Test
+    fun `saveStaff onResult is null on success`() = runTest {
+        var result: String? = "unset"
+        viewModel.saveStaff("New Guy", "1234", "STAFF") { error -> result = error }
+        advanceUntilIdle()
+
+        assertEquals(null, result)
     }
 
     @Test

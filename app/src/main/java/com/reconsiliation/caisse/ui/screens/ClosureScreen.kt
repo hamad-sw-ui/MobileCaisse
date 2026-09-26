@@ -50,13 +50,20 @@ fun ClosureScreen(navController: NavController) {
     val allVentesWithItems by viewModel.allVentesWithItems.collectAsState()
     val sessionUiState by sessionViewModel.uiState.collectAsState()
     val sessionPreview by sessionViewModel.sessionPreview.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val sessionCloseError = stringResource(R.string.error_session_close)
 
     LaunchedEffect(Unit) {
         sessionViewModel.loadSessionPreview()
     }
     LaunchedEffect(sessionUiState) {
-        if (sessionUiState is SessionUiState.Success) {
-            sessionViewModel.clearUiState()
+        when (sessionUiState) {
+            is SessionUiState.Error -> {
+                snackbarHostState.showSnackbar(sessionCloseError)
+                sessionViewModel.clearUiState()
+            }
+            SessionUiState.Success -> sessionViewModel.clearUiState()
+            else -> Unit
         }
     }
     
@@ -70,6 +77,7 @@ fun ClosureScreen(navController: NavController) {
     val cashGap = SessionAmounts.cashGap(countedCash, sessionPreview?.expectedCash)
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_closure)) },

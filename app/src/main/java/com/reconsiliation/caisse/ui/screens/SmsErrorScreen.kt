@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,13 +41,24 @@ fun SmsErrorScreen(navController: NavController) {
     val operatorName = boutique?.operator ?: "MoMo"
     val errors by viewModel.smsErrors.collectAsState()
     val allVentes by viewModel.allVentes.collectAsState()
+    val uiError by viewModel.uiError.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val actionErrorMessage = stringResource(R.string.error_generic)
     
     val pendingVentes = allVentes.filter { (it.paymentMethod == "MOMO" || it.paymentMethod == "MIXED") && it.status == "PENDING" }
 
     var selectedError by remember { mutableStateOf<com.reconsiliation.caisse.data.local.entity.SmsErrorEntity?>(null) }
     var showResolveDialog by remember { mutableStateOf(false) }
 
+    LaunchedEffect(uiError) {
+        if (uiError != null) {
+            snackbarHostState.showSnackbar(actionErrorMessage)
+            viewModel.clearError()
+        }
+    }
+
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_sms_log, operatorName)) },

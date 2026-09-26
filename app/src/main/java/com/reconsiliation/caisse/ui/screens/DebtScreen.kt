@@ -44,10 +44,17 @@ fun DebtScreen(navController: NavController) {
     val operatorName = boutique?.operator ?: "MoMo"
     val debtors by viewModel.debtors.collectAsState()
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorMessage = stringResource(R.string.error_debt_update)
 
     LaunchedEffect(uiState) {
-        if (uiState is CustomerUiState.Success) {
-            viewModel.clearUiState()
+        when (uiState) {
+            is CustomerUiState.Error -> {
+                snackbarHostState.showSnackbar(errorMessage)
+                viewModel.clearUiState()
+            }
+            is CustomerUiState.Success -> viewModel.clearUiState()
+            else -> Unit
         }
     }
     
@@ -55,6 +62,7 @@ fun DebtScreen(navController: NavController) {
     var showRepayDialog by remember { mutableStateOf(false) }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_debts)) },

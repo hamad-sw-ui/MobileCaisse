@@ -114,6 +114,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     val suggestedSeller by sessionViewModel.suggestedSeller.collectAsState()
     val sessionPreview by sessionViewModel.sessionPreview.collectAsState()
     val sessionUiState by sessionViewModel.uiState.collectAsState()
+    val sessionOpenError = stringResource(R.string.error_session_open)
 
     LaunchedEffect(staffId) {
         sessionViewModel.loadSellerSuggestion(staffId)
@@ -137,6 +138,10 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                 sessionViewModel.clearUiState()
             }
             SessionUiState.AlreadyOpen -> sessionViewModel.loadSessionPreview()
+            is SessionUiState.Error -> {
+                snackbarHostState.showSnackbar(sessionOpenError)
+                sessionViewModel.clearUiState()
+            }
             else -> Unit
         }
     }

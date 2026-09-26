@@ -2,16 +2,27 @@ package com.reconsiliation.caisse.ui.viewmodel
 
 import androidx.lifecycle.SavedStateHandle
 import com.reconsiliation.caisse.data.local.entity.StockEntity
+import com.reconsiliation.caisse.data.local.entity.VenteEntity
 import com.reconsiliation.caisse.data.repository.*
 import com.reconsiliation.caisse.platform.PrinterManager
 import com.reconsiliation.caisse.platform.ShareManager
-import kotlinx.coroutines.flow.first
+import com.reconsiliation.caisse.ui.state.NewSaleUiState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import java.util.Date
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class NewSaleViewModelTest {
 
     private lateinit var viewModel: NewSaleViewModel
@@ -19,9 +30,11 @@ class NewSaleViewModelTest {
     private lateinit var salesRepository: SalesRepository
     private lateinit var mainRepository: MainRepository
     private lateinit var context: FakeContext
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         db = FakeAppDatabase()
         context = FakeContext()
         val inventoryRepository = InventoryRepository(
@@ -52,6 +65,11 @@ class NewSaleViewModelTest {
             shareManager = ShareManager(context),
             savedStateHandle = SavedStateHandle()
         )
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
     }
 
     private fun createProduct(id: Long) = StockEntity(
@@ -105,5 +123,27 @@ class NewSaleViewModelTest {
         
         viewModel.clearCart()
         assertTrue(viewModel.cart.value.isEmpty())
+    }
+
+    @Test
+    fun `clearUiState after Error returns Idle`() = runTest {
+        viewModel.addVenteWithItems(
+            VenteEntity(
+                amount = 100.0,
+                description = "T",
+                date = Date(),
+                paymentMethod = "CASH",
+                status = "CONFIRMED"
+            ),
+            emptyList(),
+            "MANAGER",
+            false,
+            0.0
+        )
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is NewSaleUiState.Error)
+        viewModel.clearUiState()
+        assertTrue(viewModel.uiState.value is NewSaleUiState.Idle)
     }
 }

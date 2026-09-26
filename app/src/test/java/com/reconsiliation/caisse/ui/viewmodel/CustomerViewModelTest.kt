@@ -3,8 +3,16 @@ package com.reconsiliation.caisse.ui.viewmodel
 import com.reconsiliation.caisse.data.local.entity.CustomerEntity
 import com.reconsiliation.caisse.data.repository.*
 import com.reconsiliation.caisse.ui.state.CustomerUiState
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -27,15 +35,18 @@ class MockShareManager : com.reconsiliation.caisse.platform.ShareManager(FakeCon
     override fun shareText(text: String, title: String, pkg: String?) {}
 }
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CustomerViewModelTest {
 
     private lateinit var viewModel: CustomerViewModel
     private lateinit var db: FakeAppDatabase
     private lateinit var salesRepository: SalesRepository
     private lateinit var shareManager: MockShareManager
+    private val testDispatcher = StandardTestDispatcher()
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         db = FakeAppDatabase()
         val context = FakeContext()
         val inventoryRepository = InventoryRepository(
@@ -80,6 +91,24 @@ class CustomerViewModelTest {
             reportManager = MockReportManager(),
             shareManager = shareManager
         )
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun `generateCustomerStatement sets Error when pdf fails then clearUiState returns Idle`() = runTest {
+        val customer = CustomerEntity(id = 1, name = "C1", phone = "1")
+        db.customerDao().insertOrUpdate(customer)
+
+        viewModel.generateCustomerStatement(customer)
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is CustomerUiState.Error)
+        viewModel.clearUiState()
+        assertTrue(viewModel.uiState.value is CustomerUiState.Idle)
     }
 
     @Test

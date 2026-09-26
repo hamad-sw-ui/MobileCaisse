@@ -36,7 +36,7 @@ class CustomerViewModel @Inject constructor(
                 salesRepository.addRepayment(customerId, amount, method, role)
                 _uiState.value = CustomerUiState.Success
             } catch (e: Exception) {
-                _uiState.value = CustomerUiState.Error(e.message ?: "Erreur de remboursement")
+                _uiState.value = CustomerUiState.Error(e.message ?: "")
             }
         }
     }
@@ -68,10 +68,10 @@ class CustomerViewModel @Inject constructor(
                     shareManager.shareFile(file, "application/pdf", "Partager le relevé")
                     _uiState.value = CustomerUiState.Success
                 } else {
-                    _uiState.value = CustomerUiState.Error("Échec de génération du PDF")
+                    _uiState.value = CustomerUiState.Error("")
                 }
             } catch (e: Exception) {
-                _uiState.value = CustomerUiState.Error(e.message ?: "Erreur PDF")
+                _uiState.value = CustomerUiState.Error(e.message ?: "")
             }
         }
     }

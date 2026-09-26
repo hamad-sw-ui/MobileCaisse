@@ -42,15 +42,22 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
     val currency by mainViewModel.currency.collectAsState()
     val customerVentes by viewModel.getVentesByCustomer(customerId).collectAsState(initial = emptyList())
     val uiState by viewModel.uiState.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val errorMessage = stringResource(R.string.error_pdf_failed)
 
     LaunchedEffect(uiState) {
-        if (uiState is CustomerUiState.Error) {
-            // Handle error (e.g. show snackbar)
-            viewModel.clearUiState()
+        when (uiState) {
+            is CustomerUiState.Error -> {
+                snackbarHostState.showSnackbar(errorMessage)
+                viewModel.clearUiState()
+            }
+            is CustomerUiState.Success -> viewModel.clearUiState()
+            else -> Unit
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(customer?.name ?: stringResource(R.string.title_customer_profile)) },

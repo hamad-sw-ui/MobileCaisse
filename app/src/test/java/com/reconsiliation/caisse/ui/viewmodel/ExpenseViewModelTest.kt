@@ -65,6 +65,16 @@ class ExpenseViewModelTest {
     }
 
     @Test
+    fun `clearUiState after Error returns Idle`() = runTest {
+        viewModel.addExpense("Taxi", 0.0, "Transport")
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value is ExpenseUiState.Error)
+        viewModel.clearUiState()
+        assertTrue(viewModel.uiState.value is ExpenseUiState.Idle)
+    }
+
+    @Test
     fun `deleteExpense should call repository`() = runTest {
         backgroundScope.launch { viewModel.allExpenses.collect {} }
         viewModel.addExpense("Taxi", 1000.0, "Transport")

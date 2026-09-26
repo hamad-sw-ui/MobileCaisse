@@ -47,7 +47,9 @@ fun ReportsScreen(navController: NavController) {
     val valuation = inventoryViewModel.stockValuation.collectAsState().value
     val topProducts = inventoryViewModel.topProducts.collectAsState().value
     val uiState by viewModel.uiState.collectAsState()
-    
+    val snackbarHostState = remember { SnackbarHostState() }
+    val exportErrorMessage = (uiState as? ReportsUiState.Error)?.let { stringResource(it.messageRes) }
+
     var period by remember { mutableStateOf("MONTH") } // MONTH, YEAR, CUSTOM
 
     LaunchedEffect(period) {
@@ -55,12 +57,20 @@ fun ReportsScreen(navController: NavController) {
     }
 
     LaunchedEffect(uiState) {
-        if (uiState is ReportsUiState.Success) {
-            viewModel.clearUiState()
+        when (uiState) {
+            is ReportsUiState.Error -> {
+                if (exportErrorMessage != null) {
+                    snackbarHostState.showSnackbar(exportErrorMessage)
+                }
+                viewModel.clearUiState()
+            }
+            is ReportsUiState.Success -> viewModel.clearUiState()
+            else -> Unit
         }
     }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_reports)) },

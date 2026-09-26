@@ -108,9 +108,13 @@ class NewSaleViewModel @Inject constructor(
                 _lastConfirmedVenteId.value = venteId
                 _uiState.value = NewSaleUiState.Success(venteId)
             } catch (e: Exception) {
-                _uiState.value = NewSaleUiState.Error(e.message ?: "Erreur inconnue")
+                _uiState.value = NewSaleUiState.Error(e.message ?: "")
             }
         }
+    }
+
+    fun clearUiState() {
+        _uiState.value = NewSaleUiState.Idle
     }
 
     fun clearLastVenteId() {

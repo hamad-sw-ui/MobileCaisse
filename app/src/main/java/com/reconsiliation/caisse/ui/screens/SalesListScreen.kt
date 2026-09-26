@@ -21,7 +21,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
-import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import androidx.compose.ui.res.stringResource
@@ -52,12 +51,19 @@ fun SalesListScreen(navController: NavController) {
     
     val context = androidx.compose.ui.platform.LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
-    val scope = rememberCoroutineScope()
+    val uiError by mainViewModel.uiError.collectAsState()
+    val actionErrorMessage = stringResource(R.string.error_generic)
     
     var selectedDate by remember { mutableStateOf(java.util.Date()) }
 
     LaunchedEffect(selectedDate) {
         viewModel.loadVentesForMonth(selectedDate)
+    }
+    LaunchedEffect(uiError) {
+        if (uiError != null) {
+            snackbarHostState.showSnackbar(actionErrorMessage)
+            mainViewModel.clearError()
+        }
     }
     
     var venteToDelete by remember { mutableStateOf<VenteEntity?>(null) }
@@ -143,7 +149,6 @@ fun SalesListScreen(navController: NavController) {
                     Button(onClick = {
                         mainViewModel.deleteVente(venteToDelete!!)
                         venteToDelete = null
-                        scope.launch { snackbarHostState.showSnackbar(context.getString(R.string.sale_deleted)) }
                     }, colors = ButtonDefaults.buttonColors(containerColor = RedError)) {
                         Text(stringResource(R.string.action_delete))
                     }

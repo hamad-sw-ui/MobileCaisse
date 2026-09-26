@@ -70,6 +70,8 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = androidx.compose.ui.platform.LocalContext.current
+    val uiError by mainViewModel.uiError.collectAsState()
+    val actionErrorMessage = stringResource(R.string.error_generic)
 
     LaunchedEffect(uiState) {
         if (uiState is InventoryUiState.Error) {
@@ -77,6 +79,12 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
             viewModel.clearUiState()
         } else if (uiState is InventoryUiState.Success) {
             viewModel.clearUiState()
+        }
+    }
+    LaunchedEffect(uiError) {
+        if (uiError != null) {
+            snackbarHostState.showSnackbar(actionErrorMessage)
+            mainViewModel.clearError()
         }
     }
     
@@ -219,11 +227,14 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                             unitPrice = item.unitPrice,
                                             purchasePrice = item.purchasePrice
                                         )
-                                        mainViewModel.addVenteWithItems(vente, listOf(venteItem))
+                                        val productName = item.productName
                                         scope.launch {
-                                            snackbarHostState.showSnackbar(
-                                                context.getString(R.string.label_rapid_sale_success, item.productName)
-                                            )
+                                            mainViewModel.addVenteWithItems(vente, listOf(venteItem)).join()
+                                            if (mainViewModel.uiError.value == null) {
+                                                snackbarHostState.showSnackbar(
+                                                    context.getString(R.string.label_rapid_sale_success, productName)
+                                                )
+                                            }
                                         }
                                     }
                                 )

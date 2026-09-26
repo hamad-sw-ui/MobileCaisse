@@ -36,8 +36,19 @@ fun SupportScreen(navController: NavController) {
     var activationKey by remember { mutableStateOf("") }
     val subscription by viewModel.subscription.collectAsState()
     val boutique by viewModel.boutique.collectAsState()
+    val uiError by viewModel.uiError.collectAsState()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val actionErrorMessage = stringResource(R.string.error_generic)
+
+    LaunchedEffect(uiError) {
+        if (uiError != null) {
+            snackbarHostState.showSnackbar(actionErrorMessage)
+            viewModel.clearError()
+        }
+    }
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_support_subscription)) },
