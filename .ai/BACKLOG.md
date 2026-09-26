@@ -113,10 +113,10 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (dépend de B-101 : on n'envoie que des archives `BackupManager`)
 
 - ☑ **B-070** Écran de gestion du personnel — CRUD, rôles, désactivation sans perte d'historique
-- □ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement)
+- □ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **NEXT / NOT STARTED.** Un travail préparatoire a été séparé du working tree avant J6.1A ; il n'est pas intégré. Patch hors dépôt : `j6.2-mixed-files-before-split.diff`, SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`.
 - □ **B-072** Enrichir `AnomalyEngine` et exposer les alertes dans l'UI
-- □ **B-073** Externaliser tous les textes vers `strings.xml` (aujourd'hui 9 usages de `R.string`)
-- □ **B-074** Ajouter la traduction `values-en/`
+- ☑ **B-073** Externaliser les textes d'écran vers `strings.xml` — **J6.1A terminé** (`82f05be`). 684 clés FR. Les messages des ViewModels restent en français.
+- ☑ **B-074** Traduction `values-en/` — **J6.1A terminé** (`82f05be`). 684 clés EN, parité complète, placeholders cohérents.
 - ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
 - □ **B-076** Remplacer `Toast`/messages bruts par des `Snackbar` Material 3 cohérents
 - □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)

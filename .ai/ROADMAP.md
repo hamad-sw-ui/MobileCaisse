@@ -85,7 +85,7 @@ J7 Industrialisation (CI, release)
 
 **Séquençage J6** :
 1.  **Phase 0** : Assainissement et Sécurité (Bugs bloquants) ✅ (e0ceb2c)
-2.  **Phase 1** : Socle de Communication (i18n & Snackbars) ⏳
+2.  **Phase 1** : Socle de Communication — i18n UI **J6.1A ✅ (82f05be)** ; Snackbars (6.5) encore ouverts
 3.  **Phase 2** : Processus Métier (Sessions & Permissions)
 4.  **Phase 3** : Monitoring & Surveillance
 5.  **Phase 4** : Connectivité Cloud
@@ -95,9 +95,9 @@ J7 Industrialisation (CI, release)
 |---|---|---|---|
 | **6.0** | **Phase 0 : Assainissement (BUG-009, 010, 012, 013)** | — | ✅ (e0ceb2c) |
 | 6.1 | Écran de gestion du personnel (débloqué au J5.8.6) | B-070 | ✅ |
-| 6.2 | Pilotage complet des sessions de caisse | B-071 | □ |
+| 6.2 | Pilotage complet des sessions de caisse | B-071 | **NEXT / NOT STARTED** |
 | 6.3 | Refonte du parcours de permissions | B-078 | □ |
-| 6.4 | Externalisation des textes + `values-en/` | B-073, B-074 | □ |
+| 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
 | 6.5 | Snackbars cohérents | B-076 | □ |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | □ |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | □ |
@@ -118,4 +118,21 @@ J7 Industrialisation (CI, release)
 
 ---
 
-*Document mis à jour le 2026-09-06 (J6 Phase 0 TERMINÉE - commit e0ceb2c).*
+### J6.1A — UI Internationalization : DONE
+
+Commit technique `82f05be` (`82f05be50795cfe361eaee2c209a9451371291cd`), message `feat(j6): implement J6.1A UI internationalization`.
+
+- 38 fichiers d'écrans, de composants UI et de ressources.
+- 684 clés FR et 684 clés EN, parité complète, placeholders cohérents.
+- Build SUCCESSFUL. 118/118 tests lors de la validation.
+- Aucune modification de ViewModel, Repository, Manager, Gradle, Room/KSP ni de test.
+
+### J6.2 — Sessions / clôture de caisse : NEXT / NOT STARTED
+
+J6.2 n'est pas terminé et n'est pas dans le code au commit `82f05be`.
+
+Un travail préparatoire (session unique, aperçu de caisse, cash attendu, comptage obligatoire, validation du fond, vendeur prérempli, affichage de l'écart, tests associés) a été présent dans un working tree antérieur, puis séparé avant le commit J6.1A. Il est conservé hors dépôt dans le patch `j6.2-mixed-files-before-split.diff`, SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`. Ce patch ne fait pas partie du code actuel.
+
+---
+
+*Document mis à jour le 2026-09-26 (J6.1A TERMINÉ — commit 82f05be). Mise à jour précédente : 2026-09-06 (J6 Phase 0 TERMINÉE - commit e0ceb2c).*

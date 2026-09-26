@@ -13,6 +13,7 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 | **J5.8.3** (Session ViewModel) | ✅ J5.8.3 | — | `SessionViewModel.kt`, `MainViewModel.kt`, +8 fichiers | 90 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.4** (Reports ViewModel) | ✅ J5.8.4 | — | `ReportsViewModel.kt`, `MainViewModel.kt`, +4 fichiers | 96 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.5** (Expense ViewModel) | ✅ J5.8.5 | — | `ExpenseViewModel.kt`, `MainViewModel.kt`, +11 fichiers | 103 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
+| **J6.1A** (i18n UI FR/EN) | ✅ contre-audit GO | — | 38 fichiers UI + `strings.xml` / `values-en` | 118/118 SUCCESS | ✅ | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`82f05be`) |
 
 ---
 
@@ -30,6 +31,7 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Date | Commande | Résultat | Git Hash | Branche | Tâches | Durée |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-09-26 | `:app:testDebugUnitTest` | **SUCCESS** (118/118) | `82f05be` | `arena/...` | J6.1A | 3m 44s |
 | 2026-08-19 | `./gradlew :app:assembleDebug` | **SUCCESS** | `62ef8fa` | `arena/...` | 33 | 2m 36s |
 | 2026-08-19 | `./gradlew :app:testDebugUnitTest` | **SUCCESS** | `62ef8fa` | `arena/...` | 33 | 1m 46s |
 
@@ -39,4 +41,4 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Branche | Commit Initial | Commit Final | État |
 | :--- | :--- | :--- | :--- |
-| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `62ef8fa` | **Working tree clean** |
+| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `82f05be` | **Working tree clean après J6.1A** |

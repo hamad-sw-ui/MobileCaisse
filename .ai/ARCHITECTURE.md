@@ -245,5 +245,5 @@ Il n'y a **pas de synchronisation serveur**. Ce qui porte ce nom dans le code :
 | A4 | Accès DB depuis l'UI (5 endroits) | Passer par ViewModel | BACKLOG P2 |
 | A5 | `CoroutineScope(Dispatchers.IO)` non annulable dans `SmsReceiver` | `goAsync` + scope maîtrisé / WorkManager | BACKLOG P2 |
 | A6 | Doublon `NotificationHelper` | Une seule classe | BACKLOG P1 |
-| A7 | Texte codé en dur (9 usages de `R.string` sur ~40 clés) | `strings.xml` systématique | BACKLOG P4 |
+| A7 | Textes d'écran externalisés (J6.1A, `82f05be`, 684/684 FR/EN). Messages ViewModel encore en français. Snackbars (B-076) ouverts. | `strings.xml` systématique, y compris hors UI | BACKLOG P4 |
 | A8 | `exportSchema = false` | `true` + schémas versionnés en Git | BACKLOG P1 |

@@ -5,15 +5,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : e0ceb2c4ee692db280be12e74dcaa5e148486483
-- **HEAD actuel** : e0ceb2c4ee692db280be12e74dcaa5e148486483
+- **Dernier commit fonctionnel** : 82f05be50795cfe361eaee2c209a9451371291cd
+- **HEAD actuel** : 82f05be50795cfe361eaee2c209a9451371291cd
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-06 (SUCCESS)
-- **Dernière exécution des tests** : 2026-09-06 (118/118 SUCCESS)
+- **Dernière compilation** : 2026-09-26 (SUCCESS, validation J6.1A)
+- **Dernière exécution des tests** : 2026-09-26 (118/118 SUCCESS, validation J6.1A)
 - **KSP** : PASS
-- **Working Tree** : CLEAN
+- **Working Tree** : CLEAN après le commit J6.1A (`82f05be`)
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -28,9 +28,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - BUG-008 (Date Anomaly) reste à traiter en tâche 6.6.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : Phase 0 Jalon 6 - Assainissement et Sécurité (TERMINÉE - commit e0ceb2c).
-- **Tâche en cours** : Synchronisation documentaire.
-- **Prochaine tâche prévue** : Phase 1 Jalon 6 - Socle de Communication (i18n & Snackbars).
+- **Dernière tâche terminée** : J6.1A — internationalisation UI FR/EN (TERMINÉE TECHNIQUEMENT — commit `82f05be50795cfe361eaee2c209a9451371291cd`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture.
+- **Prochaine tâche prévue** : J6.2 — sessions / clôture de caisse. **NEXT / NOT STARTED**. Le travail préparatoire séparé avant J6.1A n'est pas dans le code ; il reste dans le patch `j6.2-mixed-files-before-split.diff` (SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`).
+- **Hors de ce commit** : snackbars (6.5 / B-076) toujours ouverts. Aucun ViewModel, Repository, Manager, Gradle, Room/KSP ni test modifié par J6.1A.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-008.
@@ -45,5 +46,5 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Permissions contextuelles : l'UX doit être soignée pour éviter le blocage Android 14+.
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-09-06
-- **Agent** : AI-DOS Independent Auditor
+- **Date** : 2026-09-26
+- **Agent** : AI-DOS — synchronisation documentaire après J6.1A

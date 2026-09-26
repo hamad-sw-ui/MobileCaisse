@@ -1,5 +1,13 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-26 — J6.1A internationalisation UI
+### Actions réalisées :
+- **J6.1A terminé techniquement** : commit `82f05be50795cfe361eaee2c209a9451371291cd` (`feat(j6): implement J6.1A UI internationalization`).
+- **Périmètre** : 38 fichiers d'UI et de ressources. 684 clés FR, 684 clés EN, parité complète, placeholders cohérents.
+- **Preuve** : Build SUCCESSFUL, 118/118 tests. Aucun ViewModel, Repository, Manager, Gradle, Room/KSP ni test modifié.
+- **J6.2** : non commencé dans le code. Travail préparatoire séparé avant ce commit, conservé hors dépôt dans `j6.2-mixed-files-before-split.diff` (SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`). Non intégré.
+- **Working Tree** : propre après le commit.
+
 ## 🗓️ 2026-08-19 — Extraction J5.8.5 (ExpenseViewModel)
 ### Actions réalisées :
 - **Extraction Domaine Dépenses** : Création de `ExpenseViewModel` gérant `allExpenses` et les catégories `"EXPENSE"`.

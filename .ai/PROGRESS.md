@@ -6,6 +6,32 @@
 
 ---
 
+## 2026-09-26 — J6.1A internationalisation UI FR/EN
+
+**Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.1A** terminé techniquement. Commit `82f05be50795cfe361eaee2c209a9451371291cd`, message `feat(j6): implement J6.1A UI internationalization`.
+- 38 fichiers : écrans et composants Compose, `values/strings.xml`, création de `values-en/strings.xml`.
+- 684 clés FR, 684 clés EN, aucune clé manquante, aucun placeholder divergent.
+- Aucun ViewModel, Repository, Manager, Gradle, Room/KSP ni test dans ce commit.
+
+### Fichiers modifiés
+Les 38 fichiers du commit `82f05be`. Cette entrée de journal ne modifie pas le code.
+
+### Tests exécutés
+Build SUCCESSFUL. `:app:testDebugUnitTest` : 22 suites, 118 tests, 0 échec, 0 erreur, 0 ignoré, lors de la validation précédant le commit.
+
+### Problèmes rencontrés
+Un working tree antérieur mélangeait l'i18n UI, des traductions hors écrans et un début de J6.2. J6.2 a été retiré avant le commit. Il n'est pas intégré.
+
+### Étape suivante
+J6.2 — sessions / clôture de caisse. **NEXT / NOT STARTED.**
+Travail préparatoire séparé, conservé hors dépôt : `j6.2-mixed-files-before-split.diff`, SHA-256 `61EBAE077D50F508B44B52ADA29E8C94AF4B26CEAEB5BC13B7C463E03B89FB11`.
+Les snackbars (6.5 / B-076) restent ouverts.
+
+---
+
 ## 2026-07-28 — Session 11 : branchement de BackupManager (étape 5)
 
 **Date** : 2026-07-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
