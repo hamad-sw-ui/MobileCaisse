@@ -372,6 +372,7 @@ class MainRepository @Inject constructor(
     /** Lecture ponctuelle de la boutique, hors flux réactif. */
     suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
     suspend fun getAllActiveStaffOnce(): List<StaffEntity> = db.staffDao().getAllActiveStaff().first()
+    suspend fun getStaffName(id: Long): String? = db.staffDao().getStaffById(id)?.name
     suspend fun updateStaffSecurityInfo(staff: StaffEntity) = db.staffDao().insertOrUpdate(staff)
 
     /** Format d'un fichier de sauvegarde, pour adapter l'interface. */

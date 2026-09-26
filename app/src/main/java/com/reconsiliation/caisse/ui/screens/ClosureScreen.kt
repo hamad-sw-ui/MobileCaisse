@@ -24,6 +24,7 @@ import com.reconsiliation.caisse.ui.components.BackupPasswordDialog
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.state.SessionUiState
+import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.*
@@ -48,7 +49,11 @@ fun ClosureScreen(navController: NavController) {
     val ventes by viewModel.allVentes.collectAsState()
     val allVentesWithItems by viewModel.allVentesWithItems.collectAsState()
     val sessionUiState by sessionViewModel.uiState.collectAsState()
+    val sessionPreview by sessionViewModel.sessionPreview.collectAsState()
 
+    LaunchedEffect(Unit) {
+        sessionViewModel.loadSessionPreview()
+    }
     LaunchedEffect(sessionUiState) {
         if (sessionUiState is SessionUiState.Success) {
             sessionViewModel.clearUiState()
@@ -56,13 +61,13 @@ fun ClosureScreen(navController: NavController) {
     }
     
     val todayVentes = ventes.filter { DateUtils.isToday(it.date.time) }
-    val cashTotal = todayVentes.filter { it.paymentMethod == "CASH" && it.status == "CONFIRMED" }.sumOf { it.amount }
     val momoTotal = todayVentes.filter { it.paymentMethod == "MOMO" && it.status == "CONFIRMED" }.sumOf { it.amount }
     val creditTotal = todayVentes.filter { it.paymentMethod == "CREDIT" }.sumOf { it.amount }
     val isLocked = todayVentes.any { it.isLocked }
 
     var realCash by remember { mutableStateOf("") }
-    val cashDiff = (realCash.toDoubleOrNull() ?: cashTotal) - cashTotal
+    val countedCash = SessionAmounts.countedCash(realCash)
+    val cashGap = SessionAmounts.cashGap(countedCash, sessionPreview?.expectedCash)
 
     Scaffold(
         topBar = {
@@ -108,25 +113,45 @@ fun ClosureScreen(navController: NavController) {
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.closure_cash_validation), style = MaterialTheme.typography.titleMedium)
-                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(stringResource(R.string.label_expected_system))
-                            Text(FormatUtil.formatCurrency(cashTotal), fontWeight = FontWeight.Bold)
+                        sessionPreview?.let { preview ->
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.label_opening_float))
+                                Text(FormatUtil.formatCurrency(preview.openingBalance))
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.label_session_cash))
+                                Text(FormatUtil.formatCurrency(preview.cashSales))
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.label_session_expenses))
+                                Text(FormatUtil.formatCurrency(preview.expenses))
+                            }
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text(stringResource(R.string.label_expected_system))
+                                Text(FormatUtil.formatCurrency(preview.expectedCash), fontWeight = FontWeight.Bold)
+                            }
                         }
                         OutlinedTextField(
                             value = realCash,
                             onValueChange = { realCash = it },
                             label = { Text(stringResource(R.string.label_actual_counted)) },
                             modifier = Modifier.fillMaxWidth(),
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             prefix = { Text(stringResource(R.string.label_unit_fcfa)) },
                             colors = CaisseTextFieldDefaults.outlinedTextFieldColors()
                         )
-                        if (realCash.isNotEmpty()) {
+                        if (countedCash == null) {
+                            Text(stringResource(R.string.session_count_required), color = RedError)
+                        } else if (cashGap != null) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(stringResource(R.string.label_diff))
                                 Text(
-                                    FormatUtil.formatCurrency(cashDiff),
-                                    color = if (cashDiff < 0) RedError else if (cashDiff > 0) com.reconsiliation.caisse.ui.theme.GreenSuccess else Color.Gray,
+                                    FormatUtil.formatCurrency(cashGap),
+                                    color = when {
+                                        cashGap < 0 -> RedError
+                                        cashGap > 0 -> GreenSuccess
+                                        else -> Color.Gray
+                                    },
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -166,18 +191,23 @@ fun ClosureScreen(navController: NavController) {
                 if (!isLocked) {
                     Button(
                         onClick = {
-                            if (cashDiff < 0) {
-                                expenseViewModel.addExpense(
-                                    label = context.getString(R.string.expense_cash_missing, FormatUtil.formatDate(Date())),
-                                    amount = kotlin.math.abs(cashDiff),
-                                    category = context.getString(R.string.category_losses)
-                                )
+                            val counted = SessionAmounts.countedCash(realCash) ?: return@Button
+                            val gap = SessionAmounts.cashGap(counted, sessionPreview?.expectedCash)
+                            val shortageLabel = context.getString(R.string.expense_cash_missing, FormatUtil.formatDate(Date()))
+                            val shortageCategory = context.getString(R.string.category_losses)
+                            sessionViewModel.closeSession(counted, viewModel.userRole.value) {
+                                viewModel.lockSalesForToday()
+                                if (gap != null && gap < 0) {
+                                    expenseViewModel.addExpense(
+                                        label = shortageLabel,
+                                        amount = kotlin.math.abs(gap),
+                                        category = shortageCategory
+                                    )
+                                }
                             }
-                            sessionViewModel.closeSession(realCash.toDoubleOrNull() ?: cashTotal, viewModel.userRole.value)
-                            viewModel.lockSalesForToday()
                         },
                         modifier = Modifier.fillMaxWidth(),
-                        enabled = sessionUiState !is SessionUiState.Processing,
+                        enabled = countedCash != null && sessionUiState !is SessionUiState.Processing,
                         colors = ButtonDefaults.buttonColors(containerColor = RedError)
                     ) {
                         Icon(Icons.Default.Lock, null)

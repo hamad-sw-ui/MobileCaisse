@@ -26,10 +26,12 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.R
 import com.reconsiliation.caisse.ui.components.BigButton
 import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.RedError
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
+import com.reconsiliation.caisse.ui.viewmodel.SessionAmounts
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
 import com.reconsiliation.caisse.utils.FormatUtil
 
@@ -79,29 +81,82 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
     var showSessionDialog by remember { mutableStateOf(false) }
     var sellerName by remember { mutableStateOf("") }
     var openingBalance by remember { mutableStateOf("") }
+    var sessionFormErrorRes by remember { mutableStateOf<Int?>(null) }
+    val staffId by viewModel.staffId.collectAsState()
+    val suggestedSeller by sessionViewModel.suggestedSeller.collectAsState()
+    val sessionPreview by sessionViewModel.sessionPreview.collectAsState()
+    val sessionUiState by sessionViewModel.uiState.collectAsState()
 
-    LaunchedEffect(activeSession, isDataLoaded) {
-        if (isDataLoaded) showSessionDialog = activeSession == null
+    LaunchedEffect(staffId) {
+        sessionViewModel.loadSellerSuggestion(staffId)
+    }
+    LaunchedEffect(suggestedSeller) {
+        val suggestion = suggestedSeller
+        if (sellerName.isBlank() && suggestion != null) sellerName = suggestion
+    }
+    LaunchedEffect(activeSession, isDataLoaded, sessionUiState) {
+        if (!isDataLoaded) return@LaunchedEffect
+        when (sessionUiState) {
+            SessionUiState.AlreadyOpen -> showSessionDialog = true
+            SessionUiState.Processing, SessionUiState.Success -> Unit
+            else -> showSessionDialog = activeSession == null
+        }
+    }
+    LaunchedEffect(sessionUiState) {
+        when (sessionUiState) {
+            SessionUiState.Success -> {
+                showSessionDialog = false
+                sessionViewModel.clearUiState()
+            }
+            SessionUiState.AlreadyOpen -> sessionViewModel.loadSessionPreview()
+            else -> Unit
+        }
     }
 
     if (showSessionDialog) {
         AlertDialog(
-            onDismissRequest = { },
+            onDismissRequest = {
+                if (sessionUiState is SessionUiState.AlreadyOpen) {
+                    showSessionDialog = false
+                    sessionViewModel.clearUiState()
+                }
+            },
             title = { Text(stringResource(R.string.session_opening)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     Text(stringResource(R.string.session_opening_desc))
+                    if (sessionUiState is SessionUiState.AlreadyOpen) {
+                        Text(stringResource(R.string.session_already_open), color = MaterialTheme.colorScheme.error)
+                        sessionPreview?.let { preview ->
+                            Text(stringResource(R.string.label_seller_colon, preview.sellerName))
+                            Text("${stringResource(R.string.label_opening_float)} : ${FormatUtil.formatCurrency(preview.openingBalance)}")
+                            Text("${stringResource(R.string.label_session_cash)} : ${FormatUtil.formatCurrency(preview.cashSales)}")
+                            Text("${stringResource(R.string.label_session_expenses)} : ${FormatUtil.formatCurrency(preview.expenses)}")
+                            Text("${stringResource(R.string.label_expected_system)} ${FormatUtil.formatCurrency(preview.expectedCash)}")
+                        }
+                    }
                     OutlinedTextField(value = sellerName, onValueChange = { sellerName = it }, label = { Text(stringResource(R.string.label_seller_name)) }, modifier = Modifier.fillMaxWidth())
                     OutlinedTextField(value = openingBalance, onValueChange = { openingBalance = it }, label = { Text(stringResource(R.string.label_initial_balance)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Decimal))
+                    sessionFormErrorRes?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error) }
                 }
             },
             confirmButton = {
-                Button(onClick = {
-                    if (sellerName.isNotBlank()) {
-                        sessionViewModel.openSession(sellerName, openingBalance.toDoubleOrNull() ?: 0.0, viewModel.staffId.value)
-                        showSessionDialog = false
-                    }
-                }) { Text(stringResource(R.string.action_open)) }
+                Button(
+                    onClick = {
+                        if (sessionUiState is SessionUiState.Processing) return@Button
+                        val seller = SessionAmounts.sellerName(sellerName)
+                        val balance = SessionAmounts.openingBalance(openingBalance)
+                        sessionFormErrorRes = when {
+                            seller == null -> R.string.session_seller_required
+                            balance == null -> R.string.session_balance_required
+                            else -> null
+                        }
+                        if (seller != null && balance != null) {
+                            sessionViewModel.openSession(seller, balance, staffId)
+                        }
+                    },
+                    enabled = sessionUiState !is SessionUiState.Processing
+                ) { Text(stringResource(R.string.action_open)) }
             }
         )
     }

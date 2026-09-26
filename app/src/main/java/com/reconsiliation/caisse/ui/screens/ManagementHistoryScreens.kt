@@ -19,8 +19,10 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.data.local.entity.SessionEntity
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
 import com.reconsiliation.caisse.ui.theme.RedError
+import com.reconsiliation.caisse.ui.viewmodel.SessionAmounts
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.SessionViewModel
@@ -136,6 +138,17 @@ fun SessionHistoryScreen(navController: NavController) {
                                     Text(stringResource(R.string.label_opening_balance, FormatUtil.formatCurrency(session.openingBalance)), style = MaterialTheme.typography.labelSmall)
                                     session.closingBalance?.let {
                                         Text(stringResource(R.string.label_closing_balance, FormatUtil.formatCurrency(it)), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold)
+                                    }
+                                    SessionAmounts.cashGap(session.closingBalance, session.expectedBalance)?.let { gap ->
+                                        Text(
+                                            stringResource(R.string.label_session_gap, FormatUtil.formatCurrency(gap)),
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = when {
+                                                gap < 0 -> RedError
+                                                gap > 0 -> GreenSuccess
+                                                else -> Color.Gray
+                                            }
+                                        )
                                     }
                                     if (session.endTime != null) {
                                         IconButton(onClick = { showCommissionDialog = session }, modifier = Modifier.size(24.dp)) {

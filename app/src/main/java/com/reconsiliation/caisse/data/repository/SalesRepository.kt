@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -28,6 +30,7 @@ class SalesRepository @Inject constructor(
     private val smsErrorDao: SmsErrorDao,
     private val expenseDao: ExpenseDao
 ) {
+    private val openSessionMutex = Mutex()
     // 1. Core Sales Flows
     val allVentes: Flow<List<VenteEntity>> = venteDao.getAllVentes()
     val allVentesWithItems: Flow<List<VenteWithItems>> = venteDao.getAllVentesWithItems()
@@ -363,13 +366,37 @@ class SalesRepository @Inject constructor(
     suspend fun getVenteByTransactionId(transactionId: String) = venteDao.getVenteByTransactionId(transactionId)
 
     // 4. Sessions
-    suspend fun openSession(seller: String, balance: Double, staffId: Long? = null) {
-        sessionDao.openSession(SessionEntity(
-            sellerName = seller,
-            startTime = Date(),
-            openingBalance = balance,
-            staffId = staffId
-        ))
+    /**
+     * Ouvre une session seulement s'il n'en existe aucune d'active.
+     * @return false si une session est déjà active : rien n'est créé.
+     */
+    suspend fun openSession(seller: String, balance: Double, staffId: Long? = null): Boolean {
+        return openSessionMutex.withLock {
+            db.runInTransaction {
+                if (sessionDao.getActiveSession().first() != null) return@runInTransaction false
+                sessionDao.openSession(SessionEntity(
+                    sellerName = seller,
+                    startTime = Date(),
+                    openingBalance = balance,
+                    staffId = staffId
+                ))
+                true
+            }
+        }
+    }
+
+    suspend fun previewActiveSession(): SessionPreview? {
+        val active = sessionDao.getActiveSession().first() ?: return null
+        val endTime = Date()
+        val cashSales = venteDao.getTotalCash(active.startTime, endTime).first() ?: 0.0
+        val expenses = expenseDao.getTotalExpenses(active.startTime, endTime).first() ?: 0.0
+        return SessionPreview(
+            sellerName = active.sellerName,
+            openingBalance = active.openingBalance,
+            cashSales = cashSales,
+            expenses = expenses,
+            expectedCash = expectedSessionCash(active.openingBalance, cashSales, expenses)
+        )
     }
 
     suspend fun closeSession(balance: Double, role: String? = null) {
@@ -383,7 +410,7 @@ class SalesRepository @Inject constructor(
                 val momoSales = venteDao.getTotalMomo(start, end).first() ?: 0.0
                 val expenses = expenseDao.getTotalExpenses(start, end).first() ?: 0.0
                 
-                val expected = active.openingBalance + cashSales - expenses
+                val expected = expectedSessionCash(active.openingBalance, cashSales, expenses)
                 
                 sessionDao.closeSession(active.copy(
                     endTime = end,
@@ -514,4 +541,15 @@ class SalesRepository @Inject constructor(
             venteId
         }
     }
+
+    private fun expectedSessionCash(openingBalance: Double, cashSales: Double, expenses: Double): Double =
+        openingBalance + cashSales - expenses
 }
+
+data class SessionPreview(
+    val sellerName: String,
+    val openingBalance: Double,
+    val cashSales: Double,
+    val expenses: Double,
+    val expectedCash: Double
+)

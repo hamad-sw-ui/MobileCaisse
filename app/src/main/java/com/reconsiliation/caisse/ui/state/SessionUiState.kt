@@ -5,4 +5,5 @@ sealed interface SessionUiState {
     object Processing : SessionUiState
     object Success : SessionUiState
     data class Error(val message: String) : SessionUiState
+    object AlreadyOpen : SessionUiState
 }

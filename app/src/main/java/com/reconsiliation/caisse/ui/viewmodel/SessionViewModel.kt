@@ -6,6 +6,7 @@ import com.reconsiliation.caisse.data.local.entity.ClosureEntity
 import com.reconsiliation.caisse.data.local.entity.SessionEntity
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
+import com.reconsiliation.caisse.data.repository.SessionPreview
 import com.reconsiliation.caisse.ui.state.SessionUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
@@ -21,6 +22,10 @@ class SessionViewModel @Inject constructor(
 
     private val _uiState = MutableStateFlow<SessionUiState>(SessionUiState.Idle)
     val uiState: StateFlow<SessionUiState> = _uiState.asStateFlow()
+    private val _sessionPreview = MutableStateFlow<SessionPreview?>(null)
+    val sessionPreview: StateFlow<SessionPreview?> = _sessionPreview.asStateFlow()
+    private val _suggestedSeller = MutableStateFlow<String?>(null)
+    val suggestedSeller: StateFlow<String?> = _suggestedSeller.asStateFlow()
 
     private val _isLoaded = MutableStateFlow(false)
     val isLoaded = _isLoaded.asStateFlow()
@@ -73,22 +78,40 @@ class SessionViewModel @Inject constructor(
     }
 
     fun openSession(seller: String, balance: Double, staffId: Long?) {
+        if (_uiState.value is SessionUiState.Processing) return
+        _uiState.value = SessionUiState.Processing
         viewModelScope.launch {
-            _uiState.value = SessionUiState.Processing
             try {
-                salesRepository.openSession(seller, balance, staffId)
-                _uiState.value = SessionUiState.Success
+                val opened = salesRepository.openSession(seller, balance, staffId)
+                _uiState.value = if (opened) SessionUiState.Success else SessionUiState.AlreadyOpen
             } catch (e: Exception) {
                 _uiState.value = SessionUiState.Error(e.message ?: "Erreur d'ouverture")
             }
         }
     }
 
-    fun closeSession(balance: Double, role: String?) {
+    fun loadSellerSuggestion(staffId: Long?) {
+        if (staffId == null) {
+            _suggestedSeller.value = null
+            return
+        }
+        viewModelScope.launch {
+            _suggestedSeller.value = mainRepository.getStaffName(staffId)
+        }
+    }
+
+    fun loadSessionPreview() {
+        viewModelScope.launch {
+            _sessionPreview.value = salesRepository.previewActiveSession()
+        }
+    }
+
+    fun closeSession(balance: Double, role: String?, afterClose: suspend () -> Unit = {}) {
         viewModelScope.launch {
             _uiState.value = SessionUiState.Processing
             try {
                 salesRepository.closeSession(balance, role)
+                afterClose()
                 _uiState.value = SessionUiState.Success
             } catch (e: Exception) {
                 _uiState.value = SessionUiState.Error(e.message ?: "Erreur de clôture")
@@ -98,5 +121,25 @@ class SessionViewModel @Inject constructor(
 
     fun clearUiState() {
         _uiState.value = SessionUiState.Idle
+    }
+}
+
+internal object SessionAmounts {
+    fun openingBalance(text: String): Double? = parseNonNegative(text)
+
+    fun countedCash(text: String): Double? = parseNonNegative(text)
+
+    fun cashGap(countedCash: Double?, expectedCash: Double?): Double? {
+        if (countedCash == null || expectedCash == null) return null
+        return countedCash - expectedCash
+    }
+
+    fun sellerName(text: String): String? = text.trim().takeIf { it.isNotEmpty() }
+
+    private fun parseNonNegative(text: String): Double? {
+        val normalized = text.trim().replace(',', '.')
+        if (normalized.isEmpty()) return null
+        val value = normalized.toDoubleOrNull() ?: return null
+        return value.takeIf { it >= 0.0 }
     }
 }

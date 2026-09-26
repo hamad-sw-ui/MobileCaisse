@@ -6,7 +6,10 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
+import java.util.Collections
 import java.util.Date
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 
 class SalesRepositoryTest {
 
@@ -124,5 +127,30 @@ class SalesRepositoryTest {
         assertEquals(2000.0, session.totalCashSales, 0.0)
         assertEquals(500.0, session.totalExpenses, 0.0)
         assertEquals(6500.0, session.expectedBalance ?: 0.0, 0.0)
+    }
+
+    @Test
+    fun `concurrent openSession creates a single active session`() {
+        val parallelism = 8
+        val results = Collections.synchronizedList(mutableListOf<Boolean>())
+        val start = CountDownLatch(1)
+        val done = CountDownLatch(parallelism)
+        repeat(parallelism) { index ->
+            Thread {
+                start.await()
+                runBlocking {
+                    results.add(salesRepository.openSession("Seller$index", 1000.0 + index, index.toLong()))
+                }
+                done.countDown()
+            }.start()
+        }
+        start.countDown()
+        assertTrue(done.await(10, TimeUnit.SECONDS))
+
+        assertEquals(1, results.count { it })
+        assertEquals(parallelism - 1, results.count { !it })
+        val sessions = runBlocking { db.sessionDao().getAllSessions().first() }
+        assertEquals(1, sessions.size)
+        assertTrue(sessions.single().isActive)
     }
 }
