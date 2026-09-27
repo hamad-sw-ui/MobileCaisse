@@ -75,7 +75,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - □ **B-026** Réserver `DataSeeder.seedSampleData()` à `BuildConfig.DEBUG` *(BUG-014)*
 - □ **B-027** Porter le rôle requis dans `Screen` au lieu de la liste codée en dur *(BUG-013)*
 - □ **B-028** Augmenter `PBKDF2_ITERATIONS` pour les PIN (5 000 → ≥ 100 000) — le mécanisme de re-hash paresseux existe déjà ✅, il suffit de relever la constante *(incohérence : `BackupManager` utilise déjà 100 000)*
-- □ **B-029** Corriger la détection d'anomalie de date SMS *(BUG-008)*
+- ☑ **B-029** Corriger la détection d'anomalie de date SMS *(BUG-008)* — **J6.6 (LOT 1) terminé** (`a34e5f3`). Timestamp SMS réel (`IncomingSms.timestampMillis`), LIVE/INBOX/MANUAL, `isSmsClockAnomaly` (>30m).
 
 ## P2 — Architecture : Hilt & assainissement
 
@@ -114,7 +114,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 - ☑ **B-070** Écran de gestion du personnel — CRUD, rôles, désactivation sans perte d'historique
 - ☑ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **J6.2 terminé** (`8658ab5`). Session unique, mutex, comptage obligatoire, écart réel, manque après clôture. Patch historique non appliqué.
-- □ **B-072** Enrichir `AnomalyEngine` et exposer les alertes dans l'UI
+- ☑ **B-072** Enrichir `AnomalyEngine` et exposer les alertes dans l'UI — **J6.6 terminé** (`a34e5f3`). LOT 1 (timestamp SMS), LOT 2 (contrat `AnomalyResult`, traçabilité rollback), LOT 3 (filtre `ANOMALIES` `ActionLogScreen`, i18n, Snackbar `NewSaleScreen`).
 - ☑ **B-073** Externaliser les textes d'écran vers `strings.xml` — **J6.1A terminé** (`82f05be`). 684 clés FR. Les messages des ViewModels restent en français.
 - ☑ **B-074** Traduction `values-en/` — **J6.1A terminé** (`82f05be`). 684 clés EN, parité complète, placeholders cohérents.
 - ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
@@ -166,15 +166,15 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | Priorité | Total | Terminées |
 |---|---|---|
 | P0 — Build & données | 28 | 17 |
-| P1 — Sécurité | 10 | 2 |
+| P1 — Sécurité | 10 | 3 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
-| P4 — Fonctionnalités | 12 | 2 |
+| P4 — Fonctionnalités | 12 | 3 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **114** | **49** |
+| **TOTAL** | **114** | **51** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-09-26 (B-078 / J6.3 terminé — commit 52b4090). Totaux P4 : +1 sur cette clôture seulement. B-039 reste ouvert.*
+*Dernière mise à jour : 2026-09-27 (J6.6 terminé — commit a34e5f3). B-029 (BUG-008) et B-072 clôturés.*

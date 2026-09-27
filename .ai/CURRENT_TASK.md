@@ -1,35 +1,35 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** synchronisation documentaire J6.5. Aucune implémentation en cours. J6.5 est clôturé techniquement. **J6.6 / LOT 4 n'est pas commencé.**
+**Tâche :** synchronisation documentaire J6.6. Aucune implémentation en cours. J6.6 est clôturé techniquement. **J6.7 n'est pas commencé.**
 
 ## État réel
 
 | Élément | Valeur |
 |---|---|
-| HEAD | `498b9ba90509122b7e98d59c96879b0b933889bf` |
-| Commit | `feat(j6): implement J6.5 snackbar and feedback handling` |
-| Parent | `d0e608e6dfc6c4e934ae44601ce5f4e18bb81057` |
+| HEAD | `a34e5f312802d9bbc2b06685f338de032a96bb9c` |
+| Commit | `feat(j6): implement J6.6 anomaly detection, sms timestamping and audit log filters` |
+| Parent | `0fdbe02b5ee551250f1ce1de01b91ddd7c13a000` |
 | J6.1A / J6.4 | TERMINÉ TECHNIQUEMENT (`82f05be`) |
 | J6.2 | TERMINÉ TECHNIQUEMENT (`8658ab5`) |
 | J6.3 | TERMINÉ TECHNIQUEMENT (`52b4090`) |
-| J6.5 | TERMINÉ TECHNIQUEMENT (`498b9ba`) — post-commit **VALIDÉ** |
-| Working Tree après `498b9ba` | propre, avant cette modification documentaire |
+| J6.5 | TERMINÉ TECHNIQUEMENT (`498b9ba`) |
+| J6.6 | TERMINÉ TECHNIQUEMENT (`a34e5f3`) — post-commit **VALIDÉ** |
+| Working Tree après `a34e5f3` | propre, avant cette modification documentaire |
 | Sync documentaire | en working tree, **pas encore committée** |
 
-## J6.5 — Snackbars / B-076 (terminé)
+## J6.6 — Alertes d'anomalie / B-072 / BUG-008 (terminé)
 
-Livré dans le commit `498b9ba` (25 fichiers techniques, +264 / −38, aucun `.ai/`) :
-- LOT 1 (19) : Customer, Debt, Expense, Reports, Staff, NewSale ;
-- LOT 2 (2) : Home, Closure (`SessionUiState.Error`) ;
-- LOT 3 (4) : SalesList, Stock, SmsError, Support (`uiError` → Snackbar → `clearError()`) ;
-- vente rapide Stock : `Job.join()` puis succès seulement si `uiError.value == null` ;
-- 147/147 tests JVM ; `compileDebugKotlin` / KSP / **`assembleDebug` OK** ; i18n 700/700.
+Livré dans le commit `a34e5f3` (14 fichiers techniques, 381 insertions / 23 suppressions, aucun `.ai/`) :
+- **LOT 1** (5) : `IncomingSms.kt`, `SmsProcessor.kt`, `SmsReceiver.kt`, `SmsSyncManager.kt`, `SmsErrorScreen.kt` (Timestamp SMS réel, `isSmsClockAnomaly` > 30m, BUG-008 / B-029).
+- **LOT 2** (4) : `AnomalyEngine.kt`, `SalesRepository.kt`, `AnomalyEngineTest.kt`, `SalesRepositoryTest.kt` (Contrat `AnomalyResult`, codes `FUTURE`, `DUPLICATE`, `HIGH_AMOUNT`, rollback SQLite des ventes bloquées et journalisation `ANOMALY_DETECTED` CRITICAL hors transaction).
+- **LOT 3** (5) : `ActionLogScreen.kt`, `NewSaleScreen.kt`, `strings.xml` (FR), `strings.xml` (EN), `ActionLogFilterTest.kt` (Filtre `ANOMALIES` strict, i18n, fallback `details`, Snackbar d'erreur de vente).
+- 169/169 tests JVM ; `compileDebugKotlin` / KSP / **`assembleDebug` OK** ; APK debug généré.
 
-Phase actuelle = **documentation uniquement**. Pas de LOT 4. Pas de J6.6.
+Phase actuelle = **documentation uniquement**. Pas de J6.7.
 
 ## Encore ouvert dans le jalon 6
 
-Alertes d'anomalie (6.6 / B-072) — **NEXT / NOT STARTED**. Sauvegarde distante (6.7), type monétaire (6.8).
+Sauvegarde distante (6.7a / 6.7b : B-111 / B-112) — **NEXT / NOT STARTED**. Type monétaire (6.8).
 
 Dettes J6.5 conservées (hors scope, non résolues) :
 - SaleDetail / Settings-Splash : `uiError` non collecté (navigation immédiate) ;
@@ -46,7 +46,7 @@ Résidus J6.3 (inchangés) :
 
 ## Historique
 
-Les jalons J5.8.2 à J5.8.6, J6.1A, J6.2 et J6.3 restent consignés dans `ROADMAP.md`, `DEVLOG.md` et `TRACEABILITY.md`. Ils ne sont pas réécrits ici.
+Les jalons J5.8.2 à J5.8.6, J6.1A, J6.2, J6.3 et J6.5 restent consignés dans `ROADMAP.md`, `DEVLOG.md` et `TRACEABILITY.md`. Ils ne sont pas réécrits ici.
 
 ---
-*Mis à jour le 2026-09-26 (clôture documentaire J6.5, non committée). Précédente fiche : 2026-09-26, post-J6.3.*
+*Mis à jour le 2026-09-27 (clôture documentaire J6.6, non committée). Précédente fiche : 2026-09-26, post-J6.5.*

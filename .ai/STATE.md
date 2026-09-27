@@ -5,41 +5,41 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 498b9ba90509122b7e98d59c96879b0b933889bf
-- **HEAD actuel** : 498b9ba90509122b7e98d59c96879b0b933889bf
+- **Dernier commit fonctionnel** : a34e5f312802d9bbc2b06685f338de032a96bb9c
+- **HEAD actuel** : a34e5f312802d9bbc2b06685f338de032a96bb9c
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-26 (SUCCESS, validation J6.5 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-09-26 (147/147 SUCCESS, `:app:testDebugUnitTest --rerun-tasks`, validation J6.5)
+- **Dernière compilation** : 2026-09-27 (SUCCESS, validation J6.6 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-09-27 (169/169 SUCCESS, `:app:testDebugUnitTest`, validation J6.6)
 - **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : CLEAN après le commit technique J6.5 (`498b9ba`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
+- **Working Tree** : CLEAN après le commit technique J6.6 (`a34e5f3`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
     - FeeCalculator (100% logique calculs MoMo)
     - LicenseUtil (100% logique HMAC)
-    - AnomalyEngine (100% logique détection fraude)
+    - AnomalyEngine (100% logique détection fraude + timestamp SMS)
     - Repositories (Data pure : Sales, Inventory, Main)
     - Platform (Services Framework : ReportManager, PrinterManager, ShareManager)
     - ViewModels (Orchestration : MainViewModel, NewSaleViewModel, InventoryViewModel, CustomerViewModel, SessionViewModel, ReportsViewModel, ExpenseViewModel, StaffViewModel, BackupViewModel, PrinterViewModel, CategoryViewModel, MaintenanceViewModel)
     - Permissions (logique JVM : `PermissionPolicy` / `SmsSyncOutcome` / `SmsCatchUpState`)
-    - Feedback UI J6.5 (Snackbars locales, 5 suites ViewModel étendues)
+    - Feedback UI J6.5 (Snackbars locales)
+    - Alertes et filtrage d'anomalies J6.6 (Timestamp SMS réel, contrat `AnomalyResult` + rollback, filtre `ANOMALIES` ActionLogScreen, 10 tests de logique)
 - **Dette technique** :
-    - `MainViewModel` purégé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique. **Non refactoré en J6.5.**
-    - BUG-008 (Date Anomaly) reste à traiter en tâche 6.6.
+    - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique. **Non refactoré en J6.6.**
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.5 — snackbars / feedback UI / B-076 (TERMINÉE TECHNIQUEMENT — commit `498b9ba90509122b7e98d59c96879b0b933889bf`). Post-commit audit **VALIDÉ**.
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée). **J6.6 / LOT 4 n'est pas commencé.**
-- **Prochaine tâche prévue** : audit documentaire indépendant, puis commit documentaire `.ai/`. Ensuite, jalon fonctionnel **J6.6** — alertes d'anomalie (B-072). **NEXT / NOT STARTED**.
-- **Hors de ce commit technique** : J6.6, J6.7, J6.8, J7. J6.1A (`82f05be`), J6.4 (même livrable i18n), J6.2 (`8658ab5`) et J6.3 (`52b4090`) restent terminés et intacts.
+- **Dernière tâche terminée** : J6.6 — alertes d'anomalie visibles dans l'UI (inc. BUG-008) / B-072 (TERMINÉE TECHNIQUEMENT — commit `a34e5f312802d9bbc2b06685f338de032a96bb9c`). Post-commit audit **VALIDÉ**.
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée). **J6.7 n'est pas commencé.**
+- **Prochaine tâche prévue** : audit documentaire indépendant, puis commit documentaire `.ai/`. Ensuite, jalon fonctionnel **J6.7a / J6.7b** — sauvegarde distante (B-111 / B-112). **NEXT / NOT STARTED**.
+- **Hors de ce commit technique** : J6.7, J6.8, J7. J6.1A (`82f05be`), J6.4 (même livrable i18n), J6.2 (`8658ab5`), J6.3 (`52b4090`) et J6.5 (`498b9ba`) restent terminés et intacts.
 
 ## 🐞 Bugs & Défauts
-- **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004, BUG-008.
-- **Bugs Corrigés (VALIDÉ)** : BUG-001, BUG-002, BUG-003, BUG-005, BUG-006, BUG-007, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017, BUG-018, BUG-019, BUG-020, BUG-021, BUG-022, BUG-023, BUG-024, BUG-025, BUG-090, BUG-091, BUG-092, BUG-093, B-094A, BUG-ENV-001.
+- **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
+- **Bugs Corrigés (VALIDÉ)** : BUG-001, BUG-002, BUG-003, BUG-005, BUG-006, BUG-007, BUG-008, BUG-009, BUG-010, BUG-011, BUG-012, BUG-013, BUG-014, BUG-015, BUG-016, BUG-017, BUG-018, BUG-019, BUG-020, BUG-021, BUG-022, BUG-023, BUG-024, BUG-025, BUG-090, BUG-091, BUG-092, BUG-093, B-094A, BUG-ENV-001.
 
 ## 🏛️ Décisions & Risques
 - **Décisions d'architecture** : 
@@ -49,6 +49,7 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J6.2 : unicité de session au niveau applicatif (`SalesRepository` singleton + mutex + transaction). Pas de changement de schéma Room.
     - J6.3 : décisions runtime dans l'UI / Activity ; `PermissionPolicy` testable sans Android ; les Repositories ne demandent pas de permissions.
     - J6.5 : feedback **local à l'écran** (`SnackbarHostState` + `LaunchedEffect` + clear). Pas de bus global, pas de `UiText`, pas de `Context` dans les ViewModels. `MainViewModel` non refactoré.
+    - J6.6 : timestamp SMS réel (`IncomingSms.timestampMillis`), traçabilité hors transaction des anomalies de blocage (`CRITICAL`), filtre `ANOMALIES` strict dans `ActionLogScreen`, pas de bus d'événements global.
 - **Risques connus / résidus J6.3 (non clos)** : 
     - `BLUETOOTH_SCAN` déclaré, jamais demandé ni utilisé.
     - `POST_NOTIFICATIONS` non redemandée aux utilisateurs déjà onboardés.
@@ -61,5 +62,5 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Overlay possible dialog / Snackbar à l'ouverture de session (Home).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-09-26
-- **Agent** : AI-DOS — synchronisation documentaire après J6.5 (non committée)
+- **Date** : 2026-09-27
+- **Agent** : AI-DOS — synchronisation documentaire après J6.6 (non committée)

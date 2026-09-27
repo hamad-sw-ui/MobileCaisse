@@ -7,7 +7,7 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 ## 🏗️ Matrice de Traçabilité
 
-| Bug / Tâche | Analyse d\u0027impact | ADR | Fichiers modifiés | Test(s) associé(s) | Build | Niveau | Documentation | Statut |
+| Bug / Tâche | Analyse d'impact | ADR | Fichiers modifiés | Test(s) associé(s) | Build | Niveau | Documentation | Statut |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
 | **J5.8.2** (Customer ViewModel) | ✅ J5.8.2 | — | `CustomerViewModel.kt`, `MainViewModel.kt`, +4 fichiers | 86 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
 | **J5.8.3** (Session ViewModel) | ✅ J5.8.3 | — | `SessionViewModel.kt`, `MainViewModel.kt`, +8 fichiers | 90 tests SUCCESS | ✅ | A | `STATE.md`, `DEVLOG.md` | **VALIDÉ** |
@@ -17,6 +17,7 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 | **J6.2** (sessions / clôture) | ✅ cartographie + 2 audits | — | 9 fichiers (repos, VM, écrans, 2 tests) | 128/128 SUCCESS | ✅ | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`8658ab5`) |
 | **J6.3** (permissions / BUG-010) | ✅ audit pré + post-commit | — | 16 fichiers (policy, UI, SMS, BT, caméra, i18n, 1 test) | 141/141 SUCCESS | ✅ `compileDebugKotlin` ; `assembleDebug` **non exécuté** | A-JVM | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`52b4090`) |
 | **J6.5** / **B-076** (snackbars) | ✅ contrôle final + post-commit | — | 25 fichiers (LOT 1 = 19, LOT 2 = 2, LOT 3 = 4) | 147/147 SUCCESS | ✅ compile + KSP + **`assembleDebug`** | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`498b9ba`) |
+| **J6.6** / **B-072** / **BUG-008** (alertes anomalies) | ✅ contrôle final + post-commit | — | 14 fichiers (LOT 1 = 5, LOT 2 = 4, LOT 3 = 5) | 169/169 SUCCESS | ✅ compile + KSP + **`assembleDebug`** | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`a34e5f3`) |
 
 ---
 
@@ -38,12 +39,17 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 - **Chaîne :** B-076 → J6.5 → LOT 1 (19) / LOT 2 (2) / LOT 3 (4) → 25 fichiers → 147/147 tests → compile + KSP + `assembleDebug` → commit `498b9ba90509122b7e98d59c96879b0b933889bf` → post-commit audit VALIDÉ.
 - **Preuve (`498b9ba`) :** Snackbars locales Material 3 ; Staff / Reports / NewSale / session Error / `uiError` câblés ; vente rapide Stock `Job.join()`. I18n 700/700. J6.2 et J6.3 hors diff. Aucun `.ai/` dans le commit technique.
 
+### 6. J6.6 alertes d'anomalies / timestamp SMS / B-072 / BUG-008
+- **Chaîne :** BUG-008 / B-029 / B-072 → J6.6 → LOT 1 (5) / LOT 2 (4) / LOT 3 (5) → 14 fichiers → 169/169 tests → compile + KSP + `assembleDebug` → commit `a34e5f312802d9bbc2b06685f338de032a96bb9c` → post-commit audit VALIDÉ.
+- **Preuve (`a34e5f3`) :** Timestamp SMS réel (`IncomingSms.timestampMillis`), `isSmsClockAnomaly` > 30m ; contrat `AnomalyResult` + codes `FUTURE`/`DUPLICATE`/`HIGH_AMOUNT`, rollback SQLite et log `CRITICAL` hors transaction ; filtre `ANOMALIES` `ActionLogScreen` + 10 tests de logique. 169/169 tests JVM.
+
 ---
 
 ## 🔨 Registre des Builds (Preuves Niveau B)
 
 | Date | Commande | Résultat | Git Hash | Branche | Tâches | Durée |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| 2026-09-27 | `$env:ANDROID_PREFS_ROOT="" ; ./gradlew testDebugUnitTest assembleDebug` | **SUCCESS** (169/169). APK debug généré | `a34e5f3` | `arena/...` | J6.6 | 3m 12s |
 | 2026-09-26 | `:app:compileDebugKotlin` + `:app:kspDebugKotlin` + `:app:testDebugUnitTest` + `:app:assembleDebug --rerun-tasks` | **SUCCESS** (147/147). APK debug généré | `498b9ba` | `arena/...` | J6.5 | 6m 03s |
 | 2026-09-26 | `:app:compileDebugKotlin` + `:app:testDebugUnitTest` | **SUCCESS** (141/141). `assembleDebug` **non exécuté** | `52b4090` | `arena/...` | J6.3 | 5m 26s |
 | 2026-09-26 | `:app:testDebugUnitTest` + `assembleDebug` | **SUCCESS** (128/128) | `8658ab5` | `arena/...` | J6.2 | 4m 39s |
@@ -57,4 +63,4 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 
 | Branche | Commit Initial | Commit Final | État |
 | :--- | :--- | :--- | :--- |
-| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `498b9ba` | **Working tree clean après J6.5 technique ; sync `.ai/` non committée** |
+| `arena/019fa5ec-mobilecaisse` | `a3a5bfd` | `a34e5f3` | **Working tree clean après J6.6 technique ; sync `.ai/` non committée** |

@@ -99,7 +99,7 @@ J7 Industrialisation (CI, release)
 | 6.3 | Refonte du parcours de permissions | B-078 | ✅ (52b4090) |
 | 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
-| 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | □ |
+| 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | □ |
 | 6.7b | Implémenter la sauvegarde automatique distante | B-112 | □ |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
@@ -197,8 +197,34 @@ Hors périmètre / dettes conservées (non résolues) :
 - Home : le `AlertDialog` d'ouverture peut masquer visuellement la Snackbar.
 - Messages bruts restants hors écrans J6.5 (`InventoryUiState`, `BackupUiState`).
 
-Prochaine étape fonctionnelle : **6.6 alertes d'anomalie (B-072)**. **NOT STARTED.**
+Prochaine étape fonctionnelle : **6.6 alertes d'anomalie (B-072)**. **TERMINÉE.**
+
+### J6.6 — Alertes d'anomalie visibles dans l'UI (inc. BUG-008) / B-072 : DONE
+
+Commit technique `a34e5f312802d9bbc2b06685f338de032a96bb9c`, message `feat(j6): implement J6.6 anomaly detection, sms timestamping and audit log filters`. Parent `0fdbe02b5ee551250f1ce1de01b91ddd7c13a000` (sync documentaire J6.5). **14 fichiers** techniques. Aucun fichier `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+Découpage livré :
+- **LOT 1 — Timestamp SMS réel (BUG-008 / B-029)** (5 fichiers) :
+  - `IncomingSms.kt`, `SmsProcessor.kt`, `SmsReceiver.kt`, `SmsSyncManager.kt`, `SmsErrorScreen.kt`.
+  - LIVE (`SmsMessage.timestampMillis`), INBOX (`Telephony.Sms.Inbox.DATE`), MANUAL (`null`).
+  - Détection `AnomalyEngine.isSmsClockAnomaly(smsTimestamp, systemTimestamp)` avec seuil `> 30 minutes` (exactement 30m = false, 31m = true, null = false).
+- **LOT 2 — Contrat AnomalyEngine + Traçabilité** (4 fichiers) :
+  - `AnomalyEngine.kt`, `SalesRepository.kt`, `AnomalyEngineTest.kt`, `SalesRepositoryTest.kt`.
+  - Contrat `AnomalyResult(blocked, message, severity, code)`.
+  - Codes stables : `FUTURE`, `DUPLICATE`, `HIGH_AMOUNT`.
+  - Ventes bloquées (`FUTURE`/`DUPLICATE`) : exception dans `runInTransaction` provoquant le rollback SQLite de la vente, attrapée par `insertVenteWithItems` qui logue `ANOMALY_DETECTED` avec sévérité `CRITICAL` **hors transaction** pour survivre au rollback.
+  - Ventes a priori suspectes (`HIGH_AMOUNT`) : log `ANOMALY_DETECTED` (`WARNING`) enregistré dans la transaction et vente persistée.
+- **LOT 3 — UI Alertes & i18n** (5 fichiers) :
+  - `ActionLogScreen.kt`, `NewSaleScreen.kt`, `strings.xml` (FR), `strings.xml` (EN), `ActionLogFilterTest.kt`.
+  - Nouveau filtre `ANOMALIES` dans `ActionLogScreen` sélectionnant exclusivement `actionType == "DATE_ANOMALY" || actionType == "ANOMALY_DETECTED"`.
+  - Sémantique des filtres `ALL`, `INFO`, `CRITICAL` (CRITICAL + WARNING) 100% conservée.
+  - i18n : clés `anomaly_future_sale`, `anomaly_duplicate_sale`, `anomaly_high_amount`, `log_date_anomaly`, `filter_anomalies`. Fallback `else -> details` pour préserver les anciens messages.
+  - `NewSaleScreen` relaie le message d'erreur d'anomalie précis dans la Snackbar J6.5.
+
+Validation : **169/169** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7a rapport comparatif Google Drive vs Dropbox (B-111)** et **6.7b sauvegarde distante (B-112)**. **NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-09-26 (J6.5 TERMINÉ — commit 498b9ba). Mises à jour précédentes : 2026-09-26 (J6.3 TERMINÉ — commit 52b4090) ; 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*
+*Document mis à jour le 2026-09-27 (J6.6 TERMINÉ — commit a34e5f3). Mises à jour précédentes : 2026-09-26 (J6.5 TERMINÉ — commit 498b9ba) ; 2026-09-26 (J6.3 TERMINÉ — commit 52b4090) ; 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*

@@ -1,5 +1,16 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-27 — J6.6 alertes d'anomalies / timestamp SMS / B-072 / BUG-008
+### Actions réalisées :
+- **J6.6 terminé techniquement** : commit `a34e5f312802d9bbc2b06685f338de032a96bb9c` (`feat(j6): implement J6.6 anomaly detection, sms timestamping and audit log filters`). Parent `0fdbe02b5ee551250f1ce1de01b91ddd7c13a000`. 14 fichiers, +381 / −23. Aucun `.ai/` dans ce commit.
+- **Architecture retenue** :
+  - **LOT 1** (5) : Timestamp SMS réel (`IncomingSms.timestampMillis`). LIVE (`SmsMessage`), INBOX (`Telephony.Sms.Inbox.DATE`), MANUAL (`null`). Détection `AnomalyEngine.isSmsClockAnomaly` avec seuil `> 30 min`. Résolution de BUG-008 / B-029.
+  - **LOT 2** (4) : Contrat `AnomalyResult(blocked, message, severity, code)`. Codes `FUTURE`, `DUPLICATE`, `HIGH_AMOUNT`. Rollback SQLite des ventes bloquées dans la transaction, puis journalisation `ANOMALY_DETECTED` `CRITICAL` hors transaction. Avertissements `HIGH_AMOUNT` (`WARNING`) commités dans la transaction.
+  - **LOT 3** (5) : Filtre `ANOMALIES` strict (`DATE_ANOMALY` / `ANOMALY_DETECTED`) dans `ActionLogScreen`. i18n FR/EN. Fallback `details`. Snackbar `NewSaleScreen`.
+- **Preuve** : 169/169 tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` / KSP / **`assembleDebug` SUCCESS**.
+- **Audits** : contrôles pré-commit et post-commit **VALIDÉS**.
+- **Séparation** : commit technique `a34e5f3` d'abord. Cette synchronisation AI-DOS est un working tree distinct, **pas encore committée**. **J6.7 non commencé.**
+
 ## 🗓️ 2026-09-26 — J6.5 snackbars / feedback UI / B-076
 ### Actions réalisées :
 - **J6.5 terminé techniquement** : commit `498b9ba90509122b7e98d59c96879b0b933889bf` (`feat(j6): implement J6.5 snackbar and feedback handling`). Parent `d0e608e`. 25 fichiers, +264 / −38. Aucun `.ai/` dans ce commit.

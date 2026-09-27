@@ -321,7 +321,7 @@ ne sont **jamais** restaurés après mort du processus, contrairement à l'inten
 
 ## 🟡 BUG-008 — Détection d'anomalie de date inopérante
 
-**Statut** : OUVERT · **Gravité** : 🟡 MINEUR · **Fichier** : `sms/SmsReceiver.kt:43-46`
+**Statut** : **CORRIGÉ (VALIDÉ) — 2026-09-27** · **Gravité** : 🟡 MINEUR · **Fichier** : `sms/SmsProcessor.kt`, `sms/SmsReceiver.kt`, `sms/SmsSyncManager.kt`, `sms/IncomingSms.kt`, `utils/AnomalyEngine.kt`
 
 ```kotlin
 val networkTime = System.currentTimeMillis()
@@ -330,8 +330,14 @@ if (abs(networkTime - systemTime) > 30*60*1000) { … }   // toujours faux
 ```
 La protection contre la falsification de l'heure système ne se déclenche jamais.
 
-**Correction attendue** : utiliser le timestamp du centre de service SMS
-(`SmsMessage.timestampMillis`) comme référence réseau.
+**Correction apportée** :
+- Transmission du timestamp SMS réel (`IncomingSms.timestampMillis`).
+- LIVE : `SmsMessage.timestampMillis`.
+- INBOX : `Telephony.Sms.Inbox.DATE`.
+- MANUAL : `timestampMillis = null` (pas de fausse anomalie de date).
+- Détection centralisée via `AnomalyEngine.isSmsClockAnomaly(smsTimestampMillis, systemTimestampMillis)` avec seuil strictement `> 30 * 60 * 1000` ms.
+- Validation par 9 tests unitaires dédiés.
+- Preuve : commit technique J6.6 (`a34e5f312802d9bbc2b06685f338de032a96bb9c`).
 
 ---
 

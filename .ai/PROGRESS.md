@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-09-27 — J6.6 alertes d'anomalies / timestamp SMS / B-072 / BUG-008
+
+**Date** : 2026-09-27 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.6** terminé techniquement. Commit `a34e5f312802d9bbc2b06685f338de032a96bb9c`, message `feat(j6): implement J6.6 anomaly detection, sms timestamping and audit log filters`. Parent `0fdbe02b5ee551250f1ce1de01b91ddd7c13a000`.
+- **LOT 1** (5 fichiers) : Timestamp SMS réel (`IncomingSms.timestampMillis`), LIVE/INBOX/MANUAL, `isSmsClockAnomaly` (>30m). Résolution de BUG-008 / B-029.
+- **LOT 2** (4 fichiers) : Contrat `AnomalyResult(blocked, message, severity, code)` avec codes `FUTURE`, `DUPLICATE`, `HIGH_AMOUNT`. Rollback SQLite des ventes bloquées et journalisation `ANOMALY_DETECTED` CRITICAL hors transaction.
+- **LOT 3** (5 fichiers) : Filtre `ANOMALIES` strict dans `ActionLogScreen`, i18n FR/EN, fallback `details`, Snackbar d'anomalie de vente `NewSaleScreen`.
+- **Total 14 fichiers**, +381 / −23. Aucun `.ai/` dans ce commit.
+- Post-commit audit **VALIDÉ**. Cette entrée de journal ne committe pas la documentation.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **169/169** tests JVM (156 existants + 3 LOT 2 + 10 LOT 3), 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Conflit d'environnement CLI Windows (`ANDROID_PREFS_ROOT` et `ANDROID_USER_HOME` définis simultanément) contourné avec `$env:ANDROID_PREFS_ROOT=""`. Absence d'infrastructure Compose UI instrumentée (prévue J7) : filtrage validé par 10 tests unitaires JVM purs. **J6.7 non commencé.**
+
+### Étape suivante
+Audit documentaire indépendant, puis commit documentaire `.ai/`. Jalon fonctionnel suivant : J6.7a / J6.7b — sauvegarde distante (B-111 / B-112). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-09-26 — J6.5 snackbars / feedback UI / B-076
 
 **Date** : 2026-09-26 · **Branche** : `arena/019fa5ec-mobilecaisse`
