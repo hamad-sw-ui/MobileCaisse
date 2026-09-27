@@ -153,4 +153,90 @@ class SalesRepositoryTest {
         assertEquals(1, sessions.size)
         assertTrue(sessions.single().isActive)
     }
+
+    @Test
+    fun `future sale is blocked with surviving anomaly log and no persisted sale`() = runBlocking {
+        setupBasicData()
+        val vente = VenteEntity(
+            amount = 1000.0,
+            description = "Future",
+            date = Date(System.currentTimeMillis() + 3_600_000),
+            paymentMethod = "CASH",
+            status = "CONFIRMED"
+        )
+        try {
+            salesRepository.insertVenteWithItems(vente, emptyList(), "ADMIN")
+            fail("Future sale must throw")
+        } catch (error: Exception) {
+            assertTrue(error.message!!.contains("futur"))
+        }
+        assertTrue(db.venteDao().getAllVentes().first().isEmpty())
+        val anomalyLog = db.actionLogDao().getRecentLogs().first()
+            .single { it.actionType == "ANOMALY_DETECTED" }
+        assertEquals("FUTURE", anomalyLog.details)
+        assertEquals("CRITICAL", anomalyLog.severity)
+        assertEquals("ADMIN", anomalyLog.userRole)
+    }
+
+    @Test
+    fun `duplicate sale is blocked with surviving anomaly log and no second sale`() = runBlocking {
+        setupBasicData()
+        val baseTime = System.currentTimeMillis() - 60_000
+        salesRepository.insertVenteWithItems(
+            VenteEntity(
+                amount = 5000.0,
+                description = "First",
+                date = Date(baseTime),
+                paymentMethod = "CASH",
+                status = "CONFIRMED"
+            ),
+            emptyList()
+        )
+        try {
+            salesRepository.insertVenteWithItems(
+                VenteEntity(
+                    amount = 5000.0,
+                    description = "Duplicate",
+                    date = Date(baseTime + 5_000),
+                    paymentMethod = "CASH",
+                    status = "CONFIRMED"
+                ),
+                emptyList(),
+                "STAFF"
+            )
+            fail("Duplicate sale must throw")
+        } catch (error: Exception) {
+            assertTrue(error.message!!.contains("doublon", ignoreCase = true))
+        }
+        assertEquals(1, db.venteDao().getAllVentes().first().size)
+        val anomalyLogs = db.actionLogDao().getRecentLogs().first()
+            .filter { it.actionType == "ANOMALY_DETECTED" }
+        assertEquals(1, anomalyLogs.size)
+        assertEquals("DUPLICATE", anomalyLogs.single().details)
+        assertEquals("CRITICAL", anomalyLogs.single().severity)
+        assertEquals("STAFF", anomalyLogs.single().userRole)
+    }
+
+    @Test
+    fun `high amount sale is persisted with warning log and is not blocked`() = runBlocking {
+        setupBasicData()
+        val venteId = salesRepository.insertVenteWithItems(
+            VenteEntity(
+                amount = 600000.0,
+                description = "High",
+                date = Date(),
+                paymentMethod = "CASH",
+                status = "CONFIRMED"
+            ),
+            emptyList(),
+            "ADMIN"
+        )
+        assertTrue(venteId > 0)
+        assertEquals(1, db.venteDao().getAllVentes().first().size)
+        val anomalyLog = db.actionLogDao().getRecentLogs().first()
+            .single { it.actionType == "ANOMALY_DETECTED" }
+        assertEquals("HIGH_AMOUNT", anomalyLog.details)
+        assertEquals("WARNING", anomalyLog.severity)
+        assertEquals("ADMIN", anomalyLog.userRole)
+    }
 }

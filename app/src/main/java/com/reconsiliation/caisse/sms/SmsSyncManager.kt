@@ -15,7 +15,7 @@ object SmsSyncManager {
         return try {
             val prefs = com.reconsiliation.caisse.data.prefs.PreferencesManager(context)
             val lastSync = prefs.getLastSmsSyncTime()
-            val messages = mutableListOf<Pair<String, String?>>()
+            val messages = mutableListOf<IncomingSms>()
 
             val fallbackSince = System.currentTimeMillis() - (hours * 60 * 60 * 1000)
             val since = if (lastSync > 0) lastSync else fallbackSince
@@ -31,13 +31,15 @@ object SmsSyncManager {
             cursor?.use {
                 val bodyIdx = it.getColumnIndex(Telephony.Sms.Inbox.BODY)
                 val addrIdx = it.getColumnIndex(Telephony.Sms.Inbox.ADDRESS)
+                val dateIdx = it.getColumnIndex(Telephony.Sms.Inbox.DATE)
 
                 while (it.moveToNext()) {
                     val body = it.getString(bodyIdx)
                     val address = it.getString(addrIdx)
+                    val timestampMillis = if (dateIdx >= 0) it.getLong(dateIdx) else null
 
                     if (isOperatorSms(body, address)) {
-                        messages.add(body to address)
+                        messages.add(IncomingSms(body, address, timestampMillis))
                     }
                 }
             }

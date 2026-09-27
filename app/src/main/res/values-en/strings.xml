@@ -308,6 +308,7 @@
     <string name="status_active_until">ACTIVE until %1$s</string>
     <string name="status_expired">EXPIRED</string>
     <string name="filter_all">All</string>
+    <string name="filter_anomalies">Anomalies</string>
     <string name="filter_infos">Infos</string>
     <string name="filter_alerts">Alerts</string>
     <string name="filter_this_month">This month</string>

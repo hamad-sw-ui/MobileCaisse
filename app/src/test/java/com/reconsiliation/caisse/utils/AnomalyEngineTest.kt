@@ -22,6 +22,7 @@ class AnomalyEngineTest {
         assertFalse(result.blocked)
         assertEquals("OK", result.message)
         assertEquals("INFO", result.severity)
+        assertNull(result.code)
     }
 
     @Test
@@ -31,6 +32,7 @@ class AnomalyEngineTest {
         val result = AnomalyEngine.analyzeVente(vente, emptyList())
         assertTrue("Future sale must be blocked", result.blocked)
         assertTrue(result.message.contains("futur"))
+        assertEquals(AnomalyEngine.CODE_FUTURE, result.code)
     }
 
     @Test
@@ -44,6 +46,7 @@ class AnomalyEngineTest {
         assertTrue("Duplicate sale must be blocked", result.blocked)
         assertTrue("Message should mention duplicate (got: ${result.message})", 
             result.message.contains("doublon", ignoreCase = true))
+        assertEquals(AnomalyEngine.CODE_DUPLICATE, result.code)
     }
 
     @Test
@@ -53,5 +56,65 @@ class AnomalyEngineTest {
         assertFalse("Large amount should not be blocked", result.blocked)
         assertEquals("WARNING", result.severity)
         assertTrue(result.message.contains(">500k"))
+        assertEquals(AnomalyEngine.CODE_HIGH_AMOUNT, result.code)
+    }
+
+    @Test
+    fun `sms clock identical timestamp is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(systemTime, systemTime))
+    }
+
+    @Test
+    fun `sms clock 1 minute before is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(systemTime - ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock 29 minutes before is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(systemTime - 29 * ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock exactly 30 minutes before is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(systemTime - 30 * ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock 31 minutes before is an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertTrue(AnomalyEngine.isSmsClockAnomaly(systemTime - 31 * ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock 31 minutes after is an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertTrue(AnomalyEngine.isSmsClockAnomaly(systemTime + 31 * ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock null timestamp is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(null, systemTime))
+    }
+
+    @Test
+    fun `sms clock exactly 30 minutes after is not an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertFalse(AnomalyEngine.isSmsClockAnomaly(systemTime + 30 * ONE_MINUTE_MS, systemTime))
+    }
+
+    @Test
+    fun `sms clock 31 minutes in the other direction is an anomaly`() {
+        val systemTime = FIXED_SYSTEM_TIME
+        assertTrue(AnomalyEngine.isSmsClockAnomaly(systemTime + 31 * ONE_MINUTE_MS, systemTime))
+    }
+
+    companion object {
+        private const val FIXED_SYSTEM_TIME = 1_700_000_000_000L
+        private const val ONE_MINUTE_MS = 60_000L
     }
 }

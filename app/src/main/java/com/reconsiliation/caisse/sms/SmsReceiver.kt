@@ -30,7 +30,10 @@ class SmsReceiver : BroadcastReceiver() {
             val messages = Telephony.Sms.Intents.getMessagesFromIntent(intent)
             smsProcessor.processSms(
                 context,
-                messages.mapNotNull { it.messageBody to it.originatingAddress }
+                messages.mapNotNull { sms ->
+                    val body = sms.messageBody ?: return@mapNotNull null
+                    IncomingSms(body, sms.originatingAddress, sms.timestampMillis)
+                }
             ) {
                 pendingResult.finish()
             }
@@ -42,7 +45,7 @@ class SmsReceiver : BroadcastReceiver() {
     companion object {
         fun processSms(
             context: Context,
-            messages: List<Pair<String, String?>>,
+            messages: List<IncomingSms>,
             pendingResult: PendingResult? = null
         ) {
             val entryPoint = EntryPointAccessors.fromApplication(

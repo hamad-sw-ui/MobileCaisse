@@ -77,7 +77,8 @@ fun NewSaleScreen(navController: NavController) {
 
     LaunchedEffect(uiState) {
         if (uiState is NewSaleUiState.Error) {
-            snackbarHostState.showSnackbar(saleErrorMessage)
+            val msg = (uiState as NewSaleUiState.Error).message.ifBlank { saleErrorMessage }
+            snackbarHostState.showSnackbar(msg)
             viewModel.clearUiState()
         }
     }

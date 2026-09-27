@@ -4,6 +4,7 @@ import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.dao.*
 import com.reconsiliation.caisse.data.local.entity.*
 import com.reconsiliation.caisse.sms.SmsParser
+import com.reconsiliation.caisse.utils.AnomalyResult
 import com.reconsiliation.caisse.utils.FormatUtil
 import com.reconsiliation.caisse.utils.PhoneUtil
 import kotlinx.coroutines.flow.Flow
@@ -61,6 +62,25 @@ class SalesRepository @Inject constructor(
 
     // 3. Sales Operations (CUD)
     suspend fun insertVenteWithItems(vente: VenteEntity, items: List<VenteItemEntity>, role: String? = null): Long {
+        return try {
+            insertVenteWithItemsInTransaction(vente, items, role)
+        } catch (blocked: BlockedSaleAnomalyException) {
+            // Le log doit survivre au rollback de la vente : il est écrit hors transaction.
+            mainRepository.logAction(
+                "ANOMALY_DETECTED",
+                blocked.anomaly.code ?: blocked.anomaly.message,
+                blocked.role,
+                "CRITICAL"
+            )
+            throw Exception(blocked.anomaly.message)
+        }
+    }
+
+    private suspend fun insertVenteWithItemsInTransaction(
+        vente: VenteEntity,
+        items: List<VenteItemEntity>,
+        role: String?
+    ): Long {
         return db.runInTransaction {
             mainRepository.checkSubscription()
             val activeSession = sessionDao.getActiveSession().first()
@@ -111,8 +131,15 @@ class SalesRepository @Inject constructor(
             // Anomaly Detection
             val history = venteDao.getRecentVentes(10)
             val anomaly = com.reconsiliation.caisse.utils.AnomalyEngine.analyzeVente(finalVente, history)
-            if (anomaly.blocked) throw Exception(anomaly.message)
-            if (anomaly.severity != "INFO") mainRepository.logAction("ANOMALY_DETECTED", anomaly.message, role, anomaly.severity)
+            if (anomaly.blocked) throw BlockedSaleAnomalyException(anomaly, role)
+            if (anomaly.severity != "INFO") {
+                mainRepository.logAction(
+                    "ANOMALY_DETECTED",
+                    anomaly.code ?: anomaly.message,
+                    role,
+                    anomaly.severity
+                )
+            }
 
             if (finalVente.status == "CONFIRMED") {
                 if (finalVente.paymentMethod == "MOMO" && finalVente.transactionId.isNullOrBlank() && role == "STAFF") {
@@ -545,6 +572,11 @@ class SalesRepository @Inject constructor(
     private fun expectedSessionCash(openingBalance: Double, cashSales: Double, expenses: Double): Double =
         openingBalance + cashSales - expenses
 }
+
+private class BlockedSaleAnomalyException(
+    val anomaly: AnomalyResult,
+    val role: String?
+) : Exception(anomaly.message)
 
 data class SessionPreview(
     val sellerName: String,

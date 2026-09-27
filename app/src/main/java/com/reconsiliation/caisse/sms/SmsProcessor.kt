@@ -9,6 +9,7 @@ import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.SalesRepository
 import com.reconsiliation.caisse.di.ApplicationScope
 import com.reconsiliation.caisse.notification.NotificationHelper
+import com.reconsiliation.caisse.utils.AnomalyEngine
 import com.reconsiliation.caisse.utils.PhoneUtil
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -27,18 +28,17 @@ class SmsProcessor @Inject constructor(
 ) {
     fun processSms(
         context: Context,
-        messages: List<Pair<String, String?>>,
+        messages: List<IncomingSms>,
         onFinished: (() -> Unit)? = null
     ) {
         scope.launch(Dispatchers.IO) {
             try {
-                for ((body, sender) in messages) {
+                for (message in messages) {
+                    val body = message.body
+                    val sender = message.sender
                     val parsed = SmsParser.parse(body, sender)
                     if (parsed != null && parsed.isSecure && parsed.transactionId.isNotBlank()) {
-                        // Point 2: Date Anomaly Check
-                        val networkTime = System.currentTimeMillis()
-                        val systemTime = System.currentTimeMillis()
-                        if (kotlin.math.abs(networkTime - systemTime) > 30 * 60 * 1000) { // 30 mins threshold
+                        if (AnomalyEngine.isSmsClockAnomaly(message.timestampMillis, System.currentTimeMillis())) {
                             repository.logAction("DATE_ANOMALY", "Écart de temps détecté (>30m). Heure système potentiellement falsifiée.", severity = "CRITICAL")
                         }
 

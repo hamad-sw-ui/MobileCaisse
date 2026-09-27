@@ -4,6 +4,16 @@ import com.reconsiliation.caisse.data.local.entity.VenteEntity
 import java.util.*
 
 object AnomalyEngine {
+    const val SMS_CLOCK_ANOMALY_THRESHOLD_MS = 30L * 60 * 1000
+    const val CODE_FUTURE = "FUTURE"
+    const val CODE_DUPLICATE = "DUPLICATE"
+    const val CODE_HIGH_AMOUNT = "HIGH_AMOUNT"
+
+    fun isSmsClockAnomaly(smsTimestampMillis: Long?, systemTimestampMillis: Long): Boolean {
+        if (smsTimestampMillis == null) return false
+        return kotlin.math.abs(smsTimestampMillis - systemTimestampMillis) > SMS_CLOCK_ANOMALY_THRESHOLD_MS
+    }
+
     /**
      * Analyse une vente pour détecter des comportements suspects.
      */
@@ -12,7 +22,7 @@ object AnomalyEngine {
         
         // 1. Détection de modification d'heure système (Rétroaction temporelle)
         if (vente.date.after(now)) {
-            return AnomalyResult(true, "Vente dans le futur detectée. Heure systeme suspecte.")
+            return AnomalyResult(true, "Vente dans le futur detectée. Heure systeme suspecte.", code = CODE_FUTURE)
         }
 
         // 2. Détection de ventes répétitives (Suspicion de spam ou doublon)
@@ -21,12 +31,12 @@ object AnomalyEngine {
             Math.abs(it.date.time - vente.date.time) < 30000 // Moins de 30 secondes
         }
         if (similarSales.isNotEmpty()) {
-            return AnomalyResult(true, "Vente identique en moins de 30s. Risque de doublon.")
+            return AnomalyResult(true, "Vente identique en moins de 30s. Risque de doublon.", code = CODE_DUPLICATE)
         }
 
         // 3. Détection de montant anormalement élevé
         if (vente.amount > 500000) {
-            return AnomalyResult(false, "Montant inhabituel (>500k). Verification recommandee.", severity = "WARNING")
+            return AnomalyResult(false, "Montant inhabituel (>500k). Verification recommandee.", severity = "WARNING", code = CODE_HIGH_AMOUNT)
         }
 
         return AnomalyResult(false, "OK")
@@ -36,5 +46,6 @@ object AnomalyEngine {
 data class AnomalyResult(
     val blocked: Boolean,
     val message: String,
-    val severity: String = "INFO"
+    val severity: String = "INFO",
+    val code: String? = null
 )

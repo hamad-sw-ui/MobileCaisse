@@ -98,7 +98,16 @@ fun SmsErrorScreen(navController: NavController) {
                         trailingIcon = {
                             if (clipboardText.isNotBlank()) {
                                 IconButton(onClick = {
-                                    com.reconsiliation.caisse.sms.SmsReceiver.processSms(context, listOf(clipboardText to "MANUAL_CLIPBOARD"))
+                                    com.reconsiliation.caisse.sms.SmsReceiver.processSms(
+                                        context,
+                                        listOf(
+                                            com.reconsiliation.caisse.sms.IncomingSms(
+                                                clipboardText,
+                                                "MANUAL_CLIPBOARD",
+                                                null
+                                            )
+                                        )
+                                    )
                                     clipboardText = ""
                                 }) {
                                     Icon(Icons.Default.Send, stringResource(R.string.action_analyze))
