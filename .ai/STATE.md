@@ -5,13 +5,13 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : a34e5f312802d9bbc2b06685f338de032a96bb9c
-- **HEAD actuel** : a34e5f312802d9bbc2b06685f338de032a96bb9c
+- **Dernier commit fonctionnel** : 8bac07c5cb6fdc0b4e3a4228a980166134259cb5
+- **HEAD actuel** : 8bac07c5cb6fdc0b4e3a4228a980166134259cb5
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-27 (SUCCESS, validation J6.6 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-09-27 (169/169 SUCCESS, `:app:testDebugUnitTest`, validation J6.6)
+- **Dernière compilation** : 2026-09-28 (SUCCESS, validation J6.7b LOT 1 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-09-28 (177/177 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 1)
 - **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
 - **Working Tree** : CLEAN après le commit technique J6.6 (`a34e5f3`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
 - **Couverture actuelle** : 
@@ -32,10 +32,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.6 — alertes d'anomalie visibles dans l'UI (inc. BUG-008) / B-072 (TERMINÉE TECHNIQUEMENT — commit `a34e5f312802d9bbc2b06685f338de032a96bb9c`). Post-commit audit **VALIDÉ**.
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire de cette clôture (pas encore committée). **J6.7 n'est pas commencé.**
-- **Prochaine tâche prévue** : audit documentaire indépendant, puis commit documentaire `.ai/`. Ensuite, jalon fonctionnel **J6.7a / J6.7b** — sauvegarde distante (B-111 / B-112). **NEXT / NOT STARTED**.
-- **Hors de ce commit technique** : J6.7, J6.8, J7. J6.1A (`82f05be`), J6.4 (même livrable i18n), J6.2 (`8658ab5`), J6.3 (`52b4090`) et J6.5 (`498b9ba`) restent terminés et intacts.
+- **Dernière tâche terminée** : J6.7b LOT 1 — socle Google Drive Remote Backup (TERMINÉE TECHNIQUEMENT — commit `8bac07c5cb6fdc0b4e3a4228a980166134259cb5`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 1.
+- **Prochaine tâche prévue** : jalon fonctionnel **J6.7b LOT 2** — `RemoteBackupRepository`, `RemoteBackupWorker` et politique de rotation (B-112-LOT2). **NEXT / NOT STARTED**.
+- **Hors de ce commit technique** : J6.7b LOT 2, J6.7b LOT 3, J6.8, J7. J6.1A (`82f05be`), J6.2 (`8658ab5`), J6.3 (`52b4090`), J6.5 (`498b9ba`), J6.6 (`a34e5f3`) et J6.7b LOT 1 (`8bac07c`) restent terminés et intacts.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.

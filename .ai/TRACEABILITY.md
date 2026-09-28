@@ -18,6 +18,8 @@ Ce document établit le lien permanent entre les défauts/tâches et les preuves
 | **J6.3** (permissions / BUG-010) | ✅ audit pré + post-commit | — | 16 fichiers (policy, UI, SMS, BT, caméra, i18n, 1 test) | 141/141 SUCCESS | ✅ `compileDebugKotlin` ; `assembleDebug` **non exécuté** | A-JVM | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`52b4090`) |
 | **J6.5** / **B-076** (snackbars) | ✅ contrôle final + post-commit | — | 25 fichiers (LOT 1 = 19, LOT 2 = 2, LOT 3 = 4) | 147/147 SUCCESS | ✅ compile + KSP + **`assembleDebug`** | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`498b9ba`) |
 | **J6.6** / **B-072** / **BUG-008** (alertes anomalies) | ✅ contrôle final + post-commit | — | 14 fichiers (LOT 1 = 5, LOT 2 = 4, LOT 3 = 5) | 169/169 SUCCESS | ✅ compile + KSP + **`assembleDebug`** | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`a34e5f3`) |
+| **J6.7a** / **B-111** (conception Google Drive) | ✅ contre-vérification factuelle GO | — | 0 fichier de code (rapport `.ai/REPORTS`) | — | — | A-Doc | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** |
+| **J6.7b LOT 1** / **B-112-LOT1** (socle Google Drive) | ✅ contrôle final + post-commit | — | 8 fichiers techniques (client REST, auth, DI, 2 tests) | 177/177 SUCCESS | ✅ compile + KSP + **`assembleDebug`** | A | `STATE.md`, `ROADMAP.md`, `DEVLOG.md` | **TERMINÉ** (`8bac07c`) |
 
 ---
 

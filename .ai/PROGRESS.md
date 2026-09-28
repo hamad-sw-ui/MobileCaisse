@@ -1,8 +1,53 @@
 # 📈 JOURNAL DE PROGRESSION
 
 > Une entrée par session, la plus récente en haut.
-> Format imposé : Date · Fonctionnalités terminées · Fichiers modifiés ·
+> Format imposed : Date · Fonctionnalités terminées · Fichiers modifiés ·
 > Tests exécutés · Problèmes rencontrés · Étape suivante.
+
+---
+
+## 2026-09-28 — J6.7b LOT 1 socle Google Drive Remote Backup / B-112-LOT1
+
+**Date** : 2026-09-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 1** terminé. Commit `8bac07c5cb6fdc0b4e3a4228a980166134259cb5`, message `feat(j6.7): implement Google Drive remote backup foundation`. Parent `c00deba536bf5cad59992ca9fdec74146380092c`.
+- **Dépendances** : `play-services-auth:21.2.0`, `okhttp:4.12.0`, `mockwebserver:4.12.0`.
+- **Abstraction** : `RemoteStorageClient` & `RemoteBackupItem`.
+- **Auth** : `GoogleDriveAuthManager` & `PlayServicesGoogleDriveAuthManager` (`GoogleSignIn`, scope `drive.appdata`, `GoogleAuthUtil.getToken()`).
+- **Client REST** : `GoogleDriveStorageClient` (`uploadBackup` multipart `appDataFolder`, `listBackups`, `downloadBackup` `.tmp` sécurisé, `deleteBackup`).
+- **Hilt DI** : `RemoteStorageModule` (`@Singleton`).
+- **Total 8 fichiers techniques** (+614 / −0). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **177/177** tests JVM (169 existants + 8 nouveaux tests `GoogleDriveStorageClientTest`), 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Ajustement du type MIME OkHttp `MultipartBody` vers `multipart/related` pour se conformer au protocole REST v3 Drive sans dupliquer l'en-tête `Content-Type`. **LOT 2 non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 2 de J6.7b (B-112-LOT2 : `RemoteBackupRepository` + `RemoteBackupWorker` + rotation). **NEXT / NOT STARTED.**
+
+---
+
+## 2026-09-27 — J6.7a conception sauvegarde distante Google Drive / B-111
+
+**Date** : 2026-09-27 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7a** (B-111) terminé. Validation du fournisseur principal **Google Drive API v3 (dossier masqué `appDataFolder`)**.
+- Rédaction du rapport de conception et du plan d'implémentation détaillé : `.ai/REPORTS/analyse_conception_2026-09-27_sauvegarde_distante_google_drive.md`.
+- Spécification des 3 lots pour J6.7b / B-112 (LOT 1: Auth & REST Client, LOT 2: Repository & WorkManager rotation, LOT 3: UI & Restauration Cloud) + 8 critères de recette (AC-DRIVE-01 à 08).
+- **0 fichier de code modifié**.
+
+### Tests exécutés
+Sans objet (étape de conception pure).
+
+### Problèmes rencontrés
+Aucun. Arbitrage humain validé en faveur de Google Drive. **J6.7b non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 1 de J6.7b (B-112). **NEXT / NOT STARTED.**
 
 ---
 

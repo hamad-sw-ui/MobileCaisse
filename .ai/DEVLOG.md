@@ -1,5 +1,29 @@
 # # 🪵 JOURNAL DE BORD (DEVLOG)
 
+## 🗓️ 2026-09-28 — J6.7b LOT 1 socle Google Drive Remote Backup / B-112-LOT1
+### Actions réalisées :
+- **J6.7b LOT 1 terminé techniquement** : commit `8bac07c5cb6fdc0b4e3a4228a980166134259cb5` (`feat(j6.7): implement Google Drive remote backup foundation`). Parent `c00deba`. 8 fichiers techniques (+614 / −0). Aucun `.ai/` dans ce commit.
+- **Architecture retenue** :
+  - **Dépendances** : `play-services-auth:21.2.0`, `okhttp:4.12.0`, `mockwebserver:4.12.0`.
+  - **Abstraction `RemoteStorageClient`** (`RemoteStorageClient.kt` & `RemoteBackupItem`) : interface générique isolée de Google Drive.
+  - **Authentification `GoogleDriveAuthManager`** (`GoogleDriveAuthManager.kt` & `PlayServicesGoogleDriveAuthManager`) : Google Sign-In, scope `https://www.googleapis.com/auth/drive.appdata`, obtention des jetons Bearer via `GoogleAuthUtil.getToken()` sur `Dispatchers.IO`. Prise en charge propre de l'absence de GMS.
+  - **Client REST `GoogleDriveStorageClient`** (`GoogleDriveStorageClient.kt`) : endpoints v3 Drive `uploadBackup` (`multipart/related`, `appDataFolder`), `listBackups`, `downloadBackup` (fichier temporaire `.tmp` sécurisé), `deleteBackup`.
+  - **Hilt DI** (`RemoteStorageModule.kt`) : bindings `@Singleton` pour `RemoteStorageClient`, `GoogleDriveAuthManager` et `OkHttpClient`.
+  - **Tests unitaires JVM** (`GoogleDriveStorageClientTest.kt` & `FakeGoogleDriveAuthManager.kt`) : 8 tests purs MockWebServer.
+- **Preuve** : 177/177 tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` / KSP / **`assembleDebug` SUCCESS**.
+- **Audits** : contrôles pré-commit et post-commit **VALIDÉS**.
+- **Séparation** : commit technique `8bac07c` d'abord. Cette synchronisation AI-DOS est un working tree distinct, **pas encore committée**. **J6.7b LOT 2 non commencé.**
+
+## 🗓️ 2026-09-27 — J6.7a conception sauvegarde distante Google Drive / B-111
+### Actions réalisées :
+- **J6.7a (B-111) terminé** : Validation du fournisseur cloud principal **Google Drive API v3 (dossier masqué `appDataFolder`)**.
+- **Document de conception rédigé** : `.ai/REPORTS/analyse_conception_2026-09-27_sauvegarde_distante_google_drive.md`.
+- **Découpage J6.7b (B-112)** :
+  - LOT 1 : `GoogleDriveAuthManager` & `GoogleDriveStorageClient` (REST OkHttp) + 4 tests unitaires.
+  - LOT 2 : `RemoteBackupRepository`, rotation (7 quotidiennes + 4 mensuelles), `RemoteBackupWorker` (`WorkManager`).
+  - LOT 3 : Carte UI `SettingsScreen` / `BackupScreen`, i18n FR/EN, parcours de restauration `RestorationWizardScreen`.
+- **0 fichier de code modifié.**
+
 ## 🗓️ 2026-09-27 — J6.6 alertes d'anomalies / timestamp SMS / B-072 / BUG-008
 ### Actions réalisées :
 - **J6.6 terminé techniquement** : commit `a34e5f312802d9bbc2b06685f338de032a96bb9c` (`feat(j6): implement J6.6 anomaly detection, sms timestamping and audit log filters`). Parent `0fdbe02b5ee551250f1ce1de01b91ddd7c13a000`. 14 fichiers, +381 / −23. Aucun `.ai/` dans ce commit.

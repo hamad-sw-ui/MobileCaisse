@@ -100,8 +100,8 @@ J7 Industrialisation (CI, release)
 | 6.4 | Externalisation des textes UI + `values-en/` (**J6.1A**) | B-073, B-074 | ✅ (82f05be) |
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
-| 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | □ |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | □ |
+| 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -223,8 +223,22 @@ Découpage livré :
 
 Validation : **169/169** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7a rapport comparatif Google Drive vs Dropbox (B-111)** et **6.7b sauvegarde distante (B-112)**. **NOT STARTED.**
+### J6.7b / B-112 — Socle Google Drive Remote Backup (LOT 1) : DONE
+
+Commit technique `8bac07c` (`8bac07c5cb6fdc0b4e3a4228a980166134259cb5`), message `feat(j6.7): implement Google Drive remote backup foundation`. Parent `c00deba` (sync documentaire J6.6). 8 fichiers techniques (+614 lignes, -0). Aucun `.ai/` dans ce commit.
+
+Comportement livré :
+- **Dépendances Google Auth & OkHttp** : `play-services-auth:21.2.0`, `okhttp:4.12.0`, `mockwebserver:4.12.0`.
+- **Abstraction `RemoteStorageClient`** (`RemoteStorageClient.kt` & `RemoteBackupItem`) : interface générique isolée de Google Drive.
+- **Authentification `GoogleDriveAuthManager`** (`GoogleDriveAuthManager.kt` & `PlayServicesGoogleDriveAuthManager`) : Google Sign-In, scope `https://www.googleapis.com/auth/drive.appdata`, récupération des jetons Bearer via `GoogleAuthUtil.getToken()` sur `Dispatchers.IO`. Prise en charge propre de l'absence de GMS.
+- **Client REST `GoogleDriveStorageClient`** (`GoogleDriveStorageClient.kt`) : endpoints v3 Drive `uploadBackup` (`multipart/related`, `appDataFolder`), `listBackups`, `downloadBackup` (fichier temporaire `.tmp` avec nettoyage en cas d'erreur), `deleteBackup`.
+- **Hilt DI** (`RemoteStorageModule.kt`) : bindings `@Singleton` pour `RemoteStorageClient`, `GoogleDriveAuthManager` et `OkHttpClient`.
+- **Tests unitaires JVM** (`GoogleDriveStorageClientTest.kt` & `FakeGoogleDriveAuthManager.kt`) : 8 tests purs MockWebServer sans dépendre d'un compte Google réel.
+
+Validation : **177/177** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7b LOT 2 — RemoteBackupRepository + WorkManager + rotation (B-112-LOT2)**. **NEXT / NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-09-27 (J6.6 TERMINÉ — commit a34e5f3). Mises à jour précédentes : 2026-09-26 (J6.5 TERMINÉ — commit 498b9ba) ; 2026-09-26 (J6.3 TERMINÉ — commit 52b4090) ; 2026-09-26 (J6.2 TERMINÉ — commit 8658ab5).*
+*Document mis à jour le 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c). Mises à jour précédentes : 2026-09-27 (J6.7a TERMINÉ — conception Google Drive) ; 2026-09-27 (J6.6 TERMINÉ — commit a34e5f3).*

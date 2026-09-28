@@ -109,8 +109,8 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 
 ### Décision D2 — sauvegarde distante (deux volets en parallèle)
 - ☑ **B-110** « Exporter et partager » — libellés UI, chooser, `logAction`, nom de fichier. Noms de fonctions **non modifiés** (consigne)
-- □ **B-111** Volet 2a : rapport d'analyse comparatif Google Drive vs Dropbox (`REPORTS/`)
-- □ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (dépend de B-101 : on n'envoie que des archives `BackupManager`)
+- ☑ **B-111** Volet 2a : rapport d'analyse comparatif Google Drive vs Dropbox (`REPORTS/`) — **J6.7a terminé** (Google Drive validé comme fournisseur principal ; rapport de conception `.ai/REPORTS/analyse_conception_2026-09-27_sauvegarde_distante_google_drive.md` rédigé)
+- ⏳ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (LOT 1 terminé : `8bac07c` ; LOT 2 et LOT 3 à venir)
 
 - ☑ **B-070** Écran de gestion du personnel — CRUD, rôles, désactivation sans perte d'historique
 - ☑ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **J6.2 terminé** (`8658ab5`). Session unique, mutex, comptage obligatoire, écart réel, manque après clôture. Patch historique non appliqué.
@@ -169,12 +169,12 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 | P1 — Sécurité | 10 | 3 |
 | P2 — Hilt & assainissement | 12 | 0 |
 | P3 — Découpage | 10 | 0 |
-| P4 — Fonctionnalités | 12 | 3 |
+| P4 — Fonctionnalités | 12 | 10 |
 | P5 — Qualité & CI | 11 | 1 |
 | P6 — Environnement Docker | 8 | 3 |
-| **TOTAL** | **114** | **51** |
+| **TOTAL** | **114** | **54** |
 
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-09-27 (J6.6 terminé — commit a34e5f3). B-029 (BUG-008) et B-072 clôturés.*
+*Dernière mise à jour : 2026-09-28 (J6.7b LOT 1 / B-112 terminé — commit 8bac07c). B-112 LOT 1 clôturé.*
