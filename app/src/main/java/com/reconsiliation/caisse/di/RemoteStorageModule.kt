@@ -1,6 +1,10 @@
 package com.reconsiliation.caisse.di
 
 import android.content.Context
+import com.reconsiliation.caisse.data.local.dao.BoutiqueDao
+import com.reconsiliation.caisse.data.prefs.PreferencesManager
+import com.reconsiliation.caisse.data.repository.MainRepository
+import com.reconsiliation.caisse.data.repository.RemoteBackupRepository
 import com.reconsiliation.caisse.platform.remote.*
 import dagger.Module
 import dagger.Provides
@@ -40,5 +44,33 @@ object RemoteStorageModule {
         okHttpClient: OkHttpClient
     ): RemoteStorageClient {
         return GoogleDriveStorageClient(authManager, okHttpClient)
+    }
+
+    @Provides
+    @Singleton
+    fun providePreferencesManager(
+        @ApplicationContext context: Context
+    ): PreferencesManager {
+        return PreferencesManager(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideRemoteBackupRepository(
+        @ApplicationContext context: Context,
+        remoteStorageClient: RemoteStorageClient,
+        authManager: GoogleDriveAuthManager,
+        boutiqueDao: BoutiqueDao,
+        preferencesManager: PreferencesManager,
+        mainRepository: MainRepository
+    ): RemoteBackupRepository {
+        return RemoteBackupRepository(
+            context = context,
+            remoteStorageClient = remoteStorageClient,
+            authManager = authManager,
+            boutiqueDao = boutiqueDao,
+            preferencesManager = preferencesManager,
+            mainRepository = mainRepository
+        )
     }
 }

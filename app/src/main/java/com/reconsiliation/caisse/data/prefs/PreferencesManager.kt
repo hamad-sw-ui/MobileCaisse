@@ -31,4 +31,18 @@ class PreferencesManager(context: Context) {
         val lockUntil = System.currentTimeMillis() + (minutes * 60 * 1000)
         prefs.edit().putLong("lock_time", lockUntil).apply()
     }
+
+    // ==================== Sauvegarde Distante ====================
+
+    fun isRemoteBackupEnabled(): Boolean = prefs.getBoolean("remote_backup_enabled", false)
+    fun setRemoteBackupEnabled(enabled: Boolean) = prefs.edit().putBoolean("remote_backup_enabled", enabled).apply()
+
+    fun isWifiOnlyBackupEnabled(): Boolean = prefs.getBoolean("wifi_only_backup_enabled", true)
+    fun setWifiOnlyBackupEnabled(wifiOnly: Boolean) = prefs.edit().putBoolean("wifi_only_backup_enabled", wifiOnly).apply()
+
+    fun getLastRemoteBackupTime(): Long = prefs.getLong("last_remote_backup_time", 0L)
+    fun setLastRemoteBackupTime(time: Long) = prefs.edit().putLong("last_remote_backup_time", time).apply()
+
+    fun getLastRemoteBackupStatus(): String = prefs.getString("last_remote_backup_status", "") ?: ""
+    fun setLastRemoteBackupStatus(status: String) = prefs.edit().putString("last_remote_backup_status", status).apply()
 }
