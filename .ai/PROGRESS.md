@@ -6,6 +6,30 @@
 
 ---
 
+## 2026-09-28 — J6.7b LOT 2 RemoteBackupRepository, Worker & Rotation / B-112-LOT2
+
+**Date** : 2026-09-28 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 2** terminé. Commit `11d47cb908905249f31b5761b115f66033919764`, message `feat(j6.7): implement remote backup repository and worker`. Parent `2ade92ad026d49c5708c394689ca23dfa605151f`.
+- **`RemoteBackupRepository`** (`RemoteBackupRepository.kt`) : orchestre l'exportation localement chiffrée v2 (`BackupManager.exportBackupWithPassword()`) vers un temporaire `.db.enc` privé (supprimé dans `finally`), l'upload cloud, la rotation et la traçabilité `"REMOTE_BACKUP"` (`INFO`/`CRITICAL`) via `MainRepository.logAction()`.
+- **Dérivation déterministe de secret** : `deriveRemoteBackupPassword(managerCode: String)` (suffixe `"a1A!"`).
+- **Politique de rotation** : déduplique les sauvegardes multiples du même jour UTC, conserve les 7 jours civils distincts les plus récents et le 1er fichier de jusqu'à 4 mois civils antérieurs.
+- **`RemoteBackupWorker`** (`RemoteBackupWorker.kt`) : `@HiltWorker` + `@AssistedInject` planifié via `schedulePeriodic()` (24h, `ExistingPeriodicWorkPolicy.KEEP`, backoff exponentiel 15 min, contraintes `UNMETERED`/`CONNECTED` + batterie non faible).
+- **Extensions `PreferencesManager`** & bindings Hilt (`RemoteStorageModule.kt`).
+- **Total 6 fichiers techniques** (+693 / −0). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **185/185** tests JVM (169 originaux + 8 LOT 1 + 8 LOT 2), 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Alignement du parsing ISO UTC (`removeSuffix("Z")`) dans `parseIsoDate` et implémentation de `TestContext` étendant `android.app.Application()` avec `SharedPreferences` en mémoire. **LOT 3 non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 3 de J6.7b (B-112-LOT3 : UI `SettingsScreen`/`BackupScreen`, i18n, restauration cloud). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-09-28 — J6.7b LOT 1 socle Google Drive Remote Backup / B-112-LOT1
 
 **Date** : 2026-09-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

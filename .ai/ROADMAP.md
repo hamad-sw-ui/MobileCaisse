@@ -101,7 +101,7 @@ J7 Industrialisation (CI, release)
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -237,8 +237,23 @@ Comportement livré :
 
 Validation : **177/177** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7b LOT 2 — RemoteBackupRepository + WorkManager + rotation (B-112-LOT2)**. **NEXT / NOT STARTED.**
+### J6.7b / B-112 — RemoteBackupRepository, Worker & Rotation (LOT 2) : DONE
+
+Commit technique `11d47cb` (`11d47cb908905249f31b5761b115f66033919764`), message `feat(j6.7): implement remote backup repository and worker`. Parent `2ade92a` (sync documentaire J6.7b LOT 1). 6 fichiers techniques (+693 / −0). Aucun `.ai/` dans ce commit.
+
+Comportement livré :
+- **`RemoteBackupRepository`** (`RemoteBackupRepository.kt`) : orchestre l'exportation localement chiffrée v2 via `BackupManager.exportBackupWithPassword()` vers un fichier temporaire privé `.db.enc` (supprimé dans `finally`), puis l'upload cloud via `RemoteStorageClient`. Application de la rotation et journalisation d'audit `"REMOTE_BACKUP"` (`INFO`/`CRITICAL`) via `MainRepository.logAction()`.
+- **Dérivation déterministe de secret** : `deriveRemoteBackupPassword(managerCode: String)` applique le suffixe `"a1A!"` à `managerCode.trim()` pour garantir la présence simultanée de minuscules, majuscules et chiffres exigés par `BackupManager.validatePasswordStrength`. Secret 100% reproductible pour la future restauration.
+- **Politique de rotation** : déduplique les sauvegardes multiples du même jour UTC, conserve les 7 jours civils distincts les plus récents et le 1er fichier de jusqu'à 4 mois civils antérieurs. Erreurs de suppression individuelles non bloquantes.
+- **`RemoteBackupWorker`** (`RemoteBackupWorker.kt`) : `@HiltWorker` + `@AssistedInject` planifié via `schedulePeriodic()` (24h, `ExistingPeriodicWorkPolicy.KEEP`, backoff exponentiel 15 min, contraintes `UNMETERED`/`CONNECTED` + batterie non faible). *(Note : helper de planification prêt, branchement UI effectif reporté au LOT 3)*.
+- **Extensions `PreferencesManager`** : `remote_backup_enabled`, `wifi_only_backup_enabled`, `last_remote_backup_time`, `last_remote_backup_status`.
+- **Hilt DI** (`RemoteStorageModule.kt`) : bindings `@Singleton` pour `RemoteBackupRepository` et `PreferencesManager`.
+- **Tests unitaires JVM** (`RemoteBackupRepositoryTest.kt` & `FakeRemoteStorageClient.kt`) : 8 tests unitaires déterministes couvrant le flux d'exportation, les échecs d'authentification, la politique de rotation et la sécurité.
+
+Validation : **185/185** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7b LOT 3 — UI SettingsScreen / BackupScreen, i18n et restauration cloud (B-112-LOT3)**. **NEXT / NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c). Mises à jour précédentes : 2026-09-27 (J6.7a TERMINÉ — conception Google Drive) ; 2026-09-27 (J6.6 TERMINÉ — commit a34e5f3).*
+*Document mis à jour le 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb). Mises à jour précédentes : 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c) ; 2026-09-27 (J6.7a TERMINÉ — conception Google Drive).*
