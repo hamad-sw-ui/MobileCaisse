@@ -6,6 +6,28 @@
 
 ---
 
+## 2026-10-02 — J6.7b LOT 3B Carte UI Google Drive & i18n FR/EN / B-112-LOT3B
+
+**Date** : 2026-10-02 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 3B** terminé. Commit `0a8c13b76eee4ae31ae28bdacf5f554f860b2597`, message `feat(j6.7): implement Google Drive backup UI`. Parent `84a7c8437a0819d414e4b49da3fbc8564932b233`.
+- **Carte UI Google Drive** dans `SettingsScreen.kt` : insérée sous `settings_backup_export`. Affiche le compte e-mail connecté, les bascules sauvegarde automatique & Wi-Fi uniquement, l'horodatage et le statut du dernier envoi, le bouton de synchronisation manuelle Cloud, et le bouton de connexion/déconnexion Google Drive.
+- **Google Sign-In Launcher** : `rememberLauncherForActivityResult` géré à 100% dans `SettingsScreen.kt` sans fuite de référence Activity/Launcher dans `BackupViewModel`.
+- **Ressources i18n FR/EN** : 10 paires de clés créées dans `strings.xml` et `values-en/strings.xml` avec parité 100% et placeholders d'indexation `%1$s` / `%2$s`.
+- **Total 4 fichiers techniques** (+220 / −23). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **189/189** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Aucun. **LOT 3C non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 3C de J6.7b (B-112-LOT3C : Restauration Cloud dans `RestorationWizardScreen` & Recette Globale). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-10-02 — J6.7b LOT 3A BackupViewModel & Startup Wiring / B-112-LOT3A
 
 **Date** : 2026-10-02 · **Branche** : `arena/019fa5ec-mobilecaisse`

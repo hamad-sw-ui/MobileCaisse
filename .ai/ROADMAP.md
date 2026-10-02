@@ -101,7 +101,7 @@ J7 Industrialisation (CI, release)
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -264,8 +264,22 @@ Comportement livré :
 
 Validation : **189/189** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7b LOT 3B — Carte UI Google Drive dans SettingsScreen & i18n FR/EN (B-112-LOT3B)**. **NEXT / NOT STARTED.**
+### J6.7b / B-112 — Carte UI Google Drive & i18n FR/EN (LOT 3B) : DONE
+
+Commit technique `0a8c13b` (`0a8c13b76eee4ae31ae28bdacf5f554f860b2597`), message `feat(j6.7): implement Google Drive backup UI`. Parent `84a7c84` (sync documentaire J6.7b LOT 3A). 4 fichiers techniques (+220 / −23). Aucun `.ai/` dans ce commit. Post-audit `GO — POST-COMMIT LOT 3B VALIDÉ`.
+
+Comportement livré :
+- **Carte UI Google Drive** dans `SettingsScreen` : insérée sous `settings_backup_export` ("Sauvegarde & Export") et au-dessus de l'exportation locale chiffrée.
+- **État Connecté** : affichage e-mail (`googleAccountEmail`), bascule sauvegarde automatique quotidienne (`toggleRemoteBackup`), bascule Wi-Fi uniquement (`toggleWifiOnlyBackup`), horodatage et statut du dernier envoi (format `dd/MM/yyyy HH:mm` ou *"Jamais"*), bouton de sauvegarde manuelle Cloud (`triggerManualRemoteBackup`) et bouton de déconnexion (`signOutGoogleDrive`).
+- **État Déconnecté** : affichage *"Non connecté à Google Drive"* et bouton *"Connecter Google Drive"*.
+- **Google Sign-In Launcher** : `rememberLauncherForActivityResult` placé 100% dans `SettingsScreen.kt`. `BackupViewModel` expose `getGoogleSignInIntent()` sans aucune référence à une Activity ou Composable.
+- **Ressources i18n FR/EN** : 10 paires de clés créées dans `strings.xml` et `values-en/strings.xml` avec parité 100% et placeholders d'indexation `%1$s` / `%2$s`.
+- **Accessibilité** : zones interactives >= 48dp, `contentDescription = null` sur icônes décoratives, contrastes Material 3. *(Note : vérification statique effectuée, TalkBack non testé manuellement)*.
+
+Validation : **189/189** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7b LOT 3C — Restauration Cloud dans RestorationWizardScreen & Recette Globale (B-112-LOT3C)**. **NEXT / NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de). Mises à jour précédentes : 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb) ; 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c).*
+*Document mis à jour le 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b). Mises à jour précédentes : 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de) ; 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb).*

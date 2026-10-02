@@ -110,7 +110,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 ### Décision D2 — sauvegarde distante (deux volets en parallèle)
 - ☑ **B-110** « Exporter et partager » — libellés UI, chooser, `logAction`, nom de fichier. Noms de fonctions **non modifiés** (consigne)
 - ☑ **B-111** Volet 2a : rapport d'analyse comparatif Google Drive vs Dropbox (`REPORTS/`) — **J6.7a terminé** (Google Drive validé comme fournisseur principal ; rapport de conception `.ai/REPORTS/analyse_conception_2026-09-27_sauvegarde_distante_google_drive.md` rédigé)
-- ⏳ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (LOT 1 : `8bac07c` ; LOT 2 : `11d47cb` ; LOT 3A : `55067de` ; LOT 3B/3C à venir)
+- ⏳ **B-112** Volet 2b : implémenter la sauvegarde automatique distante retenue (LOT 1 : `8bac07c` ; LOT 2 : `11d47cb` ; LOT 3A : `55067de` ; LOT 3B : `0a8c13b` ; LOT 3C à venir)
 
 - ☑ **B-070** Écran de gestion du personnel — CRUD, rôles, désactivation sans perte d'historique
 - ☑ **B-071** Compléter le pilotage des sessions de caisse (ouverture/fermeture guidée + rapprochement). **J6.2 terminé** (`8658ab5`). Session unique, mutex, comptage obligatoire, écart réel, manque après clôture. Patch historique non appliqué.
@@ -177,4 +177,4 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-10-02 (J6.7b LOT 3A / B-112-LOT3A terminé — commit 55067de). B-112 LOT 3A clôturé.*
+*Dernière mise à jour : 2026-10-02 (J6.7b LOT 3B / B-112-LOT3B terminé — commit 0a8c13b). B-112 LOT 3B clôturé.*
