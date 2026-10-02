@@ -701,4 +701,16 @@
     <string name="sms_catchup_unavailable">Rattrapage SMS indisponible</string>
     <string name="sms_catchup_done">Rattrapage SMS terminé</string>
     <string name="sms_catchup_failed">Le rattrapage SMS a échoué. Le reste de la caisse reste utilisable.</string>
+
+    <!-- Sauvegarde Distante Google Drive (J6.7b LOT 3B) -->
+    <string name="remote_backup_card_title">Sauvegarde distante Google Drive</string>
+    <string name="remote_backup_connected_as">Connecté : %1$s</string>
+    <string name="remote_backup_disconnected">Non connecté à Google Drive</string>
+    <string name="action_connect_google_drive">Connecter Google Drive</string>
+    <string name="action_disconnect_google_drive">Déconnecter</string>
+    <string name="label_auto_remote_backup">Sauvegarde automatique quotidienne</string>
+    <string name="label_wifi_only_backup">Uniquement en Wi-Fi</string>
+    <string name="label_last_cloud_sync">Dernier envoi : %1$s (%2$s)</string>
+    <string name="action_cloud_sync_now">Sauvegarder sur le Cloud maintenant</string>
+    <string name="status_last_sync_never">Jamais</string>
 </resources>

@@ -104,6 +104,9 @@ class BackupViewModel @Inject constructor(
         refreshRemoteBackupState()
     }
 
+    fun getGoogleSignInIntent(): android.content.Intent? =
+        authManager.getSignInClient()?.signInIntent
+
     fun triggerManualRemoteBackup() = viewModelScope.launch {
         _backupState.value = BackupUiState.Working("Sauvegarde distante vers Google Drive en cours…")
 

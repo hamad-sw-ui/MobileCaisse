@@ -701,4 +701,16 @@
     <string name="sms_catchup_unavailable">SMS catch-up unavailable</string>
     <string name="sms_catchup_done">SMS catch-up finished</string>
     <string name="sms_catchup_failed">SMS catch-up failed. The rest of the register still works.</string>
+
+    <!-- Google Drive Remote Backup (J6.7b LOT 3B) -->
+    <string name="remote_backup_card_title">Google Drive Remote Backup</string>
+    <string name="remote_backup_connected_as">Connected: %1$s</string>
+    <string name="remote_backup_disconnected">Not connected to Google Drive</string>
+    <string name="action_connect_google_drive">Connect Google Drive</string>
+    <string name="action_disconnect_google_drive">Disconnect</string>
+    <string name="label_auto_remote_backup">Daily Automatic Backup</string>
+    <string name="label_wifi_only_backup">Wi-Fi Only</string>
+    <string name="label_last_cloud_sync">Last upload: %1$s (%2$s)</string>
+    <string name="action_cloud_sync_now">Backup to Cloud Now</string>
+    <string name="status_last_sync_never">Never</string>
 </resources>
