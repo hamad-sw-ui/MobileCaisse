@@ -6,6 +6,28 @@
 
 ---
 
+## 2026-10-02 — J6.7b LOT 3A BackupViewModel & Startup Wiring / B-112-LOT3A
+
+**Date** : 2026-10-02 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 3A** terminé. Commit `55067deb3ae18e7b470a10bec85d0415b89806d2`, message `feat(j6.7): implement remote backup ViewModel and startup wiring`. Parent `a0272455e0236f46a48d2120066e1e19759f2240`.
+- **`BackupViewModel`** (`BackupViewModel.kt`) : injection Hilt de `RemoteBackupRepository`, `GoogleDriveAuthManager` et `PreferencesManager`. Exposition des StateFlows `isRemoteBackupEnabled`, `isWifiOnlyBackupEnabled`, `lastRemoteBackupTime`, `lastRemoteBackupStatus`, `isGoogleConnected`, `googleAccountEmail`.
+- **Commandes ViewModel** : `toggleRemoteBackup(enabled)` (persiste + schedule/cancel WorkManager), `toggleWifiOnlyBackup(wifiOnly)` (persiste + reschedule si actif), `signOutGoogleDrive()` (déconnexion Google), `triggerManualRemoteBackup()` (sauvegarde distante manuelle chiffrée avec le secret dérivé `deriveRemoteBackupPassword(boutique.managerCode)`).
+- **Startup Wiring** : `CaisseApplication.kt` vérifie `preferencesManager.isRemoteBackupEnabled()` dans `onCreate()` et ré-enregistre le worker au démarrage de l'app sans toucher à `MainActivity.kt`.
+- **Total 3 fichiers techniques** (+220 / −9). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **189/189** tests JVM (169 originaux + 8 LOT 1 + 8 LOT 2 + 4 LOT 3A), 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Gestion propre du fallback dans `toggleRemoteBackup` / `toggleWifiOnlyBackup` lors des tests unitaires JVM purs où `WorkManager.getInstance()` n'est pas initialisé. **LOT 3B non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 3B de J6.7b (B-112-LOT3B : Carte UI Google Drive dans `SettingsScreen` & i18n FR/EN). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-09-28 — J6.7b LOT 2 RemoteBackupRepository, Worker & Rotation / B-112-LOT2
 
 **Date** : 2026-09-28 · **Branche** : `arena/019fa5ec-mobilecaisse`

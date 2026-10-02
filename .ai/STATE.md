@@ -5,15 +5,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 11d47cb908905249f31b5761b115f66033919764
-- **HEAD actuel** : 11d47cb908905249f31b5761b115f66033919764
+- **Dernier commit fonctionnel** : 55067deb3ae18e7b470a10bec85d0415b89806d2
+- **HEAD actuel** : 55067deb3ae18e7b470a10bec85d0415b89806d2
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-09-28 (SUCCESS, validation J6.7b LOT 2 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-09-28 (185/185 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 2)
+- **Dernière compilation** : 2026-10-02 (SUCCESS, validation J6.7b LOT 3A : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-02 (189/189 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 3A)
 - **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : CLEAN après le commit technique J6.7b LOT 2 (`11d47cb`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
+- **Working Tree** : CLEAN après le commit technique J6.7b LOT 3A (`55067de`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -32,10 +32,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.7b LOT 2 — RemoteBackupRepository, RemoteBackupWorker et rotation (TERMINÉE TECHNIQUEMENT — commit `11d47cb908905249f31b5761b115f66033919764`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 2.
-- **Prochaine tâche prévue** : jalon fonctionnel **J6.7b LOT 3** — UI `SettingsScreen` / `BackupScreen`, i18n et restauration cloud (B-112-LOT3). **NEXT / NOT STARTED**.
-- **Hors de ce commit technique** : J6.7b LOT 3, J6.8, J7. J6.1A (`82f05be`), J6.2 (`8658ab5`), J6.3 (`52b4090`), J6.5 (`498b9ba`), J6.6 (`a34e5f3`), J6.7b LOT 1 (`8bac07c`) et J6.7b LOT 2 (`11d47cb`) restent terminés et intacts.
+- **Dernière tâche terminée** : J6.7b LOT 3A — BackupViewModel et startup wiring CaisseApplication (TERMINÉE TECHNIQUEMENT — commit `55067deb3ae18e7b470a10bec85d0415b89806d2`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 3A.
+- **Prochaine tâche prévue** : jalon fonctionnel **J6.7b LOT 3B** — Carte UI Google Drive dans `SettingsScreen` & i18n FR/EN (B-112-LOT3B). **NEXT / NOT STARTED**.
+- **Hors de ce commit technique** : J6.7b LOT 3B, J6.7b LOT 3C, J6.8, J7. J6.1A (`82f05be`), J6.2 (`8658ab5`), J6.3 (`52b4090`), J6.5 (`498b9ba`), J6.6 (`a34e5f3`), J6.7b LOT 1 (`8bac07c`), J6.7b LOT 2 (`11d47cb`) et J6.7b LOT 3A (`55067de`) restent terminés et intacts.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.

@@ -101,7 +101,7 @@ J7 Industrialisation (CI, release)
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -252,8 +252,20 @@ Comportement livré :
 
 Validation : **185/185** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7b LOT 3 — UI SettingsScreen / BackupScreen, i18n et restauration cloud (B-112-LOT3)**. **NEXT / NOT STARTED.**
+### J6.7b / B-112 — BackupViewModel & Startup Wiring (LOT 3A) : DONE
+
+Commit technique `55067de` (`55067deb3ae18e7b470a10bec85d0415b89806d2`), message `feat(j6.7): implement remote backup ViewModel and startup wiring`. Parent `a027245` (sync documentaire J6.7b LOT 2). 3 fichiers techniques (+220 / −9). Aucun `.ai/` dans ce commit. Post-audit `GO — POST-COMMIT LOT 3A VALIDÉ`.
+
+Comportement livré :
+- **`BackupViewModel`** (`BackupViewModel.kt`) : injection Hilt de `RemoteBackupRepository`, `GoogleDriveAuthManager` et `PreferencesManager`. Exposition des `StateFlow` distants (`isRemoteBackupEnabled`, `isWifiOnlyBackupEnabled`, `lastRemoteBackupTime`, `lastRemoteBackupStatus`, `isGoogleConnected`, `googleAccountEmail`).
+- **Commandes ViewModel** : `toggleRemoteBackup(enabled)` (persiste + schedule/cancel WorkManager), `toggleWifiOnlyBackup(wifiOnly)` (persiste + reschedule si actif), `signOutGoogleDrive()` (déconnexion Google), `triggerManualRemoteBackup()` (sauvegarde distante manuelle chiffrée avec le secret dérivé `deriveRemoteBackupPassword(boutique.managerCode)`).
+- **Startup Wiring** : `CaisseApplication.kt` vérifie `preferencesManager.isRemoteBackupEnabled()` dans `onCreate()` et ré-enregistre le worker au démarrage de l'app sans toucher à `MainActivity.kt`.
+- **Tests unitaires JVM** (`BackupViewModelTest.kt`) : 8 tests (4 originaux conservés + 4 nouveaux tests LOT 3A).
+
+Validation : **189/189** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7b LOT 3B — Carte UI Google Drive dans SettingsScreen & i18n FR/EN (B-112-LOT3B)**. **NEXT / NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb). Mises à jour précédentes : 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c) ; 2026-09-27 (J6.7a TERMINÉ — conception Google Drive).*
+*Document mis à jour le 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de). Mises à jour précédentes : 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb) ; 2026-09-28 (J6.7b LOT 1 TERMINÉ — commit 8bac07c).*
