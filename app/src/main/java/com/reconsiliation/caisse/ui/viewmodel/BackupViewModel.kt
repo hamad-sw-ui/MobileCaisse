@@ -4,8 +4,12 @@ import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.data.repository.MainRepository
+import com.reconsiliation.caisse.data.repository.RemoteBackupRepository
+import com.reconsiliation.caisse.data.work.RemoteBackupWorker
 import com.reconsiliation.caisse.platform.ShareManager
+import com.reconsiliation.caisse.platform.remote.GoogleDriveAuthManager
 import com.reconsiliation.caisse.ui.state.BackupUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -21,15 +25,119 @@ import javax.inject.Inject
 class BackupViewModel @Inject constructor(
     application: Application,
     private val repository: MainRepository,
-    private val shareManager: ShareManager
+    private val shareManager: ShareManager,
+    private val remoteBackupRepository: RemoteBackupRepository,
+    private val authManager: GoogleDriveAuthManager,
+    private val preferencesManager: PreferencesManager
 ) : AndroidViewModel(application) {
 
     private val _backupState = MutableStateFlow<BackupUiState>(BackupUiState.Idle)
     val backupState: StateFlow<BackupUiState> = _backupState.asStateFlow()
 
+    private val _isRemoteBackupEnabled = MutableStateFlow(preferencesManager.isRemoteBackupEnabled())
+    val isRemoteBackupEnabled: StateFlow<Boolean> = _isRemoteBackupEnabled.asStateFlow()
+
+    private val _isWifiOnlyBackupEnabled = MutableStateFlow(preferencesManager.isWifiOnlyBackupEnabled())
+    val isWifiOnlyBackupEnabled: StateFlow<Boolean> = _isWifiOnlyBackupEnabled.asStateFlow()
+
+    private val _lastRemoteBackupTime = MutableStateFlow(preferencesManager.getLastRemoteBackupTime())
+    val lastRemoteBackupTime: StateFlow<Long> = _lastRemoteBackupTime.asStateFlow()
+
+    private val _lastRemoteBackupStatus = MutableStateFlow(preferencesManager.getLastRemoteBackupStatus())
+    val lastRemoteBackupStatus: StateFlow<String> = _lastRemoteBackupStatus.asStateFlow()
+
+    private val _isGoogleConnected = MutableStateFlow(authManager.isConnected())
+    val isGoogleConnected: StateFlow<Boolean> = _isGoogleConnected.asStateFlow()
+
+    private val _googleAccountEmail = MutableStateFlow(authManager.getConnectedAccountEmail())
+    val googleAccountEmail: StateFlow<String?> = _googleAccountEmail.asStateFlow()
+
+    init {
+        refreshRemoteBackupState()
+    }
+
     fun clearBackupState() {
         _backupState.value = BackupUiState.Idle
     }
+
+    fun refreshRemoteBackupState() {
+        _isRemoteBackupEnabled.value = preferencesManager.isRemoteBackupEnabled()
+        _isWifiOnlyBackupEnabled.value = preferencesManager.isWifiOnlyBackupEnabled()
+        _lastRemoteBackupTime.value = preferencesManager.getLastRemoteBackupTime()
+        _lastRemoteBackupStatus.value = preferencesManager.getLastRemoteBackupStatus()
+        _isGoogleConnected.value = authManager.isConnected()
+        _googleAccountEmail.value = authManager.getConnectedAccountEmail()
+    }
+
+    fun toggleRemoteBackup(enabled: Boolean) {
+        preferencesManager.setRemoteBackupEnabled(enabled)
+        _isRemoteBackupEnabled.value = enabled
+
+        try {
+            if (enabled) {
+                RemoteBackupWorker.schedulePeriodic(getApplication(), preferencesManager)
+            } else {
+                RemoteBackupWorker.cancelPeriodic(getApplication())
+            }
+        } catch (e: Exception) {
+            // Uninitialized in pure JVM unit tests
+        }
+    }
+
+    fun toggleWifiOnlyBackup(wifiOnly: Boolean) {
+        preferencesManager.setWifiOnlyBackupEnabled(wifiOnly)
+        _isWifiOnlyBackupEnabled.value = wifiOnly
+
+        if (preferencesManager.isRemoteBackupEnabled()) {
+            try {
+                RemoteBackupWorker.schedulePeriodic(getApplication(), preferencesManager)
+            } catch (e: Exception) {
+                // Uninitialized in pure JVM unit tests
+            }
+        }
+    }
+
+    fun signOutGoogleDrive() = viewModelScope.launch {
+        withContext(Dispatchers.IO) {
+            authManager.signOut()
+        }
+        refreshRemoteBackupState()
+    }
+
+    fun triggerManualRemoteBackup() = viewModelScope.launch {
+        _backupState.value = BackupUiState.Working("Sauvegarde distante vers Google Drive en cours…")
+
+        val boutique = withContext(Dispatchers.IO) {
+            repository.getBoutiqueOnce()
+        }
+
+        if (boutique == null) {
+            _backupState.value = BackupUiState.Error("Informations de la boutique introuvables")
+            return@launch
+        }
+
+        val password = RemoteBackupRepository.deriveRemoteBackupPassword(boutique.managerCode)
+        val result = withContext(Dispatchers.IO) {
+            remoteBackupRepository.performRemoteBackup(password)
+        }
+
+        result.fold(
+            onSuccess = { remoteItem ->
+                refreshRemoteBackupState()
+                _backupState.value = BackupUiState.Success(
+                    "Sauvegarde distante réussie vers Google Drive (${remoteItem.fileName})."
+                )
+            },
+            onFailure = { error ->
+                refreshRemoteBackupState()
+                _backupState.value = BackupUiState.Error(
+                    error.message ?: "Échec de la sauvegarde distante"
+                )
+            }
+        )
+    }
+
+    // ==================== Export / Import Local ====================
 
     fun exportEncryptedBackup(context: Context, password: String, userRole: String?) =
         viewModelScope.launch {
@@ -87,8 +195,7 @@ class BackupViewModel @Inject constructor(
                 }
             }
             if (ok) {
-                com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication())
-                    .setSetupComplete(true)
+                PreferencesManager(getApplication()).setSetupComplete(true)
             }
             onResult(ok)
         }
