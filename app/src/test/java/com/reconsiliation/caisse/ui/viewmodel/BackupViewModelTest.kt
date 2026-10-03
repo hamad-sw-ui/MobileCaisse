@@ -6,6 +6,7 @@ import com.reconsiliation.caisse.data.repository.*
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.platform.remote.FakeGoogleDriveAuthManager
 import com.reconsiliation.caisse.platform.remote.FakeRemoteStorageClient
+import com.reconsiliation.caisse.platform.remote.RemoteBackupItem
 import com.reconsiliation.caisse.ui.state.BackupUiState
 import com.reconsiliation.caisse.utils.BackupManager
 import kotlinx.coroutines.Dispatchers
@@ -164,5 +165,35 @@ class BackupViewModelTest {
 
         assertTrue("backupState should be Success but was ${viewModel.backupState.value}", viewModel.backupState.value is BackupUiState.Success)
         assertEquals("Succès", preferencesManager.getLastRemoteBackupStatus())
+    }
+
+    @Test
+    fun `fetchCloudBackups should populate cloudBackups StateFlow`() = runTest {
+        fakeRemoteStorageClient.items.add(RemoteBackupItem("item_1", "backup1.db.enc", "2026-10-02T10:00:00Z", 1000))
+
+        val job = viewModel.fetchCloudBackups()
+        job.join()
+
+        assertEquals(1, viewModel.cloudBackups.value.size)
+        assertEquals("item_1", viewModel.cloudBackups.value[0].fileId)
+    }
+
+    @Test
+    fun `restoreCloudBackup should download remote backup and clean up temp file`() = runTest {
+        val item = RemoteBackupItem("item_1", "backup1.db.enc", "2026-10-02T10:00:00Z", 1000)
+        fakeRemoteStorageClient.items.add(item)
+        val testContext = TestContext()
+
+        var restoredCalled = false
+        val job = viewModel.restoreCloudBackup(
+            context = testContext,
+            remoteItem = item,
+            userRole = "MANAGER",
+            onRestored = { restoredCalled = true }
+        )
+        job.join()
+
+        val tempFiles = testContext.cacheDir.listFiles { _, name -> name.startsWith("temp_cloud_restore_") }
+        assertTrue("Temp cloud restore files must be cleaned up in finally", tempFiles.isNullOrEmpty())
     }
 }

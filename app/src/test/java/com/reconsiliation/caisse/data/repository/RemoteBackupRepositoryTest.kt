@@ -263,4 +263,27 @@ class RemoteBackupRepositoryTest {
         assertEquals(derivedLower, RemoteBackupRepository.deriveRemoteBackupPassword(lowercaseCode))
         assertEquals(derivedNumeric, RemoteBackupRepository.deriveRemoteBackupPassword(numericCode))
     }
+
+    @Test
+    fun `listRemoteBackups should delegate to RemoteStorageClient`() = runBlocking {
+        fakeRemoteStorageClient.items.add(RemoteBackupItem("id_test", "backup.db.enc", "2026-10-02T10:00:00Z", 500))
+
+        val result = repository.listRemoteBackups()
+
+        assertTrue(result.isSuccess)
+        val items = result.getOrThrow()
+        assertEquals(1, items.size)
+        assertEquals("id_test", items[0].fileId)
+    }
+
+    @Test
+    fun `downloadRemoteBackup should delegate to RemoteStorageClient`() = runBlocking {
+        fakeRemoteStorageClient.items.add(RemoteBackupItem("id_dl", "dl_backup.db.enc", "2026-10-02T10:00:00Z", 500))
+        val destFile = File(tempFolder.root, "downloaded.db.enc")
+
+        val result = repository.downloadRemoteBackup("id_dl", destFile)
+
+        assertTrue(result.isSuccess)
+        assertTrue(destFile.exists())
+    }
 }

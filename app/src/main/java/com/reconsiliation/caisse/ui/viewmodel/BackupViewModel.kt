@@ -10,6 +10,7 @@ import com.reconsiliation.caisse.data.repository.RemoteBackupRepository
 import com.reconsiliation.caisse.data.work.RemoteBackupWorker
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.platform.remote.GoogleDriveAuthManager
+import com.reconsiliation.caisse.platform.remote.RemoteBackupItem
 import com.reconsiliation.caisse.ui.state.BackupUiState
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -51,6 +52,9 @@ class BackupViewModel @Inject constructor(
 
     private val _googleAccountEmail = MutableStateFlow(authManager.getConnectedAccountEmail())
     val googleAccountEmail: StateFlow<String?> = _googleAccountEmail.asStateFlow()
+
+    private val _cloudBackups = MutableStateFlow<List<RemoteBackupItem>>(emptyList())
+    val cloudBackups: StateFlow<List<RemoteBackupItem>> = _cloudBackups.asStateFlow()
 
     init {
         refreshRemoteBackupState()
@@ -138,6 +142,69 @@ class BackupViewModel @Inject constructor(
                 )
             }
         )
+    }
+
+    // ==================== Restauration Cloud ====================
+
+    fun fetchCloudBackups() = viewModelScope.launch {
+        _backupState.value = BackupUiState.Working("Récupération de la liste des sauvegardes distantes…")
+        val result = withContext(Dispatchers.IO) {
+            remoteBackupRepository.listRemoteBackups()
+        }
+        result.fold(
+            onSuccess = { items ->
+                _cloudBackups.value = items
+                _backupState.value = BackupUiState.Idle
+            },
+            onFailure = { error ->
+                _backupState.value = BackupUiState.Error(
+                    error.message ?: "Échec de récupération des sauvegardes distantes"
+                )
+            }
+        )
+    }
+
+    fun restoreCloudBackup(
+        context: Context,
+        remoteItem: RemoteBackupItem,
+        userRole: String?,
+        customPassword: String? = null,
+        onRestored: () -> Unit
+    ) = viewModelScope.launch {
+        _backupState.value = BackupUiState.Working("Téléchargement de la sauvegarde distante…")
+
+        val tempCloudFile = File(context.cacheDir, "temp_cloud_restore_${System.currentTimeMillis()}.db.enc")
+
+        try {
+            val downloadResult = withContext(Dispatchers.IO) {
+                remoteBackupRepository.downloadRemoteBackup(remoteItem.fileId, tempCloudFile)
+            }
+
+            if (downloadResult.isFailure) {
+                val error = downloadResult.exceptionOrNull()
+                _backupState.value = BackupUiState.Error(
+                    error?.message ?: "Échec du téléchargement de la sauvegarde distante"
+                )
+                return@launch
+            }
+
+            val passwordToUse = if (!customPassword.isNullOrBlank()) {
+                customPassword
+            } else {
+                val boutique = withContext(Dispatchers.IO) { repository.getBoutiqueOnce() }
+                if (boutique != null) {
+                    RemoteBackupRepository.deriveRemoteBackupPassword(boutique.managerCode)
+                } else null
+            }
+
+            importEncryptedBackup(context, tempCloudFile, passwordToUse, userRole, onRestored)
+        } catch (e: Exception) {
+            _backupState.value = BackupUiState.Error(e.message ?: "Erreur de restauration distante")
+        } finally {
+            if (tempCloudFile.exists()) {
+                tempCloudFile.delete()
+            }
+        }
     }
 
     // ==================== Export / Import Local ====================

@@ -132,6 +132,20 @@ class RemoteBackupRepository @Inject constructor(
     }
 
     /**
+     * Récupère la liste des sauvegardes distantes disponibles sur Google Drive.
+     */
+    suspend fun listRemoteBackups(): Result<List<RemoteBackupItem>> = withContext(Dispatchers.IO) {
+        remoteStorageClient.listBackups()
+    }
+
+    /**
+     * Télécharge une sauvegarde distante spécifiée par son [fileId] vers le fichier local [destFile].
+     */
+    suspend fun downloadRemoteBackup(fileId: String, destFile: File): Result<Unit> = withContext(Dispatchers.IO) {
+        remoteStorageClient.downloadBackup(fileId, destFile)
+    }
+
+    /**
      * Applique la politique de rotation déterministe sur les sauvegardes distantes :
      * - Conserve les 7 jours civils distincts les plus récents ;
      * - Déduplique les sauvegardes du même jour en ne gardant que la plus récente ;
