@@ -101,7 +101,7 @@ J7 Industrialisation (CI, release)
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b \| LOT 3C-1 : 5575241) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -278,8 +278,22 @@ Comportement livré :
 
 Validation : **189/189** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7b LOT 3C — Restauration Cloud dans RestorationWizardScreen & Recette Globale (B-112-LOT3C)**. **NEXT / NOT STARTED.**
+### J6.7b / B-112 — Restauration Cloud (Fondations) (LOT 3C-1) : DONE
+
+Commit technique `5575241` (`557524168574ebce25f0e0676c1eaab797c6e06c`), message `feat(j6.7): implement cloud restore foundation`. Parent `1079b66` (sync documentaire J6.7b LOT 3B). 4 fichiers techniques (+135 / −0). Aucun `.ai/` dans ce commit. Post-audit `POST-COMMIT GO`.
+
+Comportement livré :
+- **API `RemoteBackupRepository`** : wrappers `listRemoteBackups()` et `downloadRemoteBackup(fileId, destFile)` déléguant directement aux APIs REST `RemoteStorageClient`.
+- **Méthodes `BackupViewModel`** : exposition du `StateFlow<List<RemoteBackupItem>> cloudBackups`, commande `fetchCloudBackups()` et méthode `restoreCloudBackup(context, remoteItem, userRole, customPassword, onRestored)`.
+- **Sécurité du téléchargement & Nettoyage** : téléchargement binaire isolé vers `cacheDir` (`temp_cloud_restore_*.db.enc`) nettoyé inconditionnellement dans un bloc `finally`.
+- **Secret & Dérivation** : réutilise la dérivation déterministe `RemoteBackupRepository.deriveRemoteBackupPassword(boutique.managerCode)` (`"${managerCode.trim()}a1A!"`) avec support du paramètre `customPassword`.
+- **Réutilisation 100% de la chaîne d'import** : réutilise directement `importEncryptedBackup()` qui délègue à `MainRepository.importEncryptedBackup()` -> `BackupManager.importBackupWithPassword()` -> `restoreDatabase()`. Zero second mécanisme de restauration créé.
+- **Tests unitaires JVM** (`RemoteBackupRepositoryTest.kt` & `BackupViewModelTest.kt`) : 4 nouveaux tests unitaires (193/193 tests verts).
+
+Validation : **193/193** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.7b LOT 3C-2 — Restauration Cloud UI dans RestorationWizardScreen & Recette Globale (B-112-LOT3C2)**. **NEXT / NOT STARTED.**
 
 ---
 
-*Document mis à jour le 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b). Mises à jour précédentes : 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de) ; 2026-09-28 (J6.7b LOT 2 TERMINÉ — commit 11d47cb).*
+*Document mis à jour le 2026-10-03 (J6.7b LOT 3C-1 TERMINÉ — commit 5575241). Mises à jour précédentes : 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b) ; 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de).*

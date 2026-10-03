@@ -6,6 +6,30 @@
 
 ---
 
+## 2026-10-03 — J6.7b LOT 3C-1 Restauration Cloud (Fondations) / B-112-LOT3C1
+
+**Date** : 2026-10-03 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 3C-1** terminé. Commit `557524168574ebce25f0e0676c1eaab797c6e06c`, message `feat(j6.7): implement cloud restore foundation`. Parent `1079b66e74281698c171bcc18c27dcf575b56563`.
+- **`RemoteBackupRepository`** : wrappers `listRemoteBackups()` et `downloadRemoteBackup(fileId, destFile)`.
+- **`BackupViewModel`** : exposition du StateFlow `cloudBackups`, commande `fetchCloudBackups()` et méthode `restoreCloudBackup(context, remoteItem, userRole, customPassword, onRestored)`.
+- **Sécurité & Nettoyage** : téléchargement binaire temporaire isolé dans `cacheDir` (`temp_cloud_restore_*.db.enc`) nettoyé inconditionnellement dans un bloc `finally`.
+- **Secret & Dérivation** : réutilise la dérivation déterministe `RemoteBackupRepository.deriveRemoteBackupPassword(boutique.managerCode)` (`"${managerCode.trim()}a1A!"`) avec support optionnel du paramètre `customPassword`.
+- **Chaîne d'import réutilisée 100%** : délègue à `MainRepository.importEncryptedBackup()` -> `BackupManager.importBackupWithPassword()` -> `restoreDatabase()`. Zero second mécanisme de restauration créé.
+- **Total 4 fichiers techniques** (+135 / −0). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Import manquant de `RemoteBackupItem` dans `BackupViewModelTest.kt` résolu lors des tests. **LOT 3C-2 non commencé.**
+
+### Étape suivante
+Validation humaine pour l'exécution du LOT 3C-2 de J6.7b (B-112-LOT3C2 : Restauration Cloud UI dans `RestorationWizardScreen` & Recette Globale). **NEXT / NOT STARTED.**
+
+---
+
 ## 2026-10-02 — J6.7b LOT 3B Carte UI Google Drive & i18n FR/EN / B-112-LOT3B
 
 **Date** : 2026-10-02 · **Branche** : `arena/019fa5ec-mobilecaisse`
