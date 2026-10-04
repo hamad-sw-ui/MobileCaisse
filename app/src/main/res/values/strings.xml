@@ -713,4 +713,12 @@
     <string name="label_last_cloud_sync">Dernier envoi : %1$s (%2$s)</string>
     <string name="action_cloud_sync_now">Sauvegarder sur le Cloud maintenant</string>
     <string name="status_last_sync_never">Jamais</string>
+
+    <!-- Restauration Cloud Google Drive (J6.7b LOT 3C-2) -->
+    <string name="restoration_tab_local">Fichier local</string>
+    <string name="restoration_tab_cloud">Google Drive Cloud</string>
+    <string name="label_cloud_backups_title">Sauvegardes distantes sur Google Drive</string>
+    <string name="label_no_cloud_backups">Aucune sauvegarde distante disponible</string>
+    <string name="action_refresh_cloud_list">Rafraîchir la liste</string>
+    <string name="status_downloading_cloud">Téléchargement de la sauvegarde distante…</string>
 </resources>

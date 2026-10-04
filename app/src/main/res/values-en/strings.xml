@@ -713,4 +713,12 @@
     <string name="label_last_cloud_sync">Last upload: %1$s (%2$s)</string>
     <string name="action_cloud_sync_now">Backup to Cloud Now</string>
     <string name="status_last_sync_never">Never</string>
+
+    <!-- Google Drive Cloud Restoration (J6.7b LOT 3C-2) -->
+    <string name="restoration_tab_local">Local file</string>
+    <string name="restoration_tab_cloud">Google Drive Cloud</string>
+    <string name="label_cloud_backups_title">Backups available on Google Drive</string>
+    <string name="label_no_cloud_backups">No remote backups available</string>
+    <string name="action_refresh_cloud_list">Refresh list</string>
+    <string name="status_downloading_cloud">Downloading remote backup…</string>
 </resources>

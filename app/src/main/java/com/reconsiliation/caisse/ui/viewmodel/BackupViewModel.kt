@@ -83,7 +83,7 @@ class BackupViewModel @Inject constructor(
             } else {
                 RemoteBackupWorker.cancelPeriodic(getApplication())
             }
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
             // Uninitialized in pure JVM unit tests
         }
     }
@@ -95,7 +95,7 @@ class BackupViewModel @Inject constructor(
         if (preferencesManager.isRemoteBackupEnabled()) {
             try {
                 RemoteBackupWorker.schedulePeriodic(getApplication(), preferencesManager)
-            } catch (e: Exception) {
+            } catch (e: Throwable) {
                 // Uninitialized in pure JVM unit tests
             }
         }
