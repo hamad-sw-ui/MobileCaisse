@@ -101,7 +101,7 @@ J7 Industrialisation (CI, release)
 | 6.5 | Snackbars cohérents | B-076 | ✅ (498b9ba) |
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
-| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ⏳ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b \| LOT 3C-1 : 5575241) |
+| 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ✅ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b \| LOT 3C-1 : 5575241 \| LOT 3C-2 : de9637c) |
 | 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
 
 ---
@@ -292,8 +292,26 @@ Comportement livré :
 
 Validation : **193/193** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.7b LOT 3C-2 — Restauration Cloud UI dans RestorationWizardScreen & Recette Globale (B-112-LOT3C2)**. **NEXT / NOT STARTED.**
+### J6.7b / B-112 — Restauration Cloud UI & Recette Globale (LOT 3C-2) : DONE
+
+Commit technique `de9637c` (`de9637c8641c7bc2add6109d6026d8a6785e2329`), message `feat(j6.7): implement cloud restore UI`. Parent `65eb2a5` (sync documentaire J6.7b LOT 3C-1). 4 fichiers techniques (+282 / −44). Aucun `.ai/` dans ce commit. Post-audit `POST-COMMIT AUDIT GO`.
+
+Comportement livré :
+- **`RestorationWizardScreen`** :
+  - `TabRow` pour commuter entre "Fichier local" (index 0) et "Google Drive Cloud" (index 1).
+  - Flux local conservé 100% à l'identique.
+  - Mode Cloud : affichage de la liste des sauvegardes distantes (`cloudBackups`), bouton de rafraîchissement manuel (`action_refresh_cloud_list`), `fetchCloudBackups()` automatique à l'activation de l'onglet ou changement d'état.
+  - Sélection d'un élément distant (`selectedCloudItem`), passage à l'étape 2 (confirmation d'écrasement de la base avant restauration).
+  - Restauration Cloud via `restoreCloudBackup()`, fallback `customPassword` via `BackupPasswordDialog` et redirection vers `splash` après succès.
+  - Réutilisation à 100% des mécanismes Google Sign-In existants et de la chaîne d'importation/restauration.
+- **`BackupViewModel`** : remplacement de `catch (e: Exception)` par `catch (e: Throwable)` autour de la planification WorkManager dans `setRemoteBackupEnabled` et `scheduleRemoteBackupIfEnabled` (ajustement ciblé pour tests unitaires JVM purs, seul changement dans le ViewModel, audité JUSTIFIÉ ET SÛR).
+- **Ressources i18n FR/EN** : 6 paires de clés créées dans `strings.xml` et `values-en/strings.xml` avec parité 100% (`restoration_tab_local`, `restoration_tab_cloud`, `label_cloud_backups_title`, `label_no_cloud_backups`, `action_refresh_cloud_list`, `status_downloading_cloud`).
+- **Accessibilité** : zones tactiles >= 48dp, labels explicites et contentDescription sur le bouton rafraîchissement. `TalkBack manual : NON TESTÉ`.
+
+Validation : **193/193** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
+
+Prochaine étape fonctionnelle : **6.8 — Étude du passage à un type monétaire exact (B-077)**.
 
 ---
 
-*Document mis à jour le 2026-10-03 (J6.7b LOT 3C-1 TERMINÉ — commit 5575241). Mises à jour précédentes : 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b) ; 2026-10-02 (J6.7b LOT 3A TERMINÉ — commit 55067de).*
+*Document mis à jour le 2026-10-04 (J6.7b LOT 3C-2 TERMINÉ — commit de9637c). Mises à jour précédentes : 2026-10-03 (J6.7b LOT 3C-1 TERMINÉ — commit 5575241) ; 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b).*

@@ -5,37 +5,39 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 ## 📌 Identification
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
-- **Dernier commit fonctionnel** : 557524168574ebce25f0e0676c1eaab797c6e06c
-- **HEAD actuel** : 557524168574ebce25f0e0676c1eaab797c6e06c
+- **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
+- **HEAD actuel** : de9637c8641c7bc2add6109d6026d8a6785e2329
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-03 (SUCCESS, validation J6.7b LOT 3C-1 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-10-03 (193/193 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 3C-1)
+- **Dernière compilation** : 2026-10-04 (SUCCESS, validation J6.7b LOT 3C-2 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-04 (193/193 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 3C-2)
 - **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : CLEAN après le commit technique J6.7b LOT 3C-1 (`5575241`). Cette synchronisation documentaire est en working tree, **pas encore committée**.
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree, **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
     - FeeCalculator (100% logique calculs MoMo)
     - LicenseUtil (100% logique HMAC)
     - AnomalyEngine (100% logique détection fraude + timestamp SMS)
-    - Repositories (Data pure : Sales, Inventory, Main)
+    - Repositories (Data pure : Sales, Inventory, Main, RemoteBackup)
     - Platform (Services Framework : ReportManager, PrinterManager, ShareManager)
     - ViewModels (Orchestration : MainViewModel, NewSaleViewModel, InventoryViewModel, CustomerViewModel, SessionViewModel, ReportsViewModel, ExpenseViewModel, StaffViewModel, BackupViewModel, PrinterViewModel, CategoryViewModel, MaintenanceViewModel)
     - Permissions (logique JVM : `PermissionPolicy` / `SmsSyncOutcome` / `SmsCatchUpState`)
     - Feedback UI J6.5 (Snackbars locales)
     - Alertes et filtrage d'anomalies J6.6 (Timestamp SMS réel, contrat `AnomalyResult` + rollback, filtre `ANOMALIES` ActionLogScreen, 10 tests de logique)
+    - Remote Backup J6.7b (Client REST Google Drive, Repository, Worker, Rotation, WorkManager Startup, Settings UI, Restauration Cloud UI)
 - **Dette technique** :
-    - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique. **Non refactoré en J6.6.**
+    - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
+    - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.7b LOT 3C-1 — Restauration Cloud (Fondations) (TERMINÉE TECHNIQUEMENT — commit `557524168574ebce25f0e0676c1eaab797c6e06c`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 3C-1.
-- **Prochaine tâche prévue** : jalon fonctionnel **J6.7b LOT 3C-2** — Restauration Cloud UI dans `RestorationWizardScreen` & Recette Globale (B-112-LOT3C2). **NEXT / NOT STARTED**.
-- **Hors de ce commit technique** : J6.7b LOT 3C-2, J6.8, J7. J6.1A (`82f05be`), J6.2 (`8658ab5`), J6.3 (`52b4090`), J6.5 (`498b9ba`), J6.6 (`a34e5f3`), J6.7b LOT 1 (`8bac07c`), J6.7b LOT 2 (`11d47cb`), J6.7b LOT 3A (`55067de`) et J6.7b LOT 3B (`0a8c13b`) restent terminés et intacts.
+- **Dernière tâche terminée** : J6.7b LOT 3C-2 — Restauration Cloud UI & Recette Globale (TERMINÉE TECHNIQUEMENT — commit `de9637c8641c7bc2add6109d6026d8a6785e2329`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 3C-2.
+- **Prochaine tâche prévue** : jalon fonctionnel **J6.8** — Étude du passage à un type monétaire exact (B-077). **NEXT / NOT STARTED**.
+- **Hors de ce commit technique** : J6.8, J7. Tous les jalons antérieurs jusqu'à J6.7b LOT 3C-2 sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -49,18 +51,9 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J6.2 : unicité de session au niveau applicatif (`SalesRepository` singleton + mutex + transaction). Pas de changement de schéma Room.
     - J6.3 : décisions runtime dans l'UI / Activity ; `PermissionPolicy` testable sans Android ; les Repositories ne demandent pas de permissions.
     - J6.5 : feedback **local à l'écran** (`SnackbarHostState` + `LaunchedEffect` + clear). Pas de bus global, pas de `UiText`, pas de `Context` dans les ViewModels. `MainViewModel` non refactoré.
-    - J6.6 : timestamp SMS réel (`IncomingSms.timestampMillis`), traçabilité hors transaction des anomalies de blocage (`CRITICAL`), filtre `ANOMALIES` strict dans `ActionLogScreen`, pas de bus d'événements global.
-- **Risques connus / résidus J6.3 (non clos)** : 
-    - `BLUETOOTH_SCAN` déclaré, jamais demandé ni utilisé.
-    - `POST_NOTIFICATIONS` non redemandée aux utilisateurs déjà onboardés.
-    - Bannière `READ_SMS` non mise à jour automatiquement après retour Paramètres.
-    - Tests permission uniquement JVM (pas instrumentés).
-    - B-039 (WorkManager hors de `MainActivity`) hors scope.
-- **Résidus J6.5 (non clos, hors scope assumé)** :
-    - Erreurs silencieuses sur écrans qui `popBackStack` / naviguent immédiatement (SaleDetail, Settings/Splash).
-    - `convertErrorToOrphan` et `testPrint` sans canal de feedback.
-    - Overlay possible dialog / Snackbar à l'ouverture de session (Home).
+    - J6.6 : timestamp SMS réel (`IncomingSms.timestampMillis`), traçabilité hors transaction des anomalies de blocage (`CRITICAL`), filtre `ANOMALIES` strict dans `ActionLogScreen`.
+    - J6.7b : Sauvegarde distante automatique Google Drive via REST API v3, isolation du secret dérivé (`"${managerCode.trim()}a1A!"`), rotation sur 7 jours civils + 4 mois, WorkManager `@HiltWorker`, UI Google Drive dans `SettingsScreen`, Restauration Cloud dans `RestorationWizardScreen` avec réutilisation 100% du pipeline d'importation existant.
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-09-27
-- **Agent** : AI-DOS — synchronisation documentaire après J6.6 (non committée)
+- **Date** : 2026-10-04
+- **Agent** : AI-DOS — synchronisation documentaire après J6.7b LOT 3C-2

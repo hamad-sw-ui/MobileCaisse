@@ -6,6 +6,35 @@
 
 ---
 
+## 2026-10-04 — J6.7b LOT 3C-2 Restauration Cloud UI & Recette Globale / B-112-LOT3C2
+
+**Date** : 2026-10-04 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.7b LOT 3C-2** terminé. Commit `de9637c8641c7bc2add6109d6026d8a6785e2329`, message `feat(j6.7): implement cloud restore UI`. Parent `65eb2a57e62e01784e4f4137b0df54a08f86e8b8`.
+- **`RestorationWizardScreen`** :
+  - `TabRow` Fichier local / Google Drive Cloud.
+  - Conservation 100% du flux local existant.
+  - Mode Cloud : affichage de la liste `cloudBackups`, rafraîchissement manuel (`action_refresh_cloud_list`), récupération automatique à l'activation ou au changement d'état.
+  - Sélection d'une sauvegarde distante (`selectedCloudItem`), passage à l'étape 2 (confirmation d'écrasement avant restauration).
+  - Restauration Cloud via `restoreCloudBackup()`, fallback `customPassword` via `BackupPasswordDialog` et redirection vers `splash` après succès.
+  - Réutilisation 100% des mécanismes Google Sign-In et de la chaîne d'import/restauration existante.
+- **`BackupViewModel`** : remplacement de `catch (e: Exception)` par `catch (e: Throwable)` autour des appels WorkManager (ajustement ciblé pour tests unitaires JVM purs, seul changement dans le ViewModel).
+- **Ressources i18n FR/EN** : 6 paires de clés créées dans `strings.xml` et `values-en/strings.xml` avec parité 100%.
+- **Accessibilité** : zones tactiles >= 48dp, labels explicites et contentDescription sur le bouton rafraîchissement. `TalkBack manual : NON TESTÉ`.
+- **Total 4 fichiers techniques** (+282 / −44). Aucun `.ai/` dans ce commit. Post-commit audit **VALIDÉ**.
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Ajustement exception `catch (Throwable)` dans `BackupViewModel` pour compatibilité tests unitaires JVM purs sans WorkManager initialisé (audité et validé JUSTIFIÉ ET SÛR). Recette cloud end-to-end réelle sur appareil physique et TalkBack manuel non exécutés (risques résiduels documentés).
+
+### Étape suivante
+Étude du passage au type monétaire exact (J6.8 / B-077).
+
+---
+
 ## 2026-10-03 — J6.7b LOT 3C-1 Restauration Cloud (Fondations) / B-112-LOT3C1
 
 **Date** : 2026-10-03 · **Branche** : `arena/019fa5ec-mobilecaisse`
