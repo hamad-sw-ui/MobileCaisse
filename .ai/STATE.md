@@ -6,14 +6,14 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : de9637c8641c7bc2add6109d6026d8a6785e2329
+- **HEAD actuel** : 1f011a0642447a7218c3f27459f1cdb3706cfc84
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
 - **Dernière compilation** : 2026-10-04 (SUCCESS, validation J6.7b LOT 3C-2 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
 - **Dernière exécution des tests** : 2026-10-04 (193/193 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 3C-2)
 - **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree, **pas encore committées**.
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement de la décision humaine J6.8 / B-077 Lot 1), **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -34,10 +34,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.7b LOT 3C-2 — Restauration Cloud UI & Recette Globale (TERMINÉE TECHNIQUEMENT — commit `de9637c8641c7bc2add6109d6026d8a6785e2329`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J6.7b LOT 3C-2.
-- **Prochaine tâche prévue** : jalon fonctionnel **J6.8** — Étude du passage à un type monétaire exact (B-077). **NEXT / NOT STARTED**.
-- **Hors de ce commit technique** : J6.8, J7. Tous les jalons antérieurs jusqu'à J6.7b LOT 3C-2 sont terminés.
+- **Dernière tâche terminée** : J6.8 / B-077 Lot 1 — Étude d'Architecture & Décision Humaine (TERMINÉE / ÉTUDE VALIDÉE `STUDY AUDIT GO`).
+- **Tâche en cours** : aucune implémentation. Enregistrement documentaire de la décision humaine d'architecture J6.8 / B-077.
+- **Prochaine tâche prévue** : Jalon 7 (Industrialisation) ou arbitrages fonctionnels ultérieurs.
+- **Hors de ce commit technique** : J7. Tous les jalons antérieurs jusqu'à J6.8 Lot 1 sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -53,7 +53,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J6.5 : feedback **local à l'écran** (`SnackbarHostState` + `LaunchedEffect` + clear). Pas de bus global, pas de `UiText`, pas de `Context` dans les ViewModels. `MainViewModel` non refactoré.
     - J6.6 : timestamp SMS réel (`IncomingSms.timestampMillis`), traçabilité hors transaction des anomalies de blocage (`CRITICAL`), filtre `ANOMALIES` strict dans `ActionLogScreen`.
     - J6.7b : Sauvegarde distante automatique Google Drive via REST API v3, isolation du secret dérivé (`"${managerCode.trim()}a1A!"`), rotation sur 7 jours civils + 4 mois, WorkManager `@HiltWorker`, UI Google Drive dans `SettingsScreen`, Restauration Cloud dans `RestorationWizardScreen` avec réutilisation 100% du pipeline d'importation existant.
+    - J6.8 / B-077 : Maintien du stockage monétaire SQLite existant en `Double` (pas de migration physique DB vers `Long` ou `BigDecimal` à ce stade). Renforcement des arrondis explicites aux points de calculs métier. Value Class domaine `Money(val amount: Double)` utilisable sans modification DB. Toute migration future nécessitera un chantier dédié et une nouvelle décision.
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-04
-- **Agent** : AI-DOS — synchronisation documentaire après J6.7b LOT 3C-2
+- **Date** : 2026-10-05
+- **Agent** : AI-DOS — enregistrement documentaire de la décision humaine J6.8 / B-077 Lot 1

@@ -119,7 +119,7 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 - ☑ **B-074** Traduction `values-en/` — **J6.1A terminé** (`82f05be`). 684 clés EN, parité complète, placeholders cohérents.
 - ☑ **B-075** ~~Décider du sort de la « sync cloud »~~ — **tranché (D2)** : renommage honnête *et* vrai service distant en parallèle → voir B-110, B-111, B-112
 - ☑ **B-076** Snackbars Material 3 cohérents — **J6.5 terminé** (`498b9ba`). LOT 1+2+3 (25 fichiers). Pattern local (`SnackbarHostState` + `LaunchedEffect` + clear). Vente rapide Stock : `Job.join()`. Dettes **conservées** (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté, navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `PrintSettings.testPrint` silencieux ; overlay dialog Home.
-- □ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`)
+- ☑ **B-077** Étudier le passage des montants de `Double` vers un type exact (centimes en `Long`) — **J6.8 Lot 1 terminé (Étude & Décision d'architecture)**. Rapport `.ai/REPORTS/analyse_conception_2026-10-04_passage_type_monetaire_exact.md`. **Décision humaine :** Maintien du stockage Double existant en SQLite, pas de migration physique DB à ce stade, renforcement des arrondis aux points de calcul métier.
 - ☑ **B-078** Refondre le parcours de permissions (contextuel + gestion du refus) *(BUG-010)* — **J6.3 terminé** (`52b4090`). Demandes au point d'usage, refus / Paramètres / resume. Résidus : `BLUETOOTH_SCAN` déclaré inutilisé ; notifications des comptes déjà onboardés ; bannière SMS après Paramètres ; tests JVM seulement. B-039 reste ouvert.
 
 ## P7 — Software Factory *(construite au fil des besoins réels)*
@@ -177,4 +177,4 @@ Identifiants stables : `B-xxx` (ne jamais renuméroter).
 > 14 tâches ajoutées par la Phase 7 (débat + opportunités) : autant de défauts
 > ou d'améliorations identifiés **avant** d'écrire une ligne de code.
 
-*Dernière mise à jour : 2026-10-04 (J6.7b LOT 3C-2 / B-112-LOT3C2 terminé — commit de9637c). B-112 LOT 3C-2 (Restauration Cloud UI & Recette Globale) clôturé.*
+*Dernière mise à jour : 2026-10-05 (J6.8 Lot 1 / B-077 terminé — Étude & Décision humaine d'architecture consignée). Stockage Double maintenu sans migration DB.*

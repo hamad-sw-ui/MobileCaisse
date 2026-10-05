@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-10-05 — J6.8 / B-077 Lot 1 Étude d'Architecture & Décision Humaine / B-077
+
+**Date** : 2026-10-05 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J6.8 / B-077 Lot 1** (Étude d'architecture) terminé et validé (`STUDY AUDIT GO`).
+- **Rapport de conception** rédigé : `.ai/REPORTS/analyse_conception_2026-10-04_passage_type_monetaire_exact.md`.
+- **Inventaire exhaustif** des 22 entités Room (16 avec `Double`, 13 avec des champs monétaires, 1 avec un taux/pourcentage `boutique.taxRate`, 2 avec des quantités physiques seules `recipes`/`stock_movements`, 6 sans `Double`).
+- **Décision humaine d'architecture enregistrée :**
+  1. Maintien du stockage monétaire SQLite existant en `Double` (pas de migration physique DB vers `Long` ou `BigDecimal` à ce stade).
+  2. Conservation de `Double` comme représentation physique actuelle sans modifier les colonnes SQLite.
+  3. Sécurisation des calculs par des arrondis métier explicites (`Math.round()`) aux points de calculs (TVA, remises, commissions MoMo).
+  4. Encapsulation via Inline Value Class `Money(val amount: Double)` envisageable en domaine sans migration DB.
+  5. Une migration future vers `Long` ou `BigDecimal` nécessiterait un chantier séparé et une nouvelle décision.
+- **Code applicatif** : 0 modification (100% conservé).
+
+### Tests exécutés
+`:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Aucun. L'étude démontre que la migration lourde de 13 tables DB présente un risque élevé de rupture de migration et de sauvegardes pour un gain arithmétique nul en zone FCFA (où les jetons monétaires sont des entiers).
+
+### Étape suivante
+Jalon 7 — Industrialisation (CI, lint, tests) ou arbitrages fonctionnels ultérieurs.
+
+---
+
 ## 2026-10-04 — J6.7b LOT 3C-2 Restauration Cloud UI & Recette Globale / B-112-LOT3C2
 
 **Date** : 2026-10-04 · **Branche** : `arena/019fa5ec-mobilecaisse`

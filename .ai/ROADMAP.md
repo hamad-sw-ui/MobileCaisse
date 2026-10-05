@@ -102,7 +102,7 @@ J7 Industrialisation (CI, release)
 | 6.6 | Alertes d'anomalie visibles dans l'UI (inc. BUG-008) | B-072 | ✅ (a34e5f3) |
 | 6.7a | Rapport comparatif Google Drive vs Dropbox | B-111 | ✅ (Conception) |
 | 6.7b | Implémenter la sauvegarde automatique distante | B-112 | ✅ (LOT 1 : 8bac07c \| LOT 2 : 11d47cb \| LOT 3A : 55067de \| LOT 3B : 0a8c13b \| LOT 3C-1 : 5575241 \| LOT 3C-2 : de9637c) |
-| 6.8 | Étude du passage à un type monétaire exact | B-077 | □ |
+| 6.8 | Étude du passage à un type monétaire exact | B-077 | ✅ (Lot 1 : Étude & Décision humaine — Stockage Double maintenu) |
 
 ---
 
@@ -310,8 +310,19 @@ Comportement livré :
 
 Validation : **193/193** tests JVM (`:app:testDebugUnitTest`), `compileDebugKotlin` OK, `kspDebugKotlin` OK, **`assembleDebug` OK**, APK debug généré. 0 échec.
 
-Prochaine étape fonctionnelle : **6.8 — Étude du passage à un type monétaire exact (B-077)**.
+### J6.8 / B-077 — Étude du passage à un type monétaire exact (Lot 1) : DONE
+
+Livrable rédigé : `.ai/REPORTS/analyse_conception_2026-10-04_passage_type_monetaire_exact.md` (`STUDY AUDIT GO`).
+- **Inventaire** : 22 entités Room au total (16 avec `Double`, 13 avec des champs monétaires, 1 taux `boutique.taxRate`, 2 quantités physiques `recipes`/`stock_movements`, 6 sans `Double`).
+- **Décision humaine d'architecture enregistrée :**
+  - Maintien du stockage monétaire SQLite existant en `Double` (pas de migration physique DB vers `Long` ou `BigDecimal` à ce stade).
+  - Conservation de `Double` comme représentation physique actuelle sans modifier les colonnes SQLite.
+  - Sécurisation des calculs par des arrondis métier explicites (`Math.round()`) aux points de calculs.
+  - Encapsulation via Inline Value Class `Money(val amount: Double)` envisageable en domaine sans migration DB.
+  - Une migration future vers `Long` ou `BigDecimal` nécessiterait un chantier séparé et une nouvelle décision.
+
+Prochaine étape fonctionnelle : **Jalon 7 — Industrialisation (CI, lint, tests)**.
 
 ---
 
-*Document mis à jour le 2026-10-04 (J6.7b LOT 3C-2 TERMINÉ — commit de9637c). Mises à jour précédentes : 2026-10-03 (J6.7b LOT 3C-1 TERMINÉ — commit 5575241) ; 2026-10-02 (J6.7b LOT 3B TERMINÉ — commit 0a8c13b).*
+*Document mis à jour le 2026-10-05 (J6.8 / B-077 Lot 1 TERMINÉ — Décision humaine enregistrée). Mises à jour précédentes : 2026-10-04 (J6.7b LOT 3C-2 TERMINÉ — commit de9637c) ; 2026-10-03 (J6.7b LOT 3C-1 TERMINÉ — commit 5575241).*
