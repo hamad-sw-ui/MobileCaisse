@@ -6,14 +6,15 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 1f011a0642447a7218c3f27459f1cdb3706cfc84
+- **HEAD actuel** : 509a1d0675aa14d70e4388053fdcbd9d12f68e8d
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-04 (SUCCESS, validation J6.7b LOT 3C-2 : `compileDebugKotlin`, `kspDebugKotlin`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-10-04 (193/193 SUCCESS, `:app:testDebugUnitTest`, validation J6.7b LOT 3C-2)
-- **KSP** : SUCCESS. Warnings Room préexistants uniquement (non bloquants)
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement de la décision humaine J6.8 / B-077 Lot 1), **pas encore committées**.
+- **Dernière compilation** : 2026-10-05 (SUCCESS, validation J7.1a LOT B-097 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-05 (193/193 SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` 9/9 tâches d'analyse validées avec baseline, validation J7.1a)
+- **KSP** : SUCCESS.
+- **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverst).
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.1a / B-097), **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -27,17 +28,19 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Feedback UI J6.5 (Snackbars locales)
     - Alertes et filtrage d'anomalies J6.6 (Timestamp SMS réel, contrat `AnomalyResult` + rollback, filtre `ANOMALIES` ActionLogScreen, 10 tests de logique)
     - Remote Backup J6.7b (Client REST Google Drive, Repository, Worker, Rotation, WorkManager Startup, Settings UI, Restauration Cloud UI)
+    - Outillage Qualité J7.1a (Intégration `ktlint` Gradle plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers)
 - **Dette technique** :
+    - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J6.8 / B-077 Lot 1 — Étude d'Architecture & Décision Humaine (TERMINÉE / ÉTUDE VALIDÉE `STUDY AUDIT GO`).
-- **Tâche en cours** : aucune implémentation. Enregistrement documentaire de la décision humaine d'architecture J6.8 / B-077.
-- **Prochaine tâche prévue** : Jalon 7 (Industrialisation) ou arbitrages fonctionnels ultérieurs.
-- **Hors de ce commit technique** : J7. Tous les jalons antérieurs jusqu'à J6.8 Lot 1 sont terminés.
+- **Dernière tâche terminée** : J7.1a / B-097 — Intégration ktlint Gradle Plugin & Baseline (TERMINÉE / COMMITTÉE `509a1d0`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J7.1a / B-097.
+- **Prochaine tâche prévue** : J7.2 / B-098 — CI GitHub Actions (Non commencé / CI non créée).
+- **Hors de ce commit technique** : J7.2 (CI). Tous les jalons antérieurs jusqu'à J7.1a sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.

@@ -1,41 +1,35 @@
 # 🎯 TÂCHE EN COURS
 
-**Tâche :** enregistrement documentaire de la décision humaine d'architecture issue de l'étude J6.8 / B-077 Lot 1. Aucune implémentation de code en cours.
+**Tâche :** synchronisation documentaire AI-DOS post-commit pour J7.1a / B-097 (ktlint + baseline). Aucune implémentation de code en cours.
 
 ## État réel
 
 | Élément | Valeur |
 |---|---|
-| HEAD | `1f011a0642447a7218c3f27459f1cdb3706cfc84` |
-| Commit technique | `de9637c8641c7bc2add6109d6026d8a6785e2329` (`feat(j6.7): implement cloud restore UI`) |
-| Commit doc J6.7b | `1f011a0642447a7218c3f27459f1cdb3706cfc84` (`docs(ai-dos): close J6.7b LOT 3C-2`) |
-| J6.1A / J6.4 | TERMINÉ TECHNIQUEMENT (`82f05be`) |
-| J6.2 | TERMINÉ TECHNIQUEMENT (`8658ab5`) |
-| J6.3 | TERMINÉ TECHNIQUEMENT (`52b4090`) |
-| J6.5 | TERMINÉ TECHNIQUEMENT (`498b9ba`) |
-| J6.6 | TERMINÉ TECHNIQUEMENT (`a34e5f3`) + Sync `.ai/` (`c00deba`) |
-| J6.7a / B-111 | CONCEPTION TERMINÉE (`.ai/REPORTS/analyse_conception_2026-09-27_sauvegarde_distante_google_drive.md`) |
+| HEAD | `509a1d0675aa14d70e4388053fdcbd9d12f68e8d` |
+| Parent | `646a9006f5c1e311030061f29b738a08fac837b7` (`docs(ai-dos): close J6.8 B-077 architecture study`) |
+| Commit technique | `509a1d0675aa14d70e4388053fdcbd9d12f68e8d` (`feat(j7.1): integrate ktlint quality gate`) |
 | J6.7b / B-112 | TERMINÉ TECHNIQUEMENT (`de9637c`) + Sync `.ai/` (`1f011a0`) |
-| J6.8 / B-077 Lot 1 | **ÉTUDE TERMINÉE & VALIDÉE** (`STUDY AUDIT GO`) — **DÉCISION HUMAINE CONSIGNÉE** |
-| J6.8b (Migration DB) | **NON REQUIS / NON DÉCIDÉ** (décision de maintenir le stockage SQLite `Double`) |
+| J6.8 / B-077 Lot 1 | TERMINÉ / ÉTUDE VALIDÉE (`646a900`) — Décision humaine (maintien SQLite Double) |
+| J7.1a / B-097 | **TERMINÉ TECHNIQUEMENT & POST-AUDITÉ** (`509a1d0`) |
+| J7.2 / B-098 (CI GitHub Actions) | **NON COMMENCÉ / CI NON CRÉÉE** |
 
-## J6.8 / B-077 Lot 1 — Étude d'Architecture Monétaire & Décision Humaine (terminé)
+## J7.1a / B-097 — Intégration ktlint Gradle Plugin & Baseline (terminé)
 
-Livrable rédigé : `.ai/REPORTS/analyse_conception_2026-10-04_passage_type_monetaire_exact.md` (`STUDY AUDIT GO`).
-- **Inventaire exhaustif du code :** 22 entités Room dans `AppDatabase.kt` (16 avec `Double`, 13 avec des champs monétaires FCFA, 1 avec un taux/pourcentage `BoutiqueEntity.taxRate`, 2 avec des quantités physiques seules `recipes`/`stock_movements`, 6 sans `Double`).
-- **Décision humaine d'architecture retenue :**
-  1. **Maintien du stockage SQLite monétaire existant en `Double`** : pas de migration physique de base de données vers `Long` ou `BigDecimal` à ce stade.
-  2. **Pas de modification des colonnes SQLite existantes.**
-  3. **Sécurisation des calculs :** renforcement des règles d'arrondi explicites (`Math.round()`) aux points de calculs métier (TVA, remises, commissions MoMo, totals).
-  4. **Value Class Domaine :** une Inline Value Class `Money(val amount: Double)` pourra être étudiée ultérieurement comme couche d'encapsulation domaine sans modification de schéma SQLite.
-  5. **Toute migration physique future** vers `Long` ou `BigDecimal` nécessitera un chantier dédié séparé et une nouvelle décision.
+Commit technique : `509a1d0675aa14d70e4388053fdcbd9d12f68e8d`.
+- **Plugin Gradle :** `org.jlleitschuh.gradle.ktlint` v14.2.0 déclaré dans `gradle/libs.versions.toml`, `build.gradle.kts` et `app/build.gradle.kts`.
+- **Moteur KtLint résolu :** `com.pinterest.ktlint:ktlint-cli:1.5.0` / `ktlint-ruleset-standard:1.5.0` (prouvé par l'arbre de dépendances Gradle `:app:dependencies --configuration ktlint`).
+- **Baseline officielle :** `app/config/ktlint/baseline.xml` créée par `:app:ktlintGenerateBaseline` (117 fichiers couverts).
+- **Résultat de `:app:ktlintCheck` :** `BUILD SUCCESSFUL` (9/9 tâches d'analyse exécutées avec succès et validées).
+- **Sûreté de la configuration :** Exploitable par une future CI (J7.2 / B-098) via le Gradle Wrapper (`./gradlew :app:ktlintCheck`). CI GitHub Actions non encore créée à ce stade.
+- **Protection du code :** 0 modification de code applicatif (`app/src/main/java/**`, `app/src/test/**`), 0 reformatage automatique du code legacy.
 
-Phase actuelle = **synchronisation documentaire AI-DOS J6.8 / B-077 Lot 1**.
+Phase actuelle = **synchronisation documentaire AI-DOS J7.1a / B-097**.
 
 ## Prochaines étapes
 
-- Jalon 7 — Industrialisation (CI, tests, release).
-- Décisions et arbitrages fonctionnels ultérieurs.
+- Audit indépendant du diff documentaire `.ai/` et autorisation du commit documentaire J7.1a.
+- J7.2 / B-098 — CI GitHub Actions (build + test + lint sur PR).
 
 ---
-*Mis à jour le 2026-10-05 (enregistrement de la décision humaine J6.8 / B-077). Précédente fiche : 2026-10-04, J6.7b LOT 3C-2.*
+*Mis à jour le 2026-10-06 (post-commit audit GO J7.1a). Précédente fiche : 2026-10-05, J6.8 B-077.*

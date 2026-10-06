@@ -6,6 +6,37 @@
 
 ---
 
+## 2026-10-06 — J7.1a Intégration ktlint Gradle Plugin & Baseline / B-097
+
+**Date** : 2026-10-06 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.1a / B-097** terminé. Commit `509a1d0675aa14d70e4388053fdcbd9d12f68e8d`, message `feat(j7.1): integrate ktlint quality gate`. Parent `646a9006f5c1e311030061f29b738a08fac837b7`.
+- **Plugin Gradle `ktlint`** :
+  - Déclaration de `ktlint = "14.2.0"` (`org.jlleitschuh.gradle.ktlint`) dans `gradle/libs.versions.toml`.
+  - Application racine `alias(libs.plugins.ktlint) apply false` dans `build.gradle.kts`.
+  - Application module `alias(libs.plugins.ktlint)` dans `app/build.gradle.kts`.
+- **Résolution du Moteur KtLint** :
+  - Moteur `com.pinterest.ktlint:ktlint-cli:1.5.0` et `ktlint-ruleset-standard:1.5.0` résolus automatiquement par Gradle 9.5 (vérifié via `:app:dependencies --configuration ktlint`).
+- **Baseline Ktlint** :
+  - Fichier `app/config/ktlint/baseline.xml` généré via `:app:ktlintGenerateBaseline` sous le plugin 14.2.0 / moteur 1.5.0.
+  - Couvre 117 fichiers avec leurs règles de style legacy sans reformater la base de code métier.
+- **Tâche `:app:ktlintCheck`** :
+  - **`BUILD SUCCESSFUL`** (9/9 tâches d'analyse exécutées et validées avec la baseline).
+- **Total 4 fichiers techniques** (3 fichiers de config Gradle + 1 fichier baseline). Zero code applicatif modifié. Post-commit audit **VALIDÉ `POST-COMMIT AUDIT GO`**.
+
+### Tests exécutés
+- `:app:ktlintCheck` : **SUCCESS** (9/9 tâches).
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Analyse initiale sans baseline révélant des écarts de style sur le code legacy. Résolu par la création de la baseline officielle `app/config/ktlint/baseline.xml` sans altérer le code métier. J7.2 / B-098 (CI GitHub Actions) non commencé.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis démarrage de J7.2 / B-098 (CI GitHub Actions).
+
+---
+
 ## 2026-10-05 — J6.8 / B-077 Lot 1 Étude d'Architecture & Décision Humaine / B-077
 
 **Date** : 2026-10-05 · **Branche** : `arena/019fa5ec-mobilecaisse`
