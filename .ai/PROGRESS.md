@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-10-06 — J7.2 Pipeline CI GitHub Actions / B-098
+
+**Date** : 2026-10-06 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.2 / B-098** terminé. Commit `f3c615ee252f83aca1a801c86c5e2890a9032a2c`, message `ci(j7.2): add GitHub Actions CI pipeline`. Parent `7df1bc7492647242183bd053bf61e689cad06f6e`.
+- **Workflow CI GitHub Actions** :
+  - Fichier unique `CAISSE/.github/workflows/ci.yml`.
+  - Triggers : `push` (`main`, `'arena/**'`) et `pull_request` (`main`).
+  - Runner `ubuntu-latest`, JDK 17 `temurin` (`actions/setup-java@v4`), `gradle/actions/setup-gradle@v3`.
+  - Tâches séquentielles : `./gradlew :app:ktlintCheck` -> `./gradlew :app:testDebugUnitTest` -> `./gradlew :app:assembleDebug`.
+- **Statut d'Exécution Distante** :
+  - Pipeline créé localement, committé et validé statiquement. Aucun run distant n'a été exécuté à ce stade faute de push (`push = 0`).
+- **Total 1 fichier technique** (`.github/workflows/ci.yml`). Zero code applicatif, test ou script Gradle modifié. Post-commit audit **VALIDÉ `POST-COMMIT AUDIT PASS`**.
+
+### Tests exécutés
+- `:app:ktlintCheck` : **SUCCESS** (9/9 tâches).
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec. `compileDebugKotlin` SUCCESS. `kspDebugKotlin` SUCCESS. **`assembleDebug` SUCCESS** (APK debug).
+
+### Problèmes rencontrés
+Ajustement mineur post-audit : retrait de la branche inexistante `master` des triggers et suppression du step `chmod +x gradlew` (car `gradlew` possède déjà le mode `100755` dans Git).
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis sélection du chantier suivant (J7.3 JaCoCo ou J7.4 Compose Tests).
+
+---
+
 ## 2026-10-06 — J7.1a Intégration ktlint Gradle Plugin & Baseline / B-097
 
 **Date** : 2026-10-06 · **Branche** : `arena/019fa5ec-mobilecaisse`

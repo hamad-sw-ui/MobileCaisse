@@ -6,15 +6,16 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 509a1d0675aa14d70e4388053fdcbd9d12f68e8d
+- **HEAD actuel** : f3c615ee252f83aca1a801c86c5e2890a9032a2c
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-05 (SUCCESS, validation J7.1a LOT B-097 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-10-05 (193/193 SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` 9/9 tâches d'analyse validées avec baseline, validation J7.1a)
+- **Dernière compilation** : 2026-10-06 (SUCCESS, validation J7.2 LOT B-098 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-06 (193/193 SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` 9/9 tâches d'analyse validées avec baseline, validation J7.2)
 - **KSP** : SUCCESS.
-- **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverst).
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.1a / B-097), **pas encore committées**.
+- **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverts).
+- **CI GitHub Actions** : Pipeline `.github/workflows/ci.yml` (JDK 17 Temurin, `gradle/actions/setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`). Pipeline créé localement, committé (`f3c615e`) et validé statiquement ; aucun run distant n'a encore été exécuté faute de push (`push = 0`).
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.2 / B-098), **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -29,6 +30,7 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Alertes et filtrage d'anomalies J6.6 (Timestamp SMS réel, contrat `AnomalyResult` + rollback, filtre `ANOMALIES` ActionLogScreen, 10 tests de logique)
     - Remote Backup J6.7b (Client REST Google Drive, Repository, Worker, Rotation, WorkManager Startup, Settings UI, Restauration Cloud UI)
     - Outillage Qualité J7.1a (Intégration `ktlint` Gradle plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers)
+    - Integration Continue J7.2 / B-098 (Workflow GitHub Actions `.github/workflows/ci.yml`)
 - **Dette technique** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
@@ -37,10 +39,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.1a / B-097 — Intégration ktlint Gradle Plugin & Baseline (TERMINÉE / COMMITTÉE `509a1d0`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J7.1a / B-097.
-- **Prochaine tâche prévue** : J7.2 / B-098 — CI GitHub Actions (Non commencé / CI non créée).
-- **Hors de ce commit technique** : J7.2 (CI). Tous les jalons antérieurs jusqu'à J7.1a sont terminés.
+- **Dernière tâche terminée** : J7.2 / B-098 — Pipeline CI GitHub Actions (TERMINÉE / COMMITTÉE `f3c615e`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J7.2 / B-098.
+- **Prochaine tâche prévue** : à sélectionner/préparer selon la roadmap (J7.3 / B-099 Couverture JaCoCo ou J7.4 / B-095 Tests Compose).
+- **Hors de ce commit technique** : J7.3+. Tous les jalons antérieurs jusqu'à J7.2 sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -57,7 +59,9 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J6.6 : timestamp SMS réel (`IncomingSms.timestampMillis`), traçabilité hors transaction des anomalies de blocage (`CRITICAL`), filtre `ANOMALIES` strict dans `ActionLogScreen`.
     - J6.7b : Sauvegarde distante automatique Google Drive via REST API v3, isolation du secret dérivé (`"${managerCode.trim()}a1A!"`), rotation sur 7 jours civils + 4 mois, WorkManager `@HiltWorker`, UI Google Drive dans `SettingsScreen`, Restauration Cloud dans `RestorationWizardScreen` avec réutilisation 100% du pipeline d'importation existant.
     - J6.8 / B-077 : Maintien du stockage monétaire SQLite existant en `Double` (pas de migration physique DB vers `Long` ou `BigDecimal` à ce stade). Renforcement des arrondis explicites aux points de calculs métier. Value Class domaine `Money(val amount: Double)` utilisable sans modification DB. Toute migration future nécessitera un chantier dédié et une nouvelle décision.
+    - J7.1a / B-097 : Outillage qualité Ktlint plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers (`app/config/ktlint/baseline.xml`).
+    - J7.2 / B-098 : Pipeline CI GitHub Actions minimal et autonome dans `.github/workflows/ci.yml` (JDK 17, `setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-05
-- **Agent** : AI-DOS — enregistrement documentaire de la décision humaine J6.8 / B-077 Lot 1
+- **Date** : 2026-10-06
+- **Agent** : AI-DOS — enregistrement documentaire du lot J7.2 / B-098
