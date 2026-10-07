@@ -6,6 +6,33 @@
 
 ---
 
+## 2026-10-07 — J7.3 Couverture de Code JaCoCo / B-099
+
+**Date** : 2026-10-07 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.3 / B-099** terminé. Commit `2eb8fdb746ef56a431063cfc1aef8b554b33106c`, message `feat(j7.3): add JaCoCo coverage reporting`. Parent `52d0d7cbc851c6626802079bddfa08a2697f03de`.
+- **Configuration JaCoCo** :
+  - `gradle/libs.versions.toml` : `jacoco = "0.8.12"`.
+  - `app/build.gradle.kts` : application du plugin `jacoco`, `debug { enableUnitTestCoverage = true }`, tâche `:app:jacocoTestReport` liée à `:app:testDebugUnitTest`.
+  - Exclusions du code généré : Hilt, Room (`*_Impl`), BuildConfig, R.class, Manifest.
+- **Rapports de Couverture** :
+  - HTML généré dans `app/build/reports/jacoco/jacocoTestReport/html/index.html`.
+  - XML généré dans `app/build/reports/jacoco/jacocoTestReport/jacocoTestReport.xml`.
+- **Validation** : Total 2 fichiers de configuration Gradle modifiés (`app/build.gradle.kts`, `gradle/libs.versions.toml`). Zero code applicatif ou test unitaire modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `POST-COMMIT RED TEAM PASS`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+- `:app:jacocoTestReport` : **`BUILD SUCCESSFUL`** (rapports HTML/XML générés et vérifiés physiquement).
+
+### Problèmes rencontrés
+Aucun. Intégration fluide sans conflit de version avec Kotlin 2.1.0 et Gradle 9.5.0.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis sélection du chantier suivant (J7.4 Tests Compose ou J7.5 Signature Release).
+
+---
+
 ## 2026-10-06 — J7.2 Pipeline CI GitHub Actions / B-098
 
 **Date** : 2026-10-06 · **Branche** : `arena/019fa5ec-mobilecaisse`

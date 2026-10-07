@@ -6,16 +6,17 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : f3c615ee252f83aca1a801c86c5e2890a9032a2c
+- **HEAD actuel** : 2eb8fdb746ef56a431063cfc1aef8b554b33106c
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-06 (SUCCESS, validation J7.2 LOT B-098 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-10-06 (193/193 SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` 9/9 tâches d'analyse validées avec baseline, validation J7.2)
+- **Dernière compilation** : 2026-10-07 (SUCCESS, validation J7.3 LOT B-099 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-07 (193/193 SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` + `:app:jacocoTestReport` rapports HTML/XML générés avec succès).
 - **KSP** : SUCCESS.
 - **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverts).
+- **JaCoCo** : Plugin JaCoCo `0.8.12` intégré dans `app/build.gradle.kts`. Tâche `:app:jacocoTestReport` générant les rapports HTML (`app/build/reports/jacoco/jacocoTestReport/html/index.html`) et XML pour les 193 tests unitaires JVM avec exclusions ciblées (Hilt, Room, BuildConfig, R.class).
 - **CI GitHub Actions** : Pipeline `.github/workflows/ci.yml` (JDK 17 Temurin, `gradle/actions/setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`). Pipeline créé localement, committé (`f3c615e`) et validé statiquement ; aucun run distant n'a encore été exécuté faute de push (`push = 0`).
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.2 / B-098), **pas encore committées**.
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.3 / B-099), **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -31,6 +32,7 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Remote Backup J6.7b (Client REST Google Drive, Repository, Worker, Rotation, WorkManager Startup, Settings UI, Restauration Cloud UI)
     - Outillage Qualité J7.1a (Intégration `ktlint` Gradle plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers)
     - Integration Continue J7.2 / B-098 (Workflow GitHub Actions `.github/workflows/ci.yml`)
+    - Couverture de Code JaCoCo J7.3 / B-099 (Plugin 0.8.12, tâche `:app:jacocoTestReport`, rapports HTML/XML)
 - **Dette technique** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
@@ -39,10 +41,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.2 / B-098 — Pipeline CI GitHub Actions (TERMINÉE / COMMITTÉE `f3c615e`).
-- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J7.2 / B-098.
-- **Prochaine tâche prévue** : à sélectionner/préparer selon la roadmap (J7.3 / B-099 Couverture JaCoCo ou J7.4 / B-095 Tests Compose).
-- **Hors de ce commit technique** : J7.3+. Tous les jalons antérieurs jusqu'à J7.2 sont terminés.
+- **Dernière tâche terminée** : J7.3 / B-099 — Couverture de Code JaCoCo (TERMINÉE / COMMITTÉE `2eb8fdb`).
+- **Tâche en cours** : aucune implémentation. Synchronisation documentaire AI-DOS J7.3 / B-099.
+- **Prochaine tâche prévue** : à sélectionner/préparer selon la roadmap (J7.4 / B-095 Tests Compose ou J7.5 Signature Release).
+- **Hors de ce commit technique** : J7.4+. Tous les jalons antérieurs jusqu'à J7.3 sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -61,7 +63,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J6.8 / B-077 : Maintien du stockage monétaire SQLite existant en `Double` (pas de migration physique DB vers `Long` ou `BigDecimal` à ce stade). Renforcement des arrondis explicites aux points de calculs métier. Value Class domaine `Money(val amount: Double)` utilisable sans modification DB. Toute migration future nécessitera un chantier dédié et une nouvelle décision.
     - J7.1a / B-097 : Outillage qualité Ktlint plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers (`app/config/ktlint/baseline.xml`).
     - J7.2 / B-098 : Pipeline CI GitHub Actions minimal et autonome dans `.github/workflows/ci.yml` (JDK 17, `setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`).
+    - J7.3 / B-099 : Intégration JaCoCo 0.8.12 pour la mesure de couverture des tests unitaires JVM (`:app:jacocoTestReport`) avec exclusions ciblées du code généré (Hilt, Room, BuildConfig, R.class).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-06
-- **Agent** : AI-DOS — enregistrement documentaire du lot J7.2 / B-098
+- **Date** : 2026-10-07
+- **Agent** : AI-DOS — enregistrement documentaire du lot J7.3 / B-099
