@@ -21,6 +21,7 @@ sqliteVersion = "2.4.0"
 playServicesAuth = "21.2.0"
 okhttp = "4.12.0"
 ktlint = "14.2.0"
+jacoco = "0.8.12"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
