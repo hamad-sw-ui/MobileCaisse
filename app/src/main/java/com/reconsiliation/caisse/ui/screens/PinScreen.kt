@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -27,6 +28,24 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.ui.res.stringResource
 import com.reconsiliation.caisse.R
 
+/**
+ * Handles PIN digit entry and backspace logic, capping length at [maxDigits].
+ * Used by [PinScreen] in production and verified by tests.
+ */
+fun handlePinKeyPress(
+    currentPin: String,
+    key: String,
+    maxDigits: Int = 4
+): String {
+    return if (key == "DEL") {
+        if (currentPin.isNotEmpty()) currentPin.dropLast(1) else ""
+    } else if (currentPin.length < maxDigits) {
+        currentPin + key
+    } else {
+        currentPin
+    }
+}
+
 @Composable
 fun PinScreen(navController: NavController) {
     val context = LocalContext.current
@@ -36,8 +55,43 @@ fun PinScreen(navController: NavController) {
 
     val scope = rememberCoroutineScope()
 
+    PinContent(
+        pin = pin,
+        error = error,
+        onKeyPress = { key ->
+            error = false
+            val newPin = handlePinKeyPress(pin, key)
+            if (newPin != pin) {
+                pin = newPin
+                if (pin.length == 4) {
+                    scope.launch {
+                        val result = viewModel.checkPin(pin)
+                        if (result != null) {
+                            viewModel.login(result.first, result.second)
+                            navController.navigate(Screen.Home.route) {
+                                popUpTo(Screen.Pin.route) { inclusive = true }
+                            }
+                        } else {
+                            HapticHelper.vibrate(context, 200)
+                            error = true
+                            pin = ""
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
+@Composable
+fun PinContent(
+    pin: String,
+    error: Boolean,
+    onKeyPress: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
@@ -52,10 +106,13 @@ fun PinScreen(navController: NavController) {
             repeat(4) { index ->
                 val isFilled = pin.length > index
                 Box(
-                    modifier = Modifier.size(20.dp).background(
-                        color = if (error) RedError else if (isFilled) Primary else Color.LightGray,
-                        shape = CircleShape
-                    )
+                    modifier = Modifier
+                        .size(20.dp)
+                        .testTag("pin_dot_$index")
+                        .background(
+                            color = if (error) RedError else if (isFilled) Primary else Color.LightGray,
+                            shape = CircleShape
+                        )
                 )
             }
         }
@@ -76,35 +133,16 @@ fun PinScreen(navController: NavController) {
                             Spacer(modifier = Modifier.size(80.dp))
                         } else {
                             OutlinedButton(
-                                onClick = {
-                                    error = false
-                                    if (key == "DEL") {
-                                        if (pin.isNotEmpty()) pin = pin.dropLast(1)
-                                    } else if (pin.length < 4) {
-                                        pin += key
-                                        if (pin.length == 4) {
-                                            scope.launch {
-                                                val result = viewModel.checkPin(pin)
-                                                if (result != null) {
-                                                    viewModel.login(result.first, result.second)
-                                                    navController.navigate(Screen.Home.route) {
-                                                        popUpTo(Screen.Pin.route) { inclusive = true }
-                                                    }
-                                                } else {
-                                                    HapticHelper.vibrate(context, 200)
-                                                    error = true
-                                                    pin = ""
-                                                }
-                                            }
-                                        }
-                                    }
-                                },
+                                onClick = { onKeyPress(key) },
                                 modifier = Modifier.size(80.dp),
                                 shape = CircleShape,
                                 colors = ButtonDefaults.outlinedButtonColors(contentColor = Primary)
                             ) {
                                 if (key == "DEL") {
-                                    Icon(Icons.Default.Backspace, contentDescription = null)
+                                    Icon(
+                                        Icons.Default.Backspace,
+                                        contentDescription = stringResource(R.string.action_delete)
+                                    )
                                 } else {
                                     Text(key, fontSize = 24.sp, fontWeight = FontWeight.Bold)
                                 }
