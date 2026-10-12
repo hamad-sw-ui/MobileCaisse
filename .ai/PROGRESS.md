@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-10-07 — J7.4 Lot 1 Tests Compose UI NumericKeypad / B-095
+
+**Date** : 2026-10-07 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.4 / B-095 Lot 1** terminé. Commit `233f9c6258cd8b732384287a837c3580b63002e9`, message `test(j7.4): add NumericKeypad Compose tests`. Parent `88a0fad2e649c977bd6487f933cabfab3c6bac1d`.
+- **Nouveau test UI Compose** :
+  - `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/NumericKeypadTest.kt` (+75 insertions).
+  - Validation du rendu 0..9 et bouton d'effacement via `R.string.action_delete`.
+  - Validation des callbacks `onNumberClick` et `onDeleteClick`.
+- **Validation** : Total 1 fichier créé. Zero code applicatif, zero script Gradle, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `POST-COMMIT RED TEAM PASS`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 1.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis préparation du Lot 2 de J7.4 (parcours Compose `NewSaleScreen` / `PinScreen` / `ClosureScreen`).
+
+---
+
 ## 2026-10-07 — J7.3 Couverture de Code JaCoCo / B-099
 
 **Date** : 2026-10-07 · **Branche** : `arena/019fa5ec-mobilecaisse`
