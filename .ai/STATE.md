@@ -6,18 +6,19 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 233f9c6258cd8b732384287a837c3580b63002e9
+- **HEAD actuel** : 8291f8ec720d3e6f56caaed9d3606c7241d7eb47
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-07 (SUCCESS, validation J7.4 LOT 1 B-095 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
-- **Dernière exécution des tests** : 2026-10-07 (193/193 JVM SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` + `:app:jacocoTestReport` rapports HTML/XML générés avec succès).
+- **Dernière compilation** : 2026-10-12 (SUCCESS, validation J7.4 LOT 2 B-095 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
+- **Dernière exécution des tests** : 2026-10-12 (193/193 JVM SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` + `:app:jacocoTestReport` rapports HTML/XML générés avec succès).
 - **KSP** : SUCCESS.
 - **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverts).
 - **JaCoCo** : Plugin JaCoCo `0.8.12` intégré dans `app/build.gradle.kts`. Tâche `:app:jacocoTestReport` générant les rapports HTML/XML pour les 193 tests unitaires JVM avec exclusions ciblées (Hilt, Room, BuildConfig, R.class).
 - **CI GitHub Actions** : Pipeline `.github/workflows/ci.yml` (JDK 17 Temurin, `gradle/actions/setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`). Pipeline créé localement, committé (`f3c615e`) et validé statiquement ; aucun run distant n'a encore été exécuté faute de push (`push = 0`).
-- **Tests UI Compose J7.4 Lot 1** : Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/NumericKeypadTest.kt` (+75 insertions). Validation des interactions (rendu 0..9/suppression, callbacks numériques, callback d'effacement). 193/193 tests JVM verts (`:app:testDebugUnitTest`). Commit technique `233f9c6258cd8b732384287a837c3580b63002e9` validé par audit Red Team post-commit.
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.4 Lot 1 / B-095), **pas encore committées**.
+- **Tests UI Compose J7.4 Lot 1** : Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/NumericKeypadTest.kt` (+75 insertions). Validation des interactions (rendu 0..9/suppression, callbacks numériques, callback d'effacement). 193/193 tests JVM verts (`:app:testDebugUnitTest`). Commit technique `233f9c6258cd8b732384287a837c3580b63002e9` validé.
+- **Tests UI Compose J7.4 Lot 2** : Extraction du composable stateless `PinContent` et de la fonction partagée de production `handlePinKeyPress(currentPin, key, maxDigits)` dans `PinScreen.kt` (+96 / -29). Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/PinScreenTest.kt` (+208). 7 méthodes de test couvrant l'interface initiale, les tags `pin_dot_0`..`3`, la saisie, l'effacement, l'affichage de `pin_invalid`, la logique `handlePinKeyPress` et le test d'intégration UI de plafonnement à 4 chiffres. 193/193 tests JVM verts. Commit technique `8291f8ec720d3e6f56caaed9d3606c7241d7eb47` validé par audits Red Team.
+- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.4 Lot 2 / B-095), **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -35,19 +36,21 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Integration Continue J7.2 / B-098 (Workflow GitHub Actions `.github/workflows/ci.yml`)
     - Couverture de Code JaCoCo J7.3 / B-099 (Plugin 0.8.12, tâche `:app:jacocoTestReport`, rapports HTML/XML)
     - Tests Compose UI J7.4 Lot 1 / B-095 (Test isolé de composant UI `NumericKeypadTest.kt`)
+    - Tests Compose UI J7.4 Lot 2 / B-095 (Saisie PIN & validation `PinScreenTest.kt`)
 - **Dette technique & Réserves** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
-    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 1.
+    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 2.
+    - Réserve d'exécution Android : L'exécution réelle de la suite Compose UI (`PinScreenTest.kt`) sur terminal/émulateur Android physique connecté reste non réalisée en environnement local headless sans émulateur.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.4 / B-095 Lot 1 — Tests Compose UI NumericKeypad (TERMINÉE / COMMITTÉE `233f9c6`).
-- **Tâche en cours** : J7.4 / B-095 — Tests Compose des parcours critiques (EN COURS — Lot 1 validé). Synchronisation documentaire AI-DOS Lot 1.
-- **Prochaine tâche prévue** : J7.4 Lot 2 — Tests Compose des parcours (`NewSaleScreen` / `PinScreen` / `ClosureScreen`) ou J7.5 Signature Release.
-- **Hors de ce commit technique** : J7.4 Lot 2+ et J7.5. Tous les jalons antérieurs jusqu'à J7.4 Lot 1 sont terminés.
+- **Dernière tâche terminée** : J7.4 / B-095 Lot 2 — Tests Compose UI PinScreen (TERMINÉE / COMMITTÉE `8291f8e`).
+- **Tâche en cours** : J7.4 / B-095 — Tests Compose des parcours critiques (EN COURS — Lots 1 & 2 validés). Synchronisation documentaire AI-DOS Lot 2.
+- **Prochaine tâche prévue** : J7.4 Lot 3 — Tests Compose UI des parcours restants (`NewSaleScreen` / `ClosureScreen`) ou J7.5 Signature Release.
+- **Hors de ce commit technique** : J7.4 Lot 3+ et J7.5. Tous les jalons antérieurs jusqu'à J7.4 Lot 2 sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -68,7 +71,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J7.2 / B-098 : Pipeline CI GitHub Actions minimal et autonome dans `.github/workflows/ci.yml` (JDK 17, `setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`).
     - J7.3 / B-099 : Intégration JaCoCo 0.8.12 pour la mesure de couverture des tests unitaires JVM (`:app:jacocoTestReport`) avec exclusions ciblées du code généré (Hilt, Room, BuildConfig, R.class).
     - J7.4 / B-095 Lot 1 : Implémentation du test d'interface Compose `NumericKeypadTest.kt` sous `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/` sans modification de code applicatif ni dépendance Gradle supplémentaire.
+    - J7.4 / B-095 Lot 2 : Refactoring de `PinScreen.kt` avec extraction de `PinContent` et de `handlePinKeyPress(currentPin, key, maxDigits)`. Création de `PinScreenTest.kt` (+208) avec 7 tests d'interface et d'état.
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-07
-- **Agent** : AI-DOS — enregistrement documentaire du lot J7.4 Lot 1 / B-095
+- **Date** : 2026-10-12
+- **Agent** : AI-DOS — enregistrement documentaire du lot J7.4 Lot 2 / B-095

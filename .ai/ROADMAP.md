@@ -113,7 +113,7 @@ J7 Industrialisation (CI, release)
 | 7.1 | ktlint ou detekt | B-097 | ✅ (J7.1a : 509a1d0) |
 | 7.2 | CI GitHub Actions (build + test + lint sur PR) | B-098 | ✅ (J7.2 : f3c615e) |
 | 7.3 | Couverture JaCoCo publiée | B-099 | ✅ (J7.3 : 2eb8fdb) |
-| 7.4 | Tests Compose des parcours critiques | B-095 | ⏳ (Lot 1 : 233f9c6) |
+| 7.4 | Tests Compose des parcours critiques | B-095 | ⏳ (Lots 1-2 : 8291f8e) |
 | 7.5 | Configuration de signature et de release |  | □ |
 
 ---

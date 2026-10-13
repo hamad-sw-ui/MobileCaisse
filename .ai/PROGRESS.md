@@ -6,6 +6,30 @@
 
 ---
 
+## 2026-10-12 — J7.4 Lot 2 Tests Compose UI PinScreen / B-095
+
+**Date** : 2026-10-12 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.4 / B-095 Lot 2** terminé. Commit `8291f8ec720d3e6f56caaed9d3606c7241d7eb47`, message `test(ui): add PinScreen content and input handling tests`. Parent `1006dbbfce86fd2714de8850d8bedccc836d6ad3`.
+- **Refactoring & Nouveau test UI Compose** :
+  - `app/src/main/java/com/reconsiliation/caisse/ui/screens/PinScreen.kt` (+96 / -29) : Extraction du composable stateless `PinContent` et de la fonction partagée de production `handlePinKeyPress(currentPin, key, maxDigits)`.
+  - `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/PinScreenTest.kt` (+208) : Nouveau fichier de tests Compose UI (7 méthodes de test).
+  - Validation de l'UI initiale, des tags `pin_dot_0`..`3`, de la saisie numérique, du bouton effacer, du message d'erreur `R.string.pin_invalid`, et du plafonnement à 4 chiffres (en unitaire et via `StatefulPinHarness`).
+- **Validation** : Total 2 fichiers modifiés/créés. Zero code métier, zero script Gradle, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `POST-COMMIT RED TEAM PASS`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 2.
+- Réserve d'exécution Android : Exécution réelle de la suite Compose UI (`PinScreenTest.kt`) sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage des travaux de tests Compose UI pour les parcours restants (`NewSaleScreen` / `ClosureScreen`).
+
+---
+
 ## 2026-10-07 — J7.4 Lot 1 Tests Compose UI NumericKeypad / B-095
 
 **Date** : 2026-10-07 · **Branche** : `arena/019fa5ec-mobilecaisse`
