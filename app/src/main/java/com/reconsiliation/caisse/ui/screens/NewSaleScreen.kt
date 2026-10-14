@@ -17,6 +17,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -83,9 +84,173 @@ fun NewSaleScreen(navController: NavController) {
         }
     }
 
+    var showScanner by remember { mutableStateOf(false) }
+    var continuousScan by remember { mutableStateOf(false) }
+    var unknownBarcode by remember { mutableStateOf<String?>(null) }
+
+    NewSaleContent(
+        cart = cart,
+        stockItems = stockItems,
+        currency = currency,
+        boutique = boutique,
+        operatorName = operatorName,
+        uiState = uiState,
+        snackbarHostState = snackbarHostState,
+        onUpdateCartQuantity = { item, newQty ->
+            mainViewModel.recordActivity()
+            if (newQty > 0) viewModel.updateCartItemQuantity(item, newQty)
+            else viewModel.removeFromCart(item)
+        },
+        onRemoveFromCart = { item ->
+            mainViewModel.recordActivity()
+            viewModel.removeFromCart(item)
+        },
+        onAddToCart = { product, price, isRetail, parentId, factor ->
+            if (isRetail) {
+                viewModel.addToCart(product, price, isRetail = true, parentId = parentId, factor = factor ?: 1.0)
+            } else {
+                viewModel.addToCart(product, price)
+            }
+        },
+        onUpdateCartPrices = { isVip ->
+            viewModel.updateCartPrices(isVip)
+        },
+        onGetCustomerByPhone = { phone ->
+            viewModel.getCustomerByPhone(phone)
+        },
+        onValidateSaleSubmit = { vente, items ->
+            viewModel.addVenteWithItems(
+                vente, items, userRole,
+                boutique?.isTaxEnabled == true,
+                boutique?.taxRate ?: 0.0
+            )
+        },
+        onNavigateBack = { navController.popBackStack() },
+        onScanClick = {
+            mainViewModel.recordActivity()
+            showScanner = true
+        }
+    )
+
+    if (lastVenteId != null) {
+        AlertDialog(
+            onDismissRequest = { viewModel.clearLastVenteId() },
+            title = { Text(stringResource(R.string.sale_confirmed_title)) },
+            text = { Text(stringResource(R.string.sale_confirmed_desc)) },
+            confirmButton = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(
+                        onClick = {
+                            viewModel.printTicket(lastVenteId!!, boutique?.printerAddress ?: "")
+                            viewModel.clearLastVenteId()
+                            navController.popBackStack()
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Print, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.action_print))
+                    }
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                val venteWithItems = viewModel.getVenteWithItems(lastVenteId!!)
+                                if (venteWithItems != null && boutique != null) {
+                                    val text = FormatUtil.generateReceiptText(
+                                        boutique!!,
+                                        venteWithItems.vente,
+                                        venteWithItems.items,
+                                        currency
+                                    )
+                                    viewModel.shareReceipt(text)
+                                }
+                                viewModel.clearLastVenteId()
+                                navController.popBackStack()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Icon(Icons.Default.Share, null)
+                        Spacer(Modifier.width(8.dp))
+                        Text(stringResource(R.string.action_whatsapp))
+                    }
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = {
+                    viewModel.clearLastVenteId()
+                    navController.popBackStack()
+                }) { Text(stringResource(R.string.action_finish)) }
+            }
+        )
+    }
+
+    if (showScanner) {
+        BarcodeScannerDialog(
+            onDismiss = {
+                showScanner = false
+                continuousScan = false
+            },
+            continuous = continuousScan,
+            onBarcodeScanned = { code ->
+                scope.launch {
+                    val product = viewModel.getProductByBarcode(code)
+                    if (product != null) {
+                        viewModel.addToCart(product, product.unitPrice)
+                    } else {
+                        unknownBarcode = code
+                        showScanner = false
+                    }
+                    if (!continuousScan && product != null) showScanner = false
+                }
+            }
+        )
+    }
+
+    if (unknownBarcode != null) {
+        AlertDialog(
+            onDismissRequest = { unknownBarcode = null },
+            title = { Text(stringResource(R.string.error_unknown_product_title)) },
+            text = { Text(stringResource(R.string.error_unknown_product_desc, unknownBarcode!!)) },
+            confirmButton = {
+                Button(onClick = {
+                    navController.navigate(Screen.Stock.route + "?barcode=$unknownBarcode")
+                    unknownBarcode = null
+                }) { Text(stringResource(R.string.action_create)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { unknownBarcode = null }) { Text(stringResource(R.string.action_cancel)) }
+            }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun NewSaleContent(
+    cart: List<com.reconsiliation.caisse.ui.viewmodel.CartItem>,
+    stockItems: List<StockEntity>,
+    currency: String,
+    boutique: com.reconsiliation.caisse.data.local.entity.BoutiqueEntity?,
+    operatorName: String,
+    uiState: NewSaleUiState,
+    snackbarHostState: SnackbarHostState,
+    onUpdateCartQuantity: (com.reconsiliation.caisse.ui.viewmodel.CartItem, Double) -> Unit,
+    onRemoveFromCart: (com.reconsiliation.caisse.ui.viewmodel.CartItem) -> Unit,
+    onAddToCart: (product: StockEntity, price: Double, isRetail: Boolean, parentId: Long?, factor: Double?) -> Unit,
+    onUpdateCartPrices: (Boolean) -> Unit,
+    onGetCustomerByPhone: suspend (String) -> com.reconsiliation.caisse.data.local.entity.CustomerEntity?,
+    onValidateSaleSubmit: (VenteEntity, List<VenteItemEntity>) -> Unit,
+    onNavigateBack: () -> Unit,
+    onScanClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val scope = rememberCoroutineScope()
+
     var customerPhone by remember { mutableStateOf("") }
     var paymentMethod by remember { mutableStateOf("CASH") }
-    var operationType by remember { mutableStateOf("MARCHAND") } // MARCHAND, TRANSFERT, RETRAIT
+    var operationType by remember { mutableStateOf("MARCHAND") }
     var amountCashStr by remember { mutableStateOf("") }
     var amountMomoStr by remember { mutableStateOf("") }
     var amountCreditUsedStr by remember { mutableStateOf("") }
@@ -98,12 +263,12 @@ fun NewSaleScreen(navController: NavController) {
     var isCustomerVip by remember { mutableStateOf(false) }
 
     LaunchedEffect(isCustomerVip) {
-        viewModel.updateCartPrices(isCustomerVip)
+        onUpdateCartPrices(isCustomerVip)
     }
 
     LaunchedEffect(customerPhone) {
         if (customerPhone.length >= 8) {
-            val c = viewModel.getCustomerByPhone(customerPhone)
+            val c = onGetCustomerByPhone(customerPhone)
             customerLoyalty = c?.loyaltyPoints
             customerCreditBalance = c?.creditBalance ?: 0.0
             isCustomerVip = c?.isVip ?: false
@@ -113,10 +278,6 @@ fun NewSaleScreen(navController: NavController) {
             isCustomerVip = false
         }
     }
-
-    var showScanner by remember { mutableStateOf(false) }
-    var continuousScan by remember { mutableStateOf(false) }
-    var unknownBarcode by remember { mutableStateOf<String?>(null) }
 
     val totalAmount = cart.sumOf { it.priceAtSale * it.quantity }
 
@@ -138,11 +299,12 @@ fun NewSaleScreen(navController: NavController) {
     }
 
     Scaffold(
+        modifier = modifier,
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.title_new_sale)) },
                 navigationIcon = {
-                    IconButton(onClick = { navController.popBackStack() }) {
+                    IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, null)
                     }
                 }
@@ -188,10 +350,10 @@ fun NewSaleScreen(navController: NavController) {
                                     unit = product.retailUnit!!,
                                     isBulk = false
                                 )
-                                viewModel.addToCart(retailItem, product.retailPrice, isRetail = true, parentId = product.id, factor = product.conversionFactor)
+                                onAddToCart(retailItem, product.retailPrice, true, product.id, product.conversionFactor)
                             } else {
                                 val price = if (isCustomerVip && product.vipPrice > 0) product.vipPrice else product.unitPrice
-                                viewModel.addToCart(product, price)
+                                onAddToCart(product, price, false, null, null)
                             }
                             showProductPicker = false
                         }
@@ -199,10 +361,7 @@ fun NewSaleScreen(navController: NavController) {
                 }
                 
                 IconButton(
-                    onClick = {
-                        mainViewModel.recordActivity()
-                        showScanner = true
-                    },
+                    onClick = onScanClick,
                     modifier = Modifier.size(48.dp).background(Primary, RoundedCornerShape(12.dp)),
                     colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
                 ) {
@@ -212,24 +371,26 @@ fun NewSaleScreen(navController: NavController) {
 
             // 2. MIDDLE: Cart List
             if (cart.isEmpty()) {
-                Column(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 32.dp)
+                        .testTag("cart_empty_view"),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
                     Icon(Icons.Default.ShoppingCart, null, tint = Color.LightGray, modifier = Modifier.size(48.dp))
                     Text(stringResource(R.string.cart_empty), color = Color.Gray)
                 }
             } else {
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(
+                    modifier = Modifier.testTag("cart_items_list"),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
                     cart.forEach { item ->
                         CartRow(
                             item = item,
-                            onUpdateQuantity = { newQty ->
-                                mainViewModel.recordActivity()
-                                if (newQty > 0) viewModel.updateCartItemQuantity(item, newQty)
-                                else viewModel.removeFromCart(item)
-                            },
-                            onRemove = {
-                                mainViewModel.recordActivity()
-                                viewModel.removeFromCart(item)
-                            }
+                            onUpdateQuantity = { newQty -> onUpdateCartQuantity(item, newQty) },
+                            onRemove = { onRemoveFromCart(item) }
                         )
                     }
                 }
@@ -242,19 +403,7 @@ fun NewSaleScreen(navController: NavController) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(
                         value = customerPhone,
-                        onValueChange = {
-                            customerPhone = it
-                            if (it.length >= 8) {
-                                scope.launch {
-                                    val c = viewModel.getCustomerByPhone(it)
-                                    customerLoyalty = c?.loyaltyPoints
-                                    isCustomerVip = c?.isVip ?: false
-                                }
-                            } else {
-                                customerLoyalty = null
-                                isCustomerVip = false
-                            }
-                        },
+                        onValueChange = { customerPhone = it },
                         label = { Text(stringResource(R.string.label_customer)) },
                         modifier = Modifier.weight(1.3f),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
@@ -363,7 +512,6 @@ fun NewSaleScreen(navController: NavController) {
                     text = stringResource(R.string.action_validate_sale),
                     enabled = uiState !is NewSaleUiState.Processing,
                     onClick = {
-                        mainViewModel.recordActivity()
                         if (cart.isNotEmpty()) {
                             val invalidItem = cart.find { it.product.unit == "pcs" && it.quantity % 1.0 != 0.0 }
                             if (invalidItem != null) {
@@ -420,109 +568,12 @@ fun NewSaleScreen(navController: NavController) {
                             val items = cart.map {
                                 VenteItemEntity(venteId = 0, productId = it.product.id, productName = it.product.productName, quantity = it.quantity, unitPrice = it.priceAtSale, purchasePrice = it.product.purchasePrice)
                             }
-                            viewModel.addVenteWithItems(
-                                vente, items, userRole, 
-                                boutique?.isTaxEnabled == true, 
-                                boutique?.taxRate ?: 0.0
-                            )
+                            onValidateSaleSubmit(vente, items)
                         }
                     },
                     containerColor = GreenSuccess
                 )
             }
-        }
-
-        if (lastVenteId != null) {
-            AlertDialog(
-                onDismissRequest = { viewModel.clearLastVenteId() },
-                title = { Text(stringResource(R.string.sale_confirmed_title)) },
-                text = { Text(stringResource(R.string.sale_confirmed_desc)) },
-                confirmButton = {
-                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Button(
-                            onClick = {
-                                viewModel.printTicket(lastVenteId!!, boutique?.printerAddress ?: "")
-                                viewModel.clearLastVenteId()
-                                navController.popBackStack()
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Print, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.action_print))
-                        }
-                        Button(
-                            onClick = {
-                                scope.launch {
-                                    val venteWithItems = viewModel.getVenteWithItems(lastVenteId!!)
-                                    if (venteWithItems != null && boutique != null) {
-                                        val text = FormatUtil.generateReceiptText(
-                                            boutique!!,
-                                            venteWithItems.vente,
-                                            venteWithItems.items,
-                                            currency
-                                        )
-                                        viewModel.shareReceipt(text)
-                                    }
-                                    viewModel.clearLastVenteId()
-                                    navController.popBackStack()
-                                }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Icon(Icons.Default.Share, null)
-                            Spacer(Modifier.width(8.dp))
-                            Text(stringResource(R.string.action_whatsapp))
-                        }
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = {
-                        viewModel.clearLastVenteId()
-                        navController.popBackStack()
-                    }) { Text(stringResource(R.string.action_finish)) }
-                }
-            )
-        }
-
-        if (showScanner) {
-            BarcodeScannerDialog(
-                onDismiss = {
-                    showScanner = false
-                    continuousScan = false
-                },
-                continuous = continuousScan,
-                onBarcodeScanned = { code ->
-                    scope.launch {
-                        val product = viewModel.getProductByBarcode(code)
-                        if (product != null) {
-                            val price = if (isCustomerVip && product.vipPrice > 0) product.vipPrice else product.unitPrice
-                            viewModel.addToCart(product, price)
-                        } else {
-                            unknownBarcode = code
-                            showScanner = false
-                        }
-                        if (!continuousScan && product != null) showScanner = false
-                    }
-                }
-            )
-        }
-
-        if (unknownBarcode != null) {
-            AlertDialog(
-                onDismissRequest = { unknownBarcode = null },
-                title = { Text(stringResource(R.string.error_unknown_product_title)) },
-                text = { Text(stringResource(R.string.error_unknown_product_desc, unknownBarcode!!)) },
-                confirmButton = {
-                    Button(onClick = {
-                        navController.navigate(Screen.Stock.route + "?barcode=$unknownBarcode")
-                        unknownBarcode = null
-                    }) { Text(stringResource(R.string.action_create)) }
-                },
-                dismissButton = {
-                    TextButton(onClick = { unknownBarcode = null }) { Text(stringResource(R.string.action_cancel)) }
-                }
-            )
         }
     }
 }
@@ -651,7 +702,10 @@ fun CartRow(
             }
             
             Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = { onUpdateQuantity(item.quantity - 1) }, modifier = Modifier.size(32.dp)) {
+                IconButton(
+                    onClick = { onUpdateQuantity(item.quantity - 1) },
+                    modifier = Modifier.size(32.dp).testTag("cart_item_minus_${item.product.id}")
+                ) {
                     Icon(Icons.Default.Remove, null, tint = Primary)
                 }
                 
@@ -659,10 +713,13 @@ fun CartRow(
                     text = if (item.quantity % 1.0 == 0.0) item.quantity.toInt().toString() else "%.2f".format(item.quantity),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.Bold,
-                    modifier = Modifier.padding(horizontal = 4.dp)
+                    modifier = Modifier.padding(horizontal = 4.dp).testTag("cart_item_qty_${item.product.id}")
                 )
 
-                IconButton(onClick = { onUpdateQuantity(item.quantity + 1) }, modifier = Modifier.size(32.dp)) {
+                IconButton(
+                    onClick = { onUpdateQuantity(item.quantity + 1) },
+                    modifier = Modifier.size(32.dp).testTag("cart_item_plus_${item.product.id}")
+                ) {
                     Icon(Icons.Default.Add, null, tint = Primary)
                 }
             }
@@ -671,7 +728,10 @@ fun CartRow(
             
             Column(horizontalAlignment = Alignment.End) {
                 Text(FormatUtil.formatCurrency(item.priceAtSale * item.quantity), color = Primary, fontWeight = FontWeight.Bold, fontSize = 14.sp)
-                IconButton(onClick = onRemove, modifier = Modifier.size(32.dp)) {
+                IconButton(
+                    onClick = onRemove,
+                    modifier = Modifier.size(32.dp).testTag("cart_item_remove_${item.product.id}")
+                ) {
                     Icon(Icons.Default.Delete, null, tint = Color.Gray, modifier = Modifier.size(18.dp))
                 }
             }
