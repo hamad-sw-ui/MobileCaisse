@@ -6,6 +6,30 @@
 
 ---
 
+## 2026-10-14 — J7.4 Lot 3 Tests Compose UI NewSaleScreen / B-095
+
+**Date** : 2026-10-14 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.4 / B-095 Lot 3** terminé. Commit `4c5d6777f2d6fdec915d95abb9cf56ed41910a70`, message `test(ui): add NewSaleScreen content and cart interaction tests`. Parent `e6be8a5cd8afa51980ff481635e045a18e03f630`.
+- **Refactoring & Nouveau test UI Compose** :
+  - `app/src/main/java/com/reconsiliation/caisse/ui/screens/NewSaleScreen.kt` (+201 / -141) : Extraction du composable stateless `NewSaleContent` et ajout des tags sémantiques ciblés.
+  - `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/NewSaleScreenTest.kt` (+221) : Nouveau fichier de tests Compose UI (5 méthodes de test).
+  - Validation du panier vide, du rendu des articles, des callbacks d'ajustement de quantité (+/-), de suppression et du bouton d'encaissement.
+- **Validation** : Total 2 fichiers modifiés/créés. Zero code métier, zero script Gradle, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `POST-COMMIT RED TEAM PASS`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 3.
+- Réserve d'exécution Android : Exécution réelle de la suite Compose UI (`NewSaleScreenTest.kt`) sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage des travaux de tests Compose UI pour le parcours de clôture (`ClosureScreen`).
+
+---
+
 ## 2026-10-12 — J7.4 Lot 2 Tests Compose UI PinScreen / B-095
 
 **Date** : 2026-10-12 · **Branche** : `arena/019fa5ec-mobilecaisse`
