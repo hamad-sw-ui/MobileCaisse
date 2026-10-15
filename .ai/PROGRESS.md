@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-10-15 — J7.5a Lot 1 Protection Git des secrets de signature Android
+
+**Date** : 2026-10-15 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.5a / Lot 1** terminé. Commit `3bd5c5af604c719075d14f2b9d3d0369bf733946`, message `build(gradle): add release keystore and signing secrets to gitignore`. Parent `5f3ceaeb1c571ca162468940f4e0a8546f957c7d`.
+- **Protection Git des Secrets** :
+  - `CAISSE/.gitignore` (+8 insertions) : Ajout des règles d'exclusion pour `*.jks`, `*.keystore`, `*.p12`, `*.pepk`, `keystore.properties`, `release.properties`.
+  - Validation de non-masquage du gabarit `app/keystore.properties.example` via `git check-ignore`.
+- **Validation** : Total 1 fichier modifé (`+8 insertions`). Zero code métier, zero script Gradle, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `GO`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec (résultat historique rapporté).
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.5.
+- Réserve d'exécution Android : Exécution réelle des 22 tests Compose UI sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage et autorisation explicite pour le démarrage du Lot J7.5b (Configuration Gradle de signature conditionnelle Release).
+
+---
+
 ## 2026-10-15 — J7.4 Clôture globale du jalon B-095 Tests Compose UI
 
 **Date** : 2026-10-15 · **Branche** : `arena/019fa5ec-mobilecaisse`
