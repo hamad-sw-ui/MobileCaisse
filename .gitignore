@@ -11,6 +11,14 @@
 .cxx
 local.properties
 
+# Signature Android & Secrets de Release (J7.5a)
+*.jks
+*.keystore
+*.p12
+*.pepk
+keystore.properties
+release.properties
+
 # Rapports HORODATÉS de la chaîne Docker : non versionnés (bruit).
 # EXCEPTION : software-factory/last-cycle/ est versionné — c'est le canal de
 # retour vers l'agent. Sans lui, un cycle exécuté sur la machine du développeur
