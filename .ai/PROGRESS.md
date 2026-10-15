@@ -6,6 +6,30 @@
 
 ---
 
+## 2026-10-14 — J7.4 Lot 4 Tests Compose UI ClosureScreen / B-095
+
+**Date** : 2026-10-14 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.4 / B-095 Lot 4** terminé. Commit `81683bb07c789dde7600e996c0f3f825ad9e1884`, message `test(ui): add ClosureScreen content and session closure tests`. Parent `1d8744f76c6519fee64fc56f9a610082af905ed3`.
+- **Refactoring & Nouveau test UI Compose** :
+  - `app/src/main/java/com/reconsiliation/caisse/ui/screens/ClosureScreen.kt` (+98 / -41) : Extraction du composable stateless `ClosureContent` et ajout des tags sémantiques ciblés.
+  - `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/ClosureScreenTest.kt` (+272) : Nouveau fichier de tests Compose UI (7 méthodes de test).
+  - Validation de l'absence d'activité, du récapitulatif de clôture, de l'exportation CSV, de la sauvegarde totale, de la carte verrouillée, du callback de clôture et du calcul d'écart de caisse formaté.
+- **Validation** : Total 2 fichiers modifiés/créés (`370 insertions(+), 41 suppressions(-)`). Zero code métier, zero script Gradle, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `GO SOUS RÉSERVES`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 4.
+- Réserve d'exécution Android : Exécution réelle de la suite Compose UI (`ClosureScreenTest.kt`) sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis bilan final du jalon J7.4 (B-095) et cadrage de J7.5.
+
+---
+
 ## 2026-10-14 — J7.4 Lot 3 Tests Compose UI NewSaleScreen / B-095
 
 **Date** : 2026-10-14 · **Branche** : `arena/019fa5ec-mobilecaisse`
