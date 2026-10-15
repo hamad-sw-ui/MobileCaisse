@@ -6,21 +6,22 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 81683bb07c789dde7600e996c0f3f825ad9e1884
+- **HEAD actuel** : 8bfbee5aafbf18eed35d07f05cb4d6e33e48baa1
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-14 (SUCCESS, validation J7.4 LOT 4 B-095 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
+- **Dernière compilation** : 2026-10-15 (SUCCESS, validation globale J7.4 B-095 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
 - **Dernière exécution des tests** : 2026-10-12 (193/193 JVM SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` + `:app:jacocoTestReport` rapports HTML/XML générés avec succès).
 - **KSP** : SUCCESS.
 - **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverts).
 - **JaCoCo** : Plugin JaCoCo `0.8.12` intégré dans `app/build.gradle.kts`. Tâche `:app:jacocoTestReport` générant les rapports HTML/XML pour les 193 tests unitaires JVM avec exclusions ciblées (Hilt, Room, BuildConfig, R.class).
 - **CI GitHub Actions** : Pipeline `.github/workflows/ci.yml` (JDK 17 Temurin, `gradle/actions/setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`). Pipeline créé localement, committé (`f3c615e`) et validé statiquement ; aucun run distant n'a encore été exécuté faute de push (`push = 0`).
-- **Tests UI Compose J7.4 Lot 1** : Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/NumericKeypadTest.kt` (+75 insertions). Validation des interactions (rendu 0..9/suppression, callbacks numériques, callback d'effacement). 193/193 tests JVM verts (`:app:testDebugUnitTest`). Commit technique `233f9c6258cd8b732384287a837c3580b63002e9` validé.
-- **Tests UI Compose J7.4 Lot 2** : Extraction du composable stateless `PinContent` et de la fonction partagée de production `handlePinKeyPress(currentPin, key, maxDigits)` dans `PinScreen.kt` (+96 / -29). Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/PinScreenTest.kt` (+208). 7 méthodes de test couvrant l'interface initiale, les tags `pin_dot_0`..`3`, la saisie, l'effacement, l'affichage de `pin_invalid`, la logique `handlePinKeyPress` et le test d'intégration UI de plafonnement à 4 chiffres. 193/193 tests JVM verts. Commit technique `8291f8ec720d3e6f56caaed9d3606c7241d7eb47` validé.
-- **Tests UI Compose J7.4 Lot 3** : Extraction du composable stateless `NewSaleContent` dans `NewSaleScreen.kt` (+201 / -141). Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/NewSaleScreenTest.kt` (+221). 5 méthodes de test couvrant l'état initial du panier vide, l'affichage des articles dans le panier, l'ajustement des quantités (+/-), la suppression d'un article et le bouton de validation de vente. 193/193 tests JVM verts. Commit technique `4c5d6777f2d6fdec915d95abb9cf56ed41910a70` validé.
-- **Tests UI Compose J7.4 Lot 4** : Extraction du composable stateless `ClosureContent` dans `ClosureScreen.kt` (+98 / -41). Création du test d'interface Compose `app/src/androidTest/java/com/reconsiliation/caisse/ui/screens/ClosureScreenTest.kt` (+272). 7 méthodes de test couvrant la vue d'absence d'activité, le récapitulatif de clôture, l'exportation CSV, la sauvegarde totale, la carte de statut fermé, la soumission de clôture avec comptage d'espèces et l'affichage de l'écart de caisse formaté. 193/193 tests JVM verts. Commit technique `81683bb07c789dde7600e996c0f3f825ad9e1884` validé par audits Red Team (`GO SOUS RÉSERVES`).
-- **Working Tree** : Modifications documentaires AI-DOS en cours en working tree (enregistrement J7.4 Lot 4 / B-095), **pas encore committées**.
+- **Tests UI Compose J7.4 (B-095) - Synthèse Globale (22 tests)** :
+  - **Lot 1 (`NumericKeypadTest.kt`)** : 3 tests d'interactions clavier numérique (`233f9c6` / `1006dbb`).
+  - **Lot 2 (`PinScreenTest.kt`)** : 7 tests de saisie PIN, fonction `handlePinKeyPress` et plafonnement 4 chiffres (`8291f8e` / `e6be8a5`).
+  - **Lot 3 (`NewSaleScreenTest.kt`)** : 5 tests de parcours panier, ajustements quantités, suppression et validation de vente (`4c5d677` / `1d8744f`).
+  - **Lot 4 (`ClosureScreenTest.kt`)** : 7 tests de clôture de caisse, récapitulatif, export CSV, sauvegarde totale, verrouillage et calcul d'écart de caisse formaté (`81683bb` / `8bfbee5`).
+- **Working Tree** : Modifications documentaires AI-DOS de clôture globale J7.4 / B-095 en cours en working tree, **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -37,24 +38,21 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Outillage Qualité J7.1a (Intégration `ktlint` Gradle plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers)
     - Integration Continue J7.2 / B-098 (Workflow GitHub Actions `.github/workflows/ci.yml`)
     - Couverture de Code JaCoCo J7.3 / B-099 (Plugin 0.8.12, tâche `:app:jacocoTestReport`, rapports HTML/XML)
-    - Tests Compose UI J7.4 Lot 1 / B-095 (Test isolé de composant UI `NumericKeypadTest.kt`)
-    - Tests Compose UI J7.4 Lot 2 / B-095 (Saisie PIN & validation `PinScreenTest.kt`)
-    - Tests Compose UI J7.4 Lot 3 / B-095 (Nouvelle vente & panier `NewSaleScreenTest.kt`)
-    - Tests Compose UI J7.4 Lot 4 / B-095 (Clôture de caisse & récapitulatif `ClosureScreenTest.kt`)
+    - Tests Compose UI J7.4 / B-095 (Couverture complète des 4 parcours critiques avec 22 tests Compose UI)
 - **Dette technique & Réserves** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
-    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du Lot 4.
-    - Réserve d'exécution Android : L'exécution réelle des suites Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`) sur terminal/émulateur Android physique connecté reste non réalisée en environnement local headless sans émulateur.
+    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.4.
+    - Réserve d'exécution Android : L'exécution réelle des 22 tests Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`) sur terminal/émulateur Android physique connecté reste non réalisée en environnement local headless sans émulateur.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.4 / B-095 Lot 4 — Tests Compose UI ClosureScreen (TERMINÉE / COMMITTÉE `81683bb`).
-- **Tâche en cours** : J7.4 / B-095 — Tests Compose des parcours critiques (EN COURS — Lots 1, 2, 3 & 4 validés). Synchronisation documentaire AI-DOS Lot 4.
-- **Prochaine tâche prévue** : Synthèse globale du jalon J7.4 (B-095) et passage au jalon J7.5 Signature & Release.
-- **Hors de ce commit technique** : J7.5 et jalons ultérieurs. Tous les lots techniques J7.4 Lots 1 à 4 sont terminés.
+- **Dernière tâche terminée** : J7.4 / B-095 — Tests Compose des parcours critiques (TERMINÉE / COMMITTÉE `81683bb` / `8bfbee5`).
+- **Tâche en cours** : J7.5 — Configuration de signature et de release (EN COURS — Cadrage). Synchronisation documentaire AI-DOS de clôture J7.4.
+- **Prochaine tâche prévue** : J7.5 — Configuration de signature et de release (APK / Bundle signé).
+- **Hors de ce commit technique** : J7.5+. Tous les jalons antérieurs jusqu'à J7.4 (B-095) inclus sont 100% terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -74,11 +72,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J7.1a / B-097 : Outillage qualité Ktlint plugin v14.2.0 + moteur v1.5.0 + baseline 117 fichiers (`app/config/ktlint/baseline.xml`).
     - J7.2 / B-098 : Pipeline CI GitHub Actions minimal et autonome dans `.github/workflows/ci.yml` (JDK 17, `setup-gradle@v3`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:assembleDebug`).
     - J7.3 / B-099 : Intégration JaCoCo 0.8.12 pour la mesure de couverture des tests unitaires JVM (`:app:jacocoTestReport`) avec exclusions ciblées du code généré (Hilt, Room, BuildConfig, R.class).
-    - J7.4 / B-095 Lot 1 : Implémentation du test d'interface Compose `NumericKeypadTest.kt` sous `app/src/androidTest/java/com/reconsiliation/caisse/ui/components/` sans modification de code applicatif ni dépendance Gradle supplémentaire.
-    - J7.4 / B-095 Lot 2 : Refactoring de `PinScreen.kt` avec extraction de `PinContent` et de `handlePinKeyPress(currentPin, key, maxDigits)`. Création de `PinScreenTest.kt` (+208) avec 7 tests d'interface et d'état.
-    - J7.4 / B-095 Lot 3 : Refactoring de `NewSaleScreen.kt` avec extraction de `NewSaleContent` (+201 / -141). Création de `NewSaleScreenTest.kt` (+221) avec 5 tests d'interface Compose.
-    - J7.4 / B-095 Lot 4 : Refactoring de `ClosureScreen.kt` avec extraction de `ClosureContent` (+98 / -41). Création de `ClosureScreenTest.kt` (+272) avec 7 tests d'interface Compose (absence d'activité, récapitulatif, exportation CSV, sauvegarde totale, carte de statut fermé, soumission de clôture avec comptage d'espèces, calcul d'écart de caisse).
+    - J7.4 / B-095 : Couverture des 4 parcours critiques par 22 tests d'interface Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-14
-- **Agent** : AI-DOS — enregistrement documentaire du lot J7.4 Lot 4 / B-095
+- **Date** : 2026-10-15
+- **Agent** : AI-DOS — enregistrement documentaire de clôture globale J7.4 / B-095

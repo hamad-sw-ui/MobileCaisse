@@ -6,6 +6,32 @@
 
 ---
 
+## 2026-10-15 — J7.4 Clôture globale du jalon B-095 Tests Compose UI
+
+**Date** : 2026-10-15 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.4 / B-095 Clôture globale** terminée. Couverture complète des 4 lots techniques (`NumericKeypad`, `PinScreen`, `NewSaleScreen`, `ClosureScreen`).
+- **Commits techniques & documentaires chaînés :**
+  - Lot 1 : `233f9c6` / `1006dbb`
+  - Lot 2 : `8291f8e` / `e6be8a5`
+  - Lot 3 : `4c5d677` / `1d8744f`
+  - Lot 4 : `81683bb` / `8bfbee5`
+- **Synthèse de couverture :** 22 méthodes de test Compose UI écrites et validées statiquement. Refactoring d'isolation des 3 écrans principaux (`PinContent`, `NewSaleContent`, `ClosureContent`) réalisé sans altération de la logique métier ni des ViewModels.
+- **Validation** : Audits pré-commit, post-commit et Red Team **VALIDÉS**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.4.
+- Réserve d'exécution Android : Exécution réelle des 22 tests Compose UI sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage du jalon J7.5 (Configuration de signature et de release).
+
+---
+
 ## 2026-10-14 — J7.4 Lot 4 Tests Compose UI ClosureScreen / B-095
 
 **Date** : 2026-10-14 · **Branche** : `arena/019fa5ec-mobilecaisse`
