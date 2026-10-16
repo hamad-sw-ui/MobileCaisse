@@ -6,6 +6,31 @@
 
 ---
 
+## 2026-10-16 — J7.5c Lot 3 Génération locale Keystore & Validation d'Artefact
+
+**Date** : 2026-10-16 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.5c / Lot 3** terminé. Validation locale de la signature de l'APK Release.
+- **Opérations d'exécution locale (fichiers non suivis) :**
+  - Génération du Keystore de test développeur `CAISSE/app/release.jks` via `keytool` (`CN=MobileCaisse Developer Test, OU=Dev, O=MobileCaisse, C=FR`).
+  - Configuration locale `CAISSE/app/keystore.properties` (secrets locaux non suivis).
+  - Assemblage `:app:assembleRelease` -> APK Release produit (`app/build/outputs/apk/release/app-release.apk`, 28.3 Mo).
+  - Validation cryptographique via `apksigner.bat verify --verbose` : `Verifies: true`, schéma v2 `true`.
+- **Validation** : Zero secret versionné dans Git (`git check-ignore` & `git status` 100% propres). Audits pré-commit, post-commit et Red Team **VALIDÉS `GO`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.5.
+- Réserve d'exécution Android : Exécution réelle des 22 tests Compose UI sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis bilan global du jalon J7.5 (Configuration de signature et de release).
+
+---
+
 ## 2026-10-16 — J7.5b Lot 2 Configuration Gradle de signature conditionnelle Release
 
 **Date** : 2026-10-16 · **Branche** : `arena/019fa5ec-mobilecaisse`

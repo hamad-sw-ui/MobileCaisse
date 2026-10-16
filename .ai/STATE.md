@@ -6,11 +6,11 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 8f391bca2bf791a48cc7dd67b34704cadb2febd4
+- **HEAD actuel** : fda08e64833b0584f2a1647e068caec5e8d374b9
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
-- **Dernière compilation** : 2026-10-15 (SUCCESS, validation globale J7.4 B-095 : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`assembleDebug`** — APK debug généré).
+- **Dernière compilation** : 2026-10-16 (SUCCESS, validation globale J7.5c : `compileDebugKotlin`, `kspDebugKotlin`, `:app:ktlintCheck`, `:app:testDebugUnitTest`, `:app:jacocoTestReport`, **`:app:assembleRelease`** — APK release 28.3 Mo généré et signé v2).
 - **Dernière exécution des tests** : 2026-10-12 (193/193 JVM SUCCESS, `:app:testDebugUnitTest` + `:app:ktlintCheck` + `:app:jacocoTestReport` rapports HTML/XML générés avec succès).
 - **KSP** : SUCCESS.
 - **Ktlint** : Plugin `org.jlleitschuh.gradle.ktlint:14.2.0` intégré avec moteur `1.5.0` / ruleset `1.5.0` et `app/config/ktlint/baseline.xml` (117 fichiers couverts).
@@ -27,8 +27,13 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Configuration Gradle de Signature Conditionnelle Release (J7.5b Lot 2)** :
   - Mise à jour de `CAISSE/app/build.gradle.kts` (+48) pour charger conditionnellement `app/keystore.properties`, valider les 4 clés requises (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) avec exception Fail-Fast en cas d'incomplétude ou de keystore introuvable, et basculer en build Release non signé (non publiable) en cas d'absence.
   - Création du gabarit versionné `CAISSE/app/keystore.properties.example` (+13).
-  - Commit technique `8f391bca2bf791a48cc7dd67b34704cadb2febd4` validé par audit Red Team. Note : l'absence de `keystore.properties` produit un APK/AAB non signé (non publiable), sans repli vers la clé Debug.
-- **Working Tree** : Modifications documentaires AI-DOS J7.5b Lot 2 en cours en working tree, **pas encore committées**.
+  - Commit technique `8f391bca2bf791a48cc7dd67b34704cadb2febd4` et commit documentaire `fda08e64833b0584f2a1647e068caec5e8d374b9` validés.
+- **Validation Locale de Signature Release APK (J7.5c Lot 3)** :
+  - Génération locale d'un Keystore de test développeur non suivi (`app/release.jks`) et configuration locale (`app/keystore.properties`).
+  - Assemblage Gradle `:app:assembleRelease` réussi (APK 28.3 Mo).
+  - Vérification cryptographique par apksigner (`apksigner.bat verify --verbose`) validée avec succès (`Verifies: true`, schéma v2 `true`, DN = `CN=MobileCaisse Developer Test, OU=Dev, O=MobileCaisse, C=FR`).
+  - Suite 193/193 tests JVM validée avec succès. Zero secret committé dans Git.
+- **Working Tree** : Modifications documentaires AI-DOS J7.5c Lot 3 en cours en working tree, **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -48,6 +53,7 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Tests Compose UI J7.4 / B-095 (Couverture complète des 4 parcours critiques avec 22 tests Compose UI)
     - Protection Git des Secrets J7.5a / Lot 1 (Exclusions `.gitignore` pour clés de signature et propriétés)
     - Signature Conditionnelle Release J7.5b / Lot 2 (Chargement `keystore.properties` + template versionné)
+    - Validation Locale Signature Release J7.5c / Lot 3 (Validation cryptographique v2 par apksigner)
 - **Dette technique & Réserves** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
@@ -58,10 +64,10 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.5b / Lot 2 — Configuration Gradle de signature conditionnelle Release (TERMINÉE / COMMITTÉE `8f391bc`).
-- **Tâche en cours** : J7.5b / Lot 2 — Configuration Gradle de signature conditionnelle Release. Synchronisation documentaire AI-DOS post-commit.
-- **Prochaine tâche prévue** : J7.5c / Lot 3 — Génération locale Keystore & Validation d'Artefact.
-- **Hors de ce commit technique** : J7.5c+. Tous les jalons antérieurs jusqu'à J7.5b Lot 2 inclus sont terminés.
+- **Dernière tâche terminée** : J7.5c / Lot 3 — Génération locale Keystore & Validation d'Artefact (TERMINÉE / NON COMMITTÉE - Fichiers locaux non suivis).
+- **Tâche en cours** : J7.5 — Configuration de signature et de release (EN COURS — Synthèse globale & Clôture J7.5). Synchronisation documentaire AI-DOS J7.5c.
+- **Prochaine tâche prévue** : Synthèse globale du jalon J7.5 et passage au Jalon 8 (Production & Distribution).
+- **Hors de ce commit technique** : J8+. Tous les jalons antérieurs jusqu'à J7.5c Lot 3 inclus sont 100% terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -84,7 +90,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J7.4 / B-095 : Couverture des 4 parcours critiques par 22 tests d'interface Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`).
     - J7.5a / Lot 1 : Protection Git des secrets de signature Android via exclusions ciblées dans `CAISSE/.gitignore` (`*.jks`, `*.keystore`, `*.p12`, `*.pepk`, `keystore.properties`, `release.properties`).
     - J7.5b / Lot 2 : Chargement conditionnel `app/keystore.properties` dans `app/build.gradle.kts` (+48) + création du gabarit versionné `app/keystore.properties.example` (+13).
+    - J7.5c / Lot 3 : Validation locale de signature Release APK (28.3 Mo) avec Keystore Développeur de Test, validation `apksigner verify` (schéma v2) et suite 193/193 JVM PASS.
 
 ## 🕒 Dernière Mise à jour
 - **Date** : 2026-10-16
-- **Agent** : AI-DOS — enregistrement documentaire du lot J7.5b / Lot 2
+- **Agent** : AI-DOS — enregistrement documentaire du lot J7.5c / Lot 3
