@@ -6,6 +6,31 @@
 
 ---
 
+## 2026-10-16 — J7.5 Clôture globale du jalon Configuration de signature et de release
+
+**Date** : 2026-10-16 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **Jalon J7.5 Clôture globale** terminée.
+- **Synthèse des 3 lots livrés & committés :**
+  - J7.5a Lot 1 (Protection Git `.gitignore`) : `3bd5c5a` / `dcd5f6c`.
+  - J7.5b Lot 2 (Configuration Gradle conditionnelle & Template) : `8f391bc` / `fda08e6`.
+  - J7.5c Lot 3 (Validation locale APK Release & Cryptographie `apksigner`) : `2b59ade` (Local non suivi).
+- **Validation** : Artefact APK Release 28.3 Mo généré et signé v2 (`Verifies: true`). Suite 193/193 tests JVM verts. Zero secret versionné dans Git. Audits pré-commit, post-commit et Red Team **VALIDÉS**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec.
+
+### Problèmes rencontrés & Réserves
+- Réserve Keystore : Le keystore utilisé est une clé de test développeur local (`CN=MobileCaisse Developer Test...`). La clé de production finale et les contrôles Google Play Console seront cadrés dans le Jalon 8.
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room.
+- Réserve d'exécution Android : Exécution réelle des 22 tests Compose UI sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage du Jalon 8 (Production, Distribution et Déploiement).
+
+---
+
 ## 2026-10-16 — J7.5c Lot 3 Génération locale Keystore & Validation d'Artefact
 
 **Date** : 2026-10-16 · **Branche** : `arena/019fa5ec-mobilecaisse`
