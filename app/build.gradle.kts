@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -7,6 +10,37 @@ plugins {
     alias(libs.plugins.hilt)
     alias(libs.plugins.ktlint)
     jacoco
+}
+
+// Chargement conditionnel de la configuration de signature Release (J7.5b)
+val keystorePropertiesFile = file("keystore.properties")
+val keystoreProperties = Properties()
+var isReleaseSigningConfigured = false
+
+if (keystorePropertiesFile.exists()) {
+    FileInputStream(keystorePropertiesFile).use { input ->
+        keystoreProperties.load(input)
+    }
+    val storeFilePath = keystoreProperties.getProperty("storeFile")?.trim() ?: ""
+    val storePassword = keystoreProperties.getProperty("storePassword")?.trim() ?: ""
+    val keyAlias = keystoreProperties.getProperty("keyAlias")?.trim() ?: ""
+    val keyPassword = keystoreProperties.getProperty("keyPassword")?.trim() ?: ""
+
+    if (storeFilePath.isEmpty() || storePassword.isEmpty() || keyAlias.isEmpty() || keyPassword.isEmpty()) {
+        throw org.gradle.api.InvalidUserDataException(
+            "[J7.5b] Le fichier app/keystore.properties existe mais est incomplet. " +
+            "Clés requises non vides : storeFile, storePassword, keyAlias, keyPassword."
+        )
+    }
+    val keystoreFile = file(storeFilePath)
+    if (!keystoreFile.exists()) {
+        throw org.gradle.api.InvalidUserDataException(
+            "[J7.5b] Le fichier de keystore configuré '$storeFilePath' dans app/keystore.properties est introuvable sur le disque."
+        )
+    }
+    isReleaseSigningConfigured = true
+} else {
+    logger.warn("[J7.5b - AVERTISSEMENT] Le fichier app/keystore.properties est absent. Le build Release sera produit NON SIGNÉ (NON PUBLIABLE).")
 }
 
 android {
@@ -23,12 +57,26 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        if (isReleaseSigningConfigured) {
+            create("release") {
+                storeFile = file(keystoreProperties.getProperty("storeFile").trim())
+                storePassword = keystoreProperties.getProperty("storePassword").trim()
+                keyAlias = keystoreProperties.getProperty("keyAlias").trim()
+                keyPassword = keystoreProperties.getProperty("keyPassword").trim()
+            }
+        }
+    }
+
     buildTypes {
         debug {
             enableUnitTestCoverage = true
         }
         release {
             isMinifyEnabled = false
+            if (isReleaseSigningConfigured) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
