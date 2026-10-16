@@ -6,6 +6,29 @@
 
 ---
 
+## 2026-10-16 — J7.5b Lot 2 Configuration Gradle de signature conditionnelle Release
+
+**Date** : 2026-10-16 · **Branche** : `arena/019fa5ec-mobilecaisse`
+
+### Livré
+- **J7.5b / Lot 2** terminé. Commit `8f391bca2bf791a48cc7dd67b34704cadb2febd4`, message `build(gradle): configure conditional release signing and keystore template`. Parent `dcd5f6c6aac97823d8511608b07c5ac031db83c3`.
+- **Signature Conditionnelle Release & Template** :
+  - `CAISSE/app/build.gradle.kts` (+48 insertions) : Intégration du chargement conditionnel de `app/keystore.properties` avec exceptions Fail-Fast si incomplet ou si keystore introuvable.
+  - `CAISSE/app/keystore.properties.example` (+13 insertions) : Création du gabarit versionné.
+- **Validation** : Total 2 fichiers modifiés/créés (`+61 insertions`). Zero code métier, zero fichier CI modifié. Audits pré-commit, post-commit et Red Team **VALIDÉS `GO`**.
+
+### Tests exécutés
+- `:app:testDebugUnitTest` : **193/193** tests JVM, 0 échec (résultat historique rapporté).
+
+### Problèmes rencontrés & Réserves
+- Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.5.
+- Réserve d'exécution Android : Exécution réelle des 22 tests Compose UI sur terminal/émulateur Android physique connecté non réalisée en environnement local headless sans émulateur.
+
+### Étape suivante
+Audit indépendant de la synchronisation documentaire `.ai/`, puis cadrage et autorisation explicite pour le démarrage du Lot J7.5c (Génération locale Keystore & Validation d'Artefact).
+
+---
+
 ## 2026-10-15 — J7.5a Lot 1 Protection Git des secrets de signature Android
 
 **Date** : 2026-10-15 · **Branche** : `arena/019fa5ec-mobilecaisse`

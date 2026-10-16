@@ -6,7 +6,7 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
 - **Projet** : MobileCaisse
 - **Branche actuelle** : arena/019fa5ec-mobilecaisse
 - **Dernier commit fonctionnel** : de9637c8641c7bc2add6109d6026d8a6785e2329
-- **HEAD actuel** : 3bd5c5af604c719075d14f2b9d3d0369bf733946
+- **HEAD actuel** : 8f391bca2bf791a48cc7dd67b34704cadb2febd4
 - **Version du Framework** : 3.0.0 (AI-DOS + Evidence Audit)
 
 ## 🛠️ État Technique
@@ -23,9 +23,12 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
   - **Lot 4 (`ClosureScreenTest.kt`)** : 7 tests de clôture de caisse, récapitulatif, export CSV, sauvegarde totale, verrouillage et calcul d'écart de caisse formaté (`81683bb` / `8bfbee5`).
 - **Protection des Secrets de Signature Android (J7.5a Lot 1)** :
   - Mise à jour de `CAISSE/.gitignore` (+8) pour exclure les magasins de clés (`*.jks`, `*.keystore`, `*.p12`, `*.pepk`) et les fichiers de propriétés de secrets (`keystore.properties`, `release.properties`).
-  - Le gabarit de documentation `app/keystore.properties.example` reste non masqué et versionnable.
-  - Commit technique `3bd5c5af604c719075d14f2b9d3d0369bf733946` validé par audit Red Team. Note : `.gitignore` empêche les ajouts futurs mais n'est pas une protection rétroactive.
-- **Working Tree** : Modifications documentaires AI-DOS J7.5a Lot 1 en cours en working tree, **pas encore committées**.
+  - Commit technique `3bd5c5af604c719075d14f2b9d3d0369bf733946` et commit documentaire `dcd5f6c6aac97823d8511608b07c5ac031db83c3` validés.
+- **Configuration Gradle de Signature Conditionnelle Release (J7.5b Lot 2)** :
+  - Mise à jour de `CAISSE/app/build.gradle.kts` (+48) pour charger conditionnellement `app/keystore.properties`, valider les 4 clés requises (`storeFile`, `storePassword`, `keyAlias`, `keyPassword`) avec exception Fail-Fast en cas d'incomplétude ou de keystore introuvable, et basculer en build Release non signé (non publiable) en cas d'absence.
+  - Création du gabarit versionné `CAISSE/app/keystore.properties.example` (+13).
+  - Commit technique `8f391bca2bf791a48cc7dd67b34704cadb2febd4` validé par audit Red Team. Note : l'absence de `keystore.properties` produit un APK/AAB non signé (non publiable), sans repli vers la clé Debug.
+- **Working Tree** : Modifications documentaires AI-DOS J7.5b Lot 2 en cours en working tree, **pas encore committées**.
 - **Couverture actuelle** : 
     - BackupManager (100% logique)
     - SmsParser (100% logique métier)
@@ -44,20 +47,21 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - Couverture de Code JaCoCo J7.3 / B-099 (Plugin 0.8.12, tâche `:app:jacocoTestReport`, rapports HTML/XML)
     - Tests Compose UI J7.4 / B-095 (Couverture complète des 4 parcours critiques avec 22 tests Compose UI)
     - Protection Git des Secrets J7.5a / Lot 1 (Exclusions `.gitignore` pour clés de signature et propriétés)
+    - Signature Conditionnelle Release J7.5b / Lot 2 (Chargement `keystore.properties` + template versionné)
 - **Dette technique & Réserves** :
     - Dette de style legacy isolée dans `app/config/ktlint/baseline.xml` (code métier et tests non reformates).
     - `MainViewModel` purgé des domaines isolés, responsable de l'Auth, Config et CRUD Boutique.
-    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.4.
+    - Réserve instrumentation legacy : 2 anciens tests d'instrumentation d'appareil (`DatabasePhysicalSecurityTest.kt` et `RoomMigrationTest.kt`) restent non compilables suite aux refactorings passés de repositories et dépendances Room ; maintenus hors périmètre du jalon J7.5.
     - Réserve d'exécution Android : L'exécution réelle des 22 tests Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`) sur terminal/émulateur Android physique connecté reste non réalisée en environnement local headless sans émulateur.
     - B-039 : WorkManager reste planifié depuis `MainActivity` (hors scope J6.3).
     - Dettes feedback J6.5 (hors scope, non résolues) : SaleDetail / Settings-Splash (`uiError` non collecté à cause de la navigation immédiate) ; `convertErrorToOrphan` inutilisé ; `testPrint` silencieux ; overlay dialog Home.
     - Risques résiduels J6.7b : Recette Cloud end-to-end réelle sur appareil physique avec compte Google réel non exécutée ; TalkBack manuel non testé.
 
 ## 📋 Progression
-- **Dernière tâche terminée** : J7.5a / Lot 1 — Protection Git des secrets de signature Android (`.gitignore`) (TERMINÉE / COMMITTÉE `3bd5c5a`).
-- **Tâche en cours** : J7.5a / Lot 1 — Protection Git des secrets de signature Android. Synchronisation documentaire AI-DOS post-commit.
-- **Prochaine tâche prévue** : J7.5b / Lot 2 — Configuration Gradle de signature conditionnelle Release (APK / Bundle).
-- **Hors de ce commit technique** : J7.5b+. Tous les jalons antérieurs jusqu'à J7.5a Lot 1 inclus sont terminés.
+- **Dernière tâche terminée** : J7.5b / Lot 2 — Configuration Gradle de signature conditionnelle Release (TERMINÉE / COMMITTÉE `8f391bc`).
+- **Tâche en cours** : J7.5b / Lot 2 — Configuration Gradle de signature conditionnelle Release. Synchronisation documentaire AI-DOS post-commit.
+- **Prochaine tâche prévue** : J7.5c / Lot 3 — Génération locale Keystore & Validation d'Artefact.
+- **Hors de ce commit technique** : J7.5c+. Tous les jalons antérieurs jusqu'à J7.5b Lot 2 inclus sont terminés.
 
 ## 🐞 Bugs & Défauts
 - **Bugs Ouverts (🔴/🟠/🟡)** : BUG-004.
@@ -79,7 +83,8 @@ Ce document est la mémoire officielle du projet. Il est mis à jour à la fin d
     - J7.3 / B-099 : Intégration JaCoCo 0.8.12 pour la mesure de couverture des tests unitaires JVM (`:app:jacocoTestReport`) avec exclusions ciblées du code généré (Hilt, Room, BuildConfig, R.class).
     - J7.4 / B-095 : Couverture des 4 parcours critiques par 22 tests d'interface Compose UI (`NumericKeypadTest.kt`, `PinScreenTest.kt`, `NewSaleScreenTest.kt`, `ClosureScreenTest.kt`).
     - J7.5a / Lot 1 : Protection Git des secrets de signature Android via exclusions ciblées dans `CAISSE/.gitignore` (`*.jks`, `*.keystore`, `*.p12`, `*.pepk`, `keystore.properties`, `release.properties`).
+    - J7.5b / Lot 2 : Chargement conditionnel `app/keystore.properties` dans `app/build.gradle.kts` (+48) + création du gabarit versionné `app/keystore.properties.example` (+13).
 
 ## 🕒 Dernière Mise à jour
-- **Date** : 2026-10-15
-- **Agent** : AI-DOS — enregistrement documentaire du lot J7.5a / Lot 1
+- **Date** : 2026-10-16
+- **Agent** : AI-DOS — enregistrement documentaire du lot J7.5b / Lot 2
