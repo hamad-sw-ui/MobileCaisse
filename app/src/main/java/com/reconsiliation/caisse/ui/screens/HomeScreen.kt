@@ -257,7 +257,7 @@ fun HomeScreen(navController: NavController, viewModel: MainViewModel) {
                         Spacer(modifier = Modifier.width(12.dp))
                         Text(stringResource(R.string.label_revenue), style = MaterialTheme.typography.titleMedium)
                         Spacer(modifier = Modifier.weight(1f))
-                        IconButton(onClick = { navController.navigate(Screen.Reports.route) }) {
+                        IconButton(onClick = { viewModel.requestAccess(Screen.Reports.route) }) {
                             Icon(Icons.AutoMirrored.Filled.ArrowForwardIos, null, modifier = Modifier.size(16.dp))
                         }
                     }

@@ -227,6 +227,8 @@
     <string name="label_role_manager_desc">Manager — full access</string>
     <string name="label_role_staff_desc">Employee — checkout access</string>
     <string name="label_phone_optional">Phone (optional)</string>
+    <string name="label_employee_id">Employee ID</string>
+    <string name="label_employee_code">Employee Code</string>
     <string name="label_pin_4_digits">PIN Code (4 digits)</string>
     <string name="label_new_pin_hint">New PIN (empty = unchanged)</string>
     <string name="label_role">Role</string>
@@ -258,9 +260,17 @@
     <string name="pin_required">PIN Code required</string>
     <string name="pin_manager_required">Manager PIN Code required</string>
     <string name="pin_invalid">Incorrect PIN Code</string>
+    <string name="pin_locked_countdown">Too many attempts. Try again in %1$d s</string>
     <string name="pin_staff">Staff</string>
     <string name="pin_manager">Manager</string>
     <string name="pin_enter_desc">Enter your 4-digit code</string>
+    <string name="change_pin_title">Change PIN Code</string>
+    <string name="change_pin_old">Current PIN</string>
+    <string name="change_pin_new">New PIN (4 digits)</string>
+    <string name="change_pin_confirm">Confirm new PIN</string>
+    <string name="change_pin_mismatch">The two new PINs do not match</string>
+    <string name="change_pin_success">PIN changed successfully</string>
+    <string name="error_pin_format">New PIN must be exactly 4 digits</string>
     <string name="dialog_cancel_sale_title">Confirm cancellation?</string>
     <string name="dialog_cancel_sale_desc">Items will be returned to stock and the amount will be deducted from revenue.</string>
     <string name="dialog_return_item_title">Return %1$s?</string>

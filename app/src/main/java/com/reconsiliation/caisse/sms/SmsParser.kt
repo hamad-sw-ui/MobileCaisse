@@ -22,7 +22,7 @@ object SmsParser {
             .trim()
         
         val senderAddr = originatingAddress?.lowercase() ?: ""
-        val isOfficial = OFFICIAL_SENDERS.any { senderAddr.contains(it) } || (senderAddr.length <= 6 && senderAddr.isNotEmpty())
+        val isOfficial = OFFICIAL_SENDERS.any { senderAddr.contains(it) }
 
         // 2. SCORING Phase: Determine if it's a payment message
         var score = 0

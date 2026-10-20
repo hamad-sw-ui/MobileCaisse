@@ -15,6 +15,9 @@ interface StaffDao {
     @Query("SELECT * FROM staff WHERE pinHash = :pinHash AND isActive = 1")
     suspend fun getStaffByPin(pinHash: String): StaffEntity?
 
+    @Query("SELECT * FROM staff WHERE employeeCode = :code AND isActive = 1")
+    suspend fun getStaffByEmployeeCode(code: String): StaffEntity?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertOrUpdate(staff: StaffEntity): Long
 

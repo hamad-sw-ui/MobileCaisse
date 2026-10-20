@@ -24,7 +24,7 @@ class DatabasePhysicalSecurityTest {
         // On s'assure d'avoir une base propre pour le test
         context.deleteDatabase("caisse_database")
         db = AppDatabase.getDatabase(context)
-        repository = MainRepository(db, context)
+        repository = MainRepository(db, context, com.reconsiliation.caisse.data.repository.InventoryRepository(db))
     }
 
     @Test

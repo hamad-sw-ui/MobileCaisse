@@ -186,6 +186,17 @@ class MainViewModel @Inject constructor(
         null
     }
 
+    suspend fun checkStaffLogin(code: String, pin: String): Pair<String, Long?>? = kotlinx.coroutines.withContext(Dispatchers.Default) {
+        val staff = repository.getStaffByEmployeeCode(code.trim()) ?: return@withContext null
+        val sec = com.reconsiliation.caisse.utils.SecurityUtil
+        if (sec.verifyPin(pin, staff.pinHash, staff.pinSalt)) Pair(staff.role, staff.id) else null
+    }
+
+    fun changePin(oldPin: String, newPin: String, onResult: (String) -> Unit) = viewModelScope.launch {
+        val error = repository.changePin(oldPin, newPin)
+        onResult(error)
+    }
+
     fun updateBoutique(boutique: BoutiqueEntity) = viewModelScope.launch { repository.updateBoutique(boutique) }
     fun clearError() { _uiError.value = null }
     fun resetApplicationData() = viewModelScope.launch(Dispatchers.IO) {

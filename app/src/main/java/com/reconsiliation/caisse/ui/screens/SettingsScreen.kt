@@ -19,11 +19,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.reconsiliation.caisse.R
+import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
 import com.reconsiliation.caisse.ui.state.BackupUiState
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -32,6 +35,7 @@ import com.reconsiliation.caisse.ui.viewmodel.BackupViewModel
 import com.reconsiliation.caisse.ui.viewmodel.InventoryViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MainViewModel
 import com.reconsiliation.caisse.ui.viewmodel.MaintenanceViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -55,8 +59,10 @@ fun SettingsScreen(navController: NavController) {
 
     var showResetDialog by remember { mutableStateOf(false) }
     var showBackupPasswordDialog by remember { mutableStateOf(false) }
+    var showChangePinDialog by remember { mutableStateOf(false) }
     val backupState by backupViewModel.backupState.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
 
     val googleSignInLauncher = rememberLauncherForActivityResult(
@@ -100,7 +106,7 @@ fun SettingsScreen(navController: NavController) {
                 verticalAlignment = androidx.compose.ui.Alignment.CenterVertically
             ) {
                 Text(stringResource(R.string.settings_shop_config), style = MaterialTheme.typography.titleMedium, color = Primary)
-                TextButton(onClick = { navController.navigate(Screen.EditBoutique.route) }) {
+                TextButton(onClick = { viewModel.requestAccess(Screen.EditBoutique.route) }) {
                     Text(stringResource(R.string.action_edit))
                 }
             }
@@ -130,25 +136,25 @@ fun SettingsScreen(navController: NavController) {
             HorizontalDivider()
 
             Text(stringResource(R.string.settings_security_audit), style = MaterialTheme.typography.titleMedium, color = Primary)
-            Button(onClick = { navController.navigate("action_logs") }, modifier = Modifier.fillMaxWidth()) {
+            Button(onClick = { viewModel.requestAccess("action_logs") }, modifier = Modifier.fillMaxWidth()) {
                 Text(stringResource(R.string.action_view_audit))
             }
             Button(
-                onClick = { navController.navigate("categories") },
+                onClick = { viewModel.requestAccess("categories") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
                 Text(stringResource(R.string.action_manage_categories))
             }
             Button(
-                onClick = { navController.navigate("maintenance") },
+                onClick = { viewModel.requestAccess("maintenance") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.tertiary)
             ) {
                 Text(stringResource(R.string.action_maintenance_purge))
             }
             Button(
-                onClick = { /* Change PIN logic */ },
+                onClick = { showChangePinDialog = true },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
@@ -363,7 +369,7 @@ fun SettingsScreen(navController: NavController) {
             }
 
             Button(
-                onClick = { viewModel.requestAccess("staff"); navController.navigate("staff") },
+                onClick = { viewModel.requestAccess("staff") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
@@ -373,7 +379,7 @@ fun SettingsScreen(navController: NavController) {
             }
 
             Button(
-                onClick = { navController.navigate("restoration_wizard") },
+                onClick = { viewModel.requestAccess("restoration_wizard") },
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
             ) {
@@ -395,6 +401,76 @@ fun SettingsScreen(navController: NavController) {
                     backupViewModel.exportEncryptedBackup(context, password, viewModel.userRole.value)
                 },
                 onDismiss = { showBackupPasswordDialog = false }
+            )
+        }
+
+        if (showChangePinDialog) {
+            val dialogContext = LocalContext.current
+            var oldPin by remember { mutableStateOf("") }
+            var newPin by remember { mutableStateOf("") }
+            var confirmPin by remember { mutableStateOf("") }
+            var pinError by remember { mutableStateOf<String?>(null) }
+            val changePinTitle = stringResource(R.string.change_pin_title)
+            val changePinSuccess = stringResource(R.string.change_pin_success)
+            androidx.compose.material3.AlertDialog(
+                onDismissRequest = { showChangePinDialog = false },
+                title = { Text(changePinTitle) },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        val textFieldColors = CaisseTextFieldDefaults.outlinedTextFieldColors()
+                        OutlinedTextField(
+                            value = oldPin,
+                            onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) oldPin = it },
+                            label = { Text(stringResource(R.string.change_pin_old)) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = textFieldColors
+                        )
+                        OutlinedTextField(
+                            value = newPin,
+                            onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) newPin = it },
+                            label = { Text(stringResource(R.string.change_pin_new)) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = textFieldColors
+                        )
+                        OutlinedTextField(
+                            value = confirmPin,
+                            onValueChange = { if (it.length <= 4 && it.all { c -> c.isDigit() }) confirmPin = it },
+                            label = { Text(stringResource(R.string.change_pin_confirm)) },
+                            visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                            keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword),
+                            modifier = Modifier.fillMaxWidth(),
+                            colors = textFieldColors
+                        )
+                        pinError?.let { Text(it, color = RedError, style = MaterialTheme.typography.bodySmall) }
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        pinError = when {
+                            oldPin.length != 4 -> dialogContext.getString(R.string.pin_enter_desc)
+                            newPin.length != 4 -> dialogContext.getString(R.string.error_pin_format)
+                            newPin != confirmPin -> dialogContext.getString(R.string.change_pin_mismatch)
+                            else -> null
+                        }
+                        if (pinError == null) {
+                            viewModel.changePin(oldPin, newPin) { error ->
+                                if (error == "") {
+                                    showChangePinDialog = false
+                                    scope.launch { snackbarHostState.showSnackbar(changePinSuccess) }
+                                } else {
+                                    pinError = error
+                                }
+                            }
+                        }
+                    }) { Text(stringResource(R.string.action_confirm)) }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showChangePinDialog = false }) { Text(stringResource(R.string.action_cancel)) }
+                }
             )
         }
 

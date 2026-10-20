@@ -25,10 +25,10 @@ class StaffViewModel @Inject constructor(
 
     fun saveStaff(
         name: String, pin: String, role: String, phone: String? = null,
-        existing: StaffEntity? = null, onResult: (String?) -> Unit = {}
+        employeeCode: String? = null, existing: StaffEntity? = null, onResult: (String?) -> Unit = {}
     ) = viewModelScope.launch {
         try {
-            repository.saveStaff(name, pin, role, phone, existing)
+            repository.saveStaff(name, pin, role, phone, employeeCode, existing)
             onResult(null)
         } catch (e: Exception) {
             onResult(e.message ?: "")

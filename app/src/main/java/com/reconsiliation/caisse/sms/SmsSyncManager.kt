@@ -62,8 +62,7 @@ object SmsSyncManager {
         val isOperatorAddr = addr.contains("momo") ||
             addr.contains("mtn") ||
             addr.contains("orange") ||
-            addr.contains("om") ||
-            addr.length <= 6
+            addr.contains("om")
 
         val containsKeywords = b.contains("recu") ||
             b.contains("reçu") ||

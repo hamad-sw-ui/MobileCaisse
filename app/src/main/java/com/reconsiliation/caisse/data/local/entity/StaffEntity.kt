@@ -10,6 +10,7 @@ data class StaffEntity(
     val pinHash: String,
     val pinSalt: String? = null,
     val phone: String? = null,
+    val employeeCode: String? = null,
     val isActive: Boolean = true,
     val role: String = "STAFF" // Can be STAFF or MANAGER
 )

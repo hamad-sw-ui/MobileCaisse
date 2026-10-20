@@ -97,7 +97,8 @@ class NewSaleViewModel @Inject constructor(
             _uiState.value = NewSaleUiState.Processing
             try {
                 val finalVente = if (isTaxEnabled) {
-                    val tax = vente.amount * taxRate / 100.0
+                    val taxableAmount = vente.amount - vente.fees
+                    val tax = taxableAmount * taxRate / 100.0
                     vente.copy(taxAmount = tax, amount = vente.amount + tax)
                 } else vente
 

@@ -328,7 +328,7 @@ class MainRepository @Inject constructor(
      * ne transite jamais en clair vers la base (SECURITY.md).
      */
     suspend fun saveStaff(
-        name: String, pin: String, role: String, phone: String? = null,
+        name: String, pin: String, role: String, phone: String? = null, employeeCode: String? = null,
         existing: StaffEntity? = null
     ) {
         require(name.isNotBlank()) { "Le nom de l'employé est obligatoire" }
@@ -336,7 +336,7 @@ class MainRepository @Inject constructor(
 
         val entity = if (pin.isBlank() && existing != null) {
             // Modification sans changement de PIN : on conserve le hash existant.
-            existing.copy(name = name.trim(), role = role, phone = phone?.trim())
+            existing.copy(name = name.trim(), role = role, phone = phone?.trim(), employeeCode = employeeCode?.trim()?.takeIf { it.isNotBlank() })
         } else {
             require(pin.length == 4) { "Le code PIN doit comporter 4 chiffres" }
             val iterations = 100_000
@@ -348,11 +348,26 @@ class MainRepository @Inject constructor(
                 pinHash = hash, pinSalt = saltWithIterations
             ) ?: StaffEntity(
                 name = name.trim(), pinHash = hash, pinSalt = saltWithIterations,
-                phone = phone?.trim(), role = role, isActive = true
+                phone = phone?.trim(), employeeCode = employeeCode?.trim()?.takeIf { it.isNotBlank() }, role = role, isActive = true
             )
         }
         db.staffDao().insertOrUpdate(entity)
         logAction("STAFF_SAVE", "Employé enregistré : ${entity.name} (${entity.role})")
+    }
+
+    suspend fun changePin(oldPin: String, newPin: String): String = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) {
+        val b = db.boutiqueDao().getBoutiqueOnce() ?: return@withContext "Boutique non configurée"
+        val sec = com.reconsiliation.caisse.utils.SecurityUtil
+        if (!sec.verifyPin(oldPin, b.pinHash, b.pinSalt) && !sec.verifyPin(oldPin, b.managerPinHash, b.managerPinSalt)) {
+            return@withContext "Ancien code PIN incorrect"
+        }
+        val salt = sec.generateSalt()
+        val hash = sec.hashPinPbkdf2(newPin, salt)
+        val saltWithIterations = "$salt:100000"
+        val updated = b.copy(pinHash = hash, pinSalt = saltWithIterations, managerPinHash = hash, managerPinSalt = saltWithIterations)
+        db.boutiqueDao().insertOrUpdate(updated)
+        logAction("CHANGE_PIN", "Code PIN administrateur modifié avec succès")
+        ""
     }
 
     /**
@@ -372,6 +387,7 @@ class MainRepository @Inject constructor(
     /** Lecture ponctuelle de la boutique, hors flux réactif. */
     suspend fun getBoutiqueOnce(): BoutiqueEntity? = db.boutiqueDao().getBoutiqueOnce()
     suspend fun getAllActiveStaffOnce(): List<StaffEntity> = db.staffDao().getAllActiveStaff().first()
+    suspend fun getStaffByEmployeeCode(code: String): StaffEntity? = db.staffDao().getStaffByEmployeeCode(code)
     suspend fun getStaffName(id: Long): String? = db.staffDao().getStaffById(id)?.name
     suspend fun updateStaffSecurityInfo(staff: StaffEntity) = db.staffDao().insertOrUpdate(staff)
 

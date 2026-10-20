@@ -97,7 +97,7 @@ fun SetupScreen(navController: NavController) {
                         setupError = null
                         viewModel.completeSetup(name = name, owner = owner, phone = phone, operator = operator, momoNumber = momoNumber, pin = pin) { error ->
                             if (error == null) {
-                                navController.navigate(Screen.Home.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
+                                navController.navigate(Screen.Pin.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
                             } else {
                                 setupError = error
                             }

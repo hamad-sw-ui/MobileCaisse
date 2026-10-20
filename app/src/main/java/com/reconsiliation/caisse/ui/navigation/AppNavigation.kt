@@ -139,13 +139,14 @@ fun AppNavigation() {
                             selected = currentDestination?.hierarchy?.any { it.route == screen.route } == true,
                             onClick = {
                                 viewModel.recordActivity()
-                                if ((screen == Screen.Reports || screen == Screen.Settings) && !isLoggedIn) {
+                                val isManagerRequired = Screen.isManagerRequired(screen.route)
+                                val currentRole = viewModel.userRole.value
+                                val canAccess = if (isManagerRequired) currentRole == "MANAGER" else currentRole != null
+                                if (!canAccess) {
                                     viewModel.requestAccess(screen.route)
                                 } else {
                                     navController.navigate(screen.route) {
-                                        popUpTo(Screen.Home.route) {
-                                            saveState = true
-                                        }
+                                        popUpTo(Screen.Home.route) { saveState = true }
                                         launchSingleTop = true
                                         restoreState = true
                                     }
@@ -184,22 +185,99 @@ fun AppNavigation() {
                 composable(Screen.Closure.route) { ClosureScreen(navController) }
                 composable(Screen.Debts.route) { DebtScreen(navController) }
                 composable(Screen.Expenses.route) { ExpenseScreen(navController) }
-                composable(Screen.Settings.route) { SettingsScreen(navController) }
+                composable(Screen.Settings.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Settings.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        SettingsScreen(navController)
+                    }
+                }
                 composable(Screen.Support.route) { SupportScreen(navController) }
-                composable(Screen.Reports.route) { ReportsScreen(navController) }
-                composable(Screen.EditBoutique.route) { EditBoutiqueScreen(navController) }
+                composable(Screen.Reports.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Reports.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        ReportsScreen(navController)
+                    }
+                }
+                composable(Screen.EditBoutique.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.EditBoutique.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        EditBoutiqueScreen(navController)
+                    }
+                }
                 composable(Screen.PrintSettings.route) { PrintSettingsScreen(navController) }
-                composable(Screen.RestorationWizard.route) { RestorationWizardScreen(navController) }
-                composable(Screen.Audit.route) { AuditScreen(navController) }
+                composable(Screen.RestorationWizard.route) {
+    if (viewModel.userRole.value != "MANAGER") {
+        viewModel.requestAccess(Screen.RestorationWizard.route)
+    }
+    if (viewModel.userRole.value == "MANAGER") {
+        RestorationWizardScreen(navController)
+    }
+}
+                composable(Screen.Audit.route) {
+    if (viewModel.userRole.value != "MANAGER") {
+        viewModel.requestAccess(Screen.Audit.route)
+    }
+    if (viewModel.userRole.value == "MANAGER") {
+        AuditScreen(navController)
+    }
+}
                 composable(Screen.AuditHistory.route) { AuditHistoryScreen(navController) }
                 composable(Screen.SessionHistory.route) { SessionHistoryScreen(navController) }
                 composable(Screen.SupplyHistory.route) { SupplyHistoryScreen(navController) }
-                composable(Screen.ClosureHistory.route) { ClosureHistoryScreen(navController) }
-                composable(Screen.ActionLogs.route) { ActionLogScreen(navController) }
-                composable(Screen.Suppliers.route) { SupplierListScreen(navController) }
-                composable(Screen.Categories.route) { CategoryManagementScreen(navController) }
-                composable(Screen.Staff.route) { StaffManagementScreen(navController) }
-                composable(Screen.Maintenance.route) { MaintenanceScreen(navController) }
+                composable(Screen.ClosureHistory.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.ClosureHistory.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        ClosureHistoryScreen(navController)
+                    }
+                }
+                composable(Screen.ActionLogs.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.ActionLogs.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        ActionLogScreen(navController)
+                    }
+                }
+                composable(Screen.Suppliers.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Suppliers.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        SupplierListScreen(navController)
+                    }
+                }
+                composable(Screen.Categories.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Categories.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        CategoryManagementScreen(navController)
+                    }
+                }
+                composable(Screen.Staff.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Staff.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        StaffManagementScreen(navController)
+                    }
+                }
+                composable(Screen.Maintenance.route) {
+                    if (viewModel.userRole.value != "MANAGER") {
+                        viewModel.requestAccess(Screen.Maintenance.route)
+                    }
+                    if (viewModel.userRole.value == "MANAGER") {
+                        MaintenanceScreen(navController)
+                    }
+                }
                 composable(
                     route = Screen.StockMovements.route,
                     arguments = listOf(androidx.navigation.navArgument("productId") { type = androidx.navigation.NavType.LongType })

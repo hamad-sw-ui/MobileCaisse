@@ -59,7 +59,6 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = emptyList(),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = false,
@@ -88,11 +87,11 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 5000.0,
                 creditTotal = 2000.0,
                 isLocked = false,
                 sessionPreview = SessionPreview(
+                    sellerName = "Caissier",
                     openingBalance = 5000.0,
                     cashSales = 10000.0,
                     expenses = 1000.0,
@@ -123,7 +122,6 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = false,
@@ -151,7 +149,6 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = false,
@@ -178,7 +175,6 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = true,
@@ -208,11 +204,10 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = false,
-                sessionPreview = SessionPreview(5000.0, 10000.0, 0.0, 15000.0),
+                sessionPreview = SessionPreview("Caissier", 5000.0, 10000.0, 0.0, 15000.0),
                 operatorName = "MoMo",
                 sessionUiState = SessionUiState.Idle,
                 snackbarHostState = SnackbarHostState(),
@@ -244,11 +239,10 @@ class ClosureScreenTest {
         composeTestRule.setContent {
             ClosureContent(
                 todayVentes = listOf(vente),
-                allVentesWithItems = emptyList(),
                 momoTotal = 0.0,
                 creditTotal = 0.0,
                 isLocked = false,
-                sessionPreview = SessionPreview(5000.0, 10000.0, 0.0, expectedCash),
+                sessionPreview = SessionPreview("Caissier", 5000.0, 10000.0, 0.0, expectedCash),
                 operatorName = "MoMo",
                 sessionUiState = SessionUiState.Idle,
                 snackbarHostState = SnackbarHostState(),

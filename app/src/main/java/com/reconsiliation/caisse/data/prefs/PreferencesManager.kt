@@ -32,6 +32,8 @@ class PreferencesManager(context: Context) {
         prefs.edit().putLong("lock_time", lockUntil).apply()
     }
 
+    fun getLockTime(): Long = prefs.getLong("lock_time", 0L)
+
     // ==================== Sauvegarde Distante ====================
 
     fun isRemoteBackupEnabled(): Boolean = prefs.getBoolean("remote_backup_enabled", false)

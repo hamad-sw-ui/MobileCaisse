@@ -29,5 +29,6 @@ data class BoutiqueEntity(
     val showTaxesOnReceipt: Boolean = true,
     val showTotalQuantityOnReceipt: Boolean = false,
     val printMerchantCopy: Boolean = false,
-    val managerCode: String = "SETUP_REQUIRED_12CHARS"  // Min 12 alphanumeric chars
+    val managerCode: String = "SETUP_REQUIRED_12CHARS", // Min 12 alphanumeric chars
+    val email: String? = null
 )

@@ -449,6 +449,7 @@ fun NewSaleContent(
                                 if (paymentMethod != "MIXED") {
                                     amountCashStr = ""
                                     amountMomoStr = ""
+                                    amountCreditUsedStr = ""
                                 }
                             },
                             label = { Text(labelText, fontSize = 12.sp) },

@@ -446,6 +446,7 @@ class FakeStaffDao : StaffDao {
     override fun getAllActiveStaff() = _staff.map { it.filter { s -> s.isActive } }
     override suspend fun getStaffById(id: Long) = _staff.value.find { it.id == id }
     override suspend fun getStaffByPin(pinHash: String) = _staff.value.find { it.pinHash == pinHash }
+    override suspend fun getStaffByEmployeeCode(code: String) = _staff.value.find { it.employeeCode == code }
     override suspend fun insertOrUpdate(staff: StaffEntity): Long {
         val id = if (staff.id == 0L) (_staff.value.size + 1).toLong() else staff.id
         _staff.value = _staff.value.filter { it.id != id } + staff.copy(id = id)

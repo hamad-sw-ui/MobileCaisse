@@ -227,6 +227,8 @@
     <string name="label_role_manager_desc">Manager — accès complet</string>
     <string name="label_role_staff_desc">Employé — accès caisse</string>
     <string name="label_phone_optional">Téléphone (facultatif)</string>
+    <string name="label_employee_id">Identifiant employé</string>
+    <string name="label_employee_code">Code employé</string>
     <string name="label_pin_4_digits">Code PIN (4 chiffres)</string>
     <string name="label_new_pin_hint">Nouveau PIN (vide = inchangé)</string>
     <string name="label_role">Rôle</string>
@@ -258,9 +260,17 @@
     <string name="pin_required">Code PIN requis</string>
     <string name="pin_manager_required">Code PIN Manager requis</string>
     <string name="pin_invalid">Code PIN incorrect</string>
+    <string name="pin_locked_countdown">Trop de tentatives. Réessayez dans %1$d s</string>
     <string name="pin_staff">Employé</string>
     <string name="pin_manager">Manager</string>
     <string name="pin_enter_desc">Entrez votre code à 4 chiffres</string>
+    <string name="change_pin_title">Changer le Code PIN</string>
+    <string name="change_pin_old">Code PIN actuel</string>
+    <string name="change_pin_new">Nouveau code PIN (4 chiffres)</string>
+    <string name="change_pin_confirm">Confirmer le nouveau PIN</string>
+    <string name="change_pin_mismatch">Les deux nouveaux codes ne correspondent pas</string>
+    <string name="change_pin_success">Code PIN modifié avec succès</string>
+    <string name="error_pin_format">Le nouveau code PIN doit contenir exactement 4 chiffres</string>
     <string name="dialog_cancel_sale_title">Confirmer l\'annulation ?</string>
     <string name="dialog_cancel_sale_desc">Les articles seront remis en stock et le montant sera déduit du chiffre d\'affaires.</string>
     <string name="dialog_return_item_title">Retourner %1$s?</string>

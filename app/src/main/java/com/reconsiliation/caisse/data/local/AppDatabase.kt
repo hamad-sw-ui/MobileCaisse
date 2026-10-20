@@ -25,7 +25,7 @@ import net.sqlcipher.database.SupportFactory
         StockMovementEntity::class, CategoryEntity::class, RecipeEntity::class, 
         StaffEntity::class
     ],
-    version = 30,
+    version = 32,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -74,6 +74,18 @@ abstract class AppDatabase : RoomDatabase() {
                 db.execSQL("DROP TABLE audit_items")
                 db.execSQL("ALTER TABLE audit_items_new RENAME TO audit_items")
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_audit_items_auditId` ON `audit_items` (`auditId`)")
+            }
+        }
+
+        val MIGRATION_30_31 = object : Migration(30, 31) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE staff ADD COLUMN employeeCode TEXT")
+            }
+        }
+
+        val MIGRATION_31_32 = object : Migration(31, 32) {
+            override fun migrate(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE boutique ADD COLUMN email TEXT")
             }
         }
 
@@ -246,7 +258,8 @@ abstract class AppDatabase : RoomDatabase() {
                     MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, 
                     MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24,
                     MIGRATION_24_25, MIGRATION_25_26, MIGRATION_26_27,
-                    MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30
+                    MIGRATION_27_28, MIGRATION_28_29, MIGRATION_29_30,
+                    MIGRATION_30_31, MIGRATION_31_32
                 )
                 
                 try {

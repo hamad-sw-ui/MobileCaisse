@@ -42,3 +42,11 @@ __pycache__/
 software-factory/cache/
 .ai/REPORTS/cycle_*.md
 software-factory/cache/pipeline-state.json
+
+# Artefacts locaux de développement (jamais versionnés)
+/.continue/
+/.vscode/
+/build_output.txt
+/test_output.txt
+*.fixed
+

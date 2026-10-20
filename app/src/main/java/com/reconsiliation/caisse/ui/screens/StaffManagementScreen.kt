@@ -112,8 +112,8 @@ fun StaffManagementScreen(navController: NavController) {
             StaffFormDialog(
                 existing = editing,
                 onDismiss = { showForm = false; editing = null },
-                onSave = { name, pin, role, phone ->
-                    viewModel.saveStaff(name, pin, role, phone, editing) { error ->
+                onSave = { name, employeeCode, pin, role, phone ->
+                    viewModel.saveStaff(name, pin, role, phone, employeeCode, editing) { error ->
                         if (error == null) {
                             showForm = false
                             editing = null
@@ -198,10 +198,11 @@ private fun StaffCard(
 private fun StaffFormDialog(
     existing: StaffEntity?,
     onDismiss: () -> Unit,
-    onSave: (name: String, pin: String, role: String, phone: String?) -> Unit
+    onSave: (name: String, employeeCode: String?, pin: String, role: String, phone: String?) -> Unit
 ) {
     var name by rememberSaveable { mutableStateOf(existing?.name ?: "") }
     var phone by rememberSaveable { mutableStateOf(existing?.phone ?: "") }
+    var employeeCode by rememberSaveable { mutableStateOf(existing?.employeeCode ?: "") }
     var pin by rememberSaveable { mutableStateOf("") }
     var role by rememberSaveable { mutableStateOf(existing?.role ?: ROLE_STAFF) }
 
@@ -226,6 +227,13 @@ private fun StaffFormDialog(
                     label = { Text(stringResource(R.string.label_phone_optional)) },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                OutlinedTextField(
+                    value = employeeCode,
+                    onValueChange = { employeeCode = it },
+                    label = { Text(stringResource(R.string.label_employee_code)) },
+                    singleLine = true,
                     modifier = Modifier.fillMaxWidth()
                 )
                 OutlinedTextField(
@@ -265,7 +273,7 @@ private fun StaffFormDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onSave(name, pin, role, phone.takeIf { it.isNotBlank() }) },
+                onClick = { onSave(name, employeeCode.takeIf { it.isNotBlank() }, pin, role, phone.takeIf { it.isNotBlank() }) },
                 enabled = canSave
             ) { Text(stringResource(R.string.action_save)) }
         },
