@@ -64,14 +64,28 @@ class MainViewModel @Inject constructor(
     }
 
     suspend fun handlePinInput(pin: String): Boolean {
-        val result = checkPin(pin)
-        if (result != null) {
-            login(result.first, result.second)
-            _showPinDialog.value = false
-            return true
+        val result = checkPin(pin) ?: return false
+        // Sur une demande d'acces privilegie (route reservee au gerant), seul un PIN
+        // de MANAGER est accepte : le PIN d'un employe ne doit ni ouvrir l'ecran
+        // ni ecraser le role de l'utilisateur connecte.
+        val requiresManager = pendingRoute?.let {
+            com.reconsiliation.caisse.ui.navigation.Screen.isManagerRequired(it)
+        } == true
+        if (requiresManager && result.first != "MANAGER") {
+            return false
         }
-        return false
+        login(result.first, result.second)
+        _showPinDialog.value = false
+        return true
     }
+
+    /**
+     * Indique si la demande d'acces en cours cible une route reservee au gerant.
+     * L'UI utilise ce flag pour afficher le message d'erreur adapte.
+     */
+    fun requiresManagerPin(): Boolean = pendingRoute?.let {
+        com.reconsiliation.caisse.ui.navigation.Screen.isManagerRequired(it)
+    } == true
 
     fun getPendingRouteAndClear(): String? {
         val route = pendingRoute
@@ -147,12 +161,12 @@ class MainViewModel @Inject constructor(
     fun confirmOrphanSale(vente: VenteEntity, product: StockEntity) = viewModelScope.launch { try { salesRepository.confirmOrphanSale(vente, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     fun convertErrorToOrphan(error: SmsErrorEntity, product: StockEntity? = null) = viewModelScope.launch { try { salesRepository.convertErrorToOrphan(error, product, userRole.value) } catch (e: Exception) { _uiError.value = e.message } }
     
-    fun completeSetup(name: String, owner: String, phone: String, operator: String, momoNumber: String, pin: String, onResult: (String?) -> Unit) = viewModelScope.launch {
+    fun completeSetup(name: String, owner: String, phone: String, operator: String, momoNumber: String, pin: String, email: String? = null, onResult: (String?) -> Unit) = viewModelScope.launch {
         try {
             val sec = com.reconsiliation.caisse.utils.SecurityUtil
             val salt = sec.generateSalt()
             val hashed = kotlinx.coroutines.withContext(Dispatchers.Default) { sec.hashPinPbkdf2(pin, salt) }
-            val b = BoutiqueEntity(id = 1, name = name.trim(), ownerName = owner.trim(), phoneNumber = phone.trim(), operator = operator, momoNumber = momoNumber.trim(), isSetupComplete = true, pinHash = hashed, pinSalt = salt, managerPinHash = hashed, managerPinSalt = salt)
+            val b = BoutiqueEntity(id = 1, name = name.trim(), ownerName = owner.trim(), phoneNumber = phone.trim(), operator = operator, momoNumber = momoNumber.trim(), isSetupComplete = true, pinHash = hashed, pinSalt = salt, managerPinHash = hashed, managerPinSalt = salt, email = email?.trim()?.takeIf { it.isNotBlank() })
             repository.completeSetup(b)
             com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication()).setSetupComplete(true)
             onResult(null)
@@ -180,8 +194,10 @@ class MainViewModel @Inject constructor(
     suspend fun checkPin(pin: String): Pair<String, Long?>? = kotlinx.coroutines.withContext(Dispatchers.Default) {
         val b = boutique.value ?: return@withContext null
         val sec = com.reconsiliation.caisse.utils.SecurityUtil
-        repository.getAllActiveStaffOnce().find { sec.verifyPin(pin, it.pinHash, it.pinSalt) }?.let { return@withContext Pair(it.role, it.id) }
+        // Le PIN gerant est verifie EN PREMIER : si un employe partage le meme code PIN,
+        // le gerant doit pouvoir se connecter avec son role MANAGER (et non STAFF).
         if (sec.verifyPin(pin, b.managerPinHash, b.managerPinSalt)) return@withContext Pair("MANAGER", null)
+        repository.getAllActiveStaffOnce().find { sec.verifyPin(pin, it.pinHash, it.pinSalt) }?.let { return@withContext Pair(it.role, it.id) }
         if (sec.verifyPin(pin, b.pinHash, b.pinSalt)) return@withContext Pair("STAFF", null)
         null
     }

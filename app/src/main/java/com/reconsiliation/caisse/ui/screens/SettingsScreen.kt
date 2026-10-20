@@ -1,7 +1,5 @@
 package com.reconsiliation.caisse.ui.screens
 
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -24,7 +22,6 @@ import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.reconsiliation.caisse.R
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
@@ -64,20 +61,6 @@ fun SettingsScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
-
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val intent = result.data
-        if (intent != null) {
-            try {
-                GoogleSignIn.getSignedInAccountFromIntent(intent)
-            } catch (e: Exception) {
-                // Ignore exception, refresh state
-            }
-        }
-        backupViewModel.refreshRemoteBackupState()
-    }
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -291,9 +274,9 @@ fun SettingsScreen(navController: NavController) {
 
                         Button(
                             onClick = {
-                                val intent = backupViewModel.getGoogleSignInIntent()
-                                if (intent != null) {
-                                    googleSignInLauncher.launch(intent)
+                                val activity = context as? android.app.Activity
+                                if (activity != null) {
+                                    backupViewModel.signInToGoogle(activity)
                                 }
                             },
                             modifier = Modifier

@@ -47,4 +47,18 @@ class PreferencesManager(context: Context) {
 
     fun getLastRemoteBackupStatus(): String = prefs.getString("last_remote_backup_status", "") ?: ""
     fun setLastRemoteBackupStatus(status: String) = prefs.edit().putString("last_remote_backup_status", status).apply()
+
+    // ==================== Compte Google Drive ====================
+
+    fun saveGoogleAccount(email: String, accountName: String) {
+        prefs.edit().putString("google_account_email", email).putString("google_account_name", accountName).apply()
+    }
+
+    fun getGoogleAccountEmail(): String? = prefs.getString("google_account_email", null)
+
+    fun getGoogleAccountName(): String? = prefs.getString("google_account_name", null)
+
+    fun clearGoogleAccount() {
+        prefs.edit().remove("google_account_email").remove("google_account_name").apply()
+    }
 }

@@ -32,6 +32,7 @@ fun SetupScreen(navController: NavController) {
     var name by remember { mutableStateOf("") }
     var owner by remember { mutableStateOf("") }
     var phone by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var operator by remember { mutableStateOf("MTN") }
     var momoNumber by remember { mutableStateOf("") }
     var pin by remember { mutableStateOf("") }
@@ -70,7 +71,16 @@ fun SetupScreen(navController: NavController) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.setup_shop_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text(stringResource(R.string.setup_owner_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             OutlinedTextField(value = phone, onValueChange = { phone = it }, label = { Text(stringResource(R.string.setup_main_phone)) }, modifier = Modifier.fillMaxWidth(), keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone), colors = textFieldColors)
-            
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(stringResource(R.string.label_email)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                colors = textFieldColors
+            )
+
             Text(stringResource(R.string.setup_mobile_payments), style = MaterialTheme.typography.titleMedium, color = Primary)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text(stringResource(R.string.label_operator_mtn)) })
@@ -93,9 +103,20 @@ fun SetupScreen(navController: NavController) {
             BigButton(
                 text = stringResource(R.string.setup_action_finish),
                 onClick = {
-                    if (name.isNotBlank() && pin.length == 4) {
+                    val trimmedEmail = email.trim()
+                    if (trimmedEmail.isNotBlank() && (!trimmedEmail.contains("@") || !trimmedEmail.contains("."))) {
+                        setupError = context.getString(R.string.error_invalid_email)
+                    } else if (name.isNotBlank() && pin.length == 4) {
                         setupError = null
-                        viewModel.completeSetup(name = name, owner = owner, phone = phone, operator = operator, momoNumber = momoNumber, pin = pin) { error ->
+                        viewModel.completeSetup(
+                            name = name,
+                            owner = owner,
+                            phone = phone,
+                            operator = operator,
+                            momoNumber = momoNumber,
+                            pin = pin,
+                            email = email.trim().takeIf { it.isNotBlank() }
+                        ) { error ->
                             if (error == null) {
                                 navController.navigate(Screen.Pin.route) { popUpTo(Screen.Setup.route) { inclusive = true } }
                             } else {

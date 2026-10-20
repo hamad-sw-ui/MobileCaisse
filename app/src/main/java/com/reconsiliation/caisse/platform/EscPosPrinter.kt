@@ -20,13 +20,13 @@ class EscPosPrinter(private val context: Context) {
     // ESC/POS Commands
     private val ESC: Byte = 0x1B
     private val GS: Byte = 0x1D
-    private val ALIGN_LEFT = byteArrayOf(ESC, 'a'.toByte(), 0x00)
-    private val ALIGN_CENTER = byteArrayOf(ESC, 'a'.toByte(), 0x01)
-    private val ALIGN_RIGHT = byteArrayOf(ESC, 'a'.toByte(), 0x02)
-    private val BOLD_ON = byteArrayOf(ESC, 'E'.toByte(), 0x01)
-    private val BOLD_OFF = byteArrayOf(ESC, 'E'.toByte(), 0x00)
-    private val FONT_LARGE = byteArrayOf(GS, '!'.toByte(), 0x11)
-    private val FONT_NORMAL = byteArrayOf(GS, '!'.toByte(), 0x00)
+    private val ALIGN_LEFT = byteArrayOf(ESC, 'a'.code.toByte(), 0x00)
+    private val ALIGN_CENTER = byteArrayOf(ESC, 'a'.code.toByte(), 0x01)
+    private val ALIGN_RIGHT = byteArrayOf(ESC, 'a'.code.toByte(), 0x02)
+    private val BOLD_ON = byteArrayOf(ESC, 'E'.code.toByte(), 0x01)
+    private val BOLD_OFF = byteArrayOf(ESC, 'E'.code.toByte(), 0x00)
+    private val FONT_LARGE = byteArrayOf(GS, '!'.code.toByte(), 0x11)
+    private val FONT_NORMAL = byteArrayOf(GS, '!'.code.toByte(), 0x00)
     private val FEED_LINE = byteArrayOf(0x0A)
 
     @SuppressLint("MissingPermission")

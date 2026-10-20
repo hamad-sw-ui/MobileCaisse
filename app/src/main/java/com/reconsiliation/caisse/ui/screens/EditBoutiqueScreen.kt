@@ -43,6 +43,7 @@ fun EditBoutiqueScreen(navController: NavController) {
 
     var name by remember { mutableStateOf("") }
     var owner by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
     var currency by remember { mutableStateOf("FCFA") }
     var operator by remember { mutableStateOf("MTN") }
     var momoNumber by remember { mutableStateOf("") }
@@ -81,6 +82,7 @@ fun EditBoutiqueScreen(navController: NavController) {
         boutique?.let {
             name = it.name
             owner = it.ownerName
+            email = it.email ?: ""
             currency = it.currency
             operator = it.operator
             momoNumber = it.momoNumber
@@ -120,7 +122,16 @@ fun EditBoutiqueScreen(navController: NavController) {
             OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(stringResource(R.string.setup_shop_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             OutlinedTextField(value = owner, onValueChange = { owner = it }, label = { Text(stringResource(R.string.setup_owner_name)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
             OutlinedTextField(value = currency, onValueChange = { currency = it }, label = { Text(stringResource(R.string.label_currency_hint)) }, modifier = Modifier.fillMaxWidth(), colors = textFieldColors)
-            
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text(stringResource(R.string.label_email)) },
+                singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                modifier = Modifier.fillMaxWidth(),
+                colors = textFieldColors
+            )
+
             Text(stringResource(R.string.label_main_momo_operator), style = MaterialTheme.typography.titleMedium, color = Primary)
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = operator == "MTN", onClick = { operator = "MTN" }, label = { Text(stringResource(R.string.label_operator_mtn)) })
@@ -252,6 +263,7 @@ fun EditBoutiqueScreen(navController: NavController) {
                             name = name,
                             ownerName = owner,
                             currency = currency,
+                            email = email.trim().takeIf { it.isNotBlank() },
                             operator = operator,
                             momoNumber = momoNumber,
                             printerAddress = printerAddress.ifBlank { null },

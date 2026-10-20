@@ -1,5 +1,6 @@
 package com.reconsiliation.caisse.ui.viewmodel
 
+import android.app.Activity
 import android.app.Application
 import android.content.Context
 import androidx.lifecycle.AndroidViewModel
@@ -108,8 +109,18 @@ class BackupViewModel @Inject constructor(
         refreshRemoteBackupState()
     }
 
-    fun getGoogleSignInIntent(): android.content.Intent? =
-        authManager.getSignInClient()?.signInIntent
+    fun signInToGoogle(activity: Activity) = viewModelScope.launch {
+        _backupState.value = BackupUiState.Working("Connexion à Google Drive en cours…")
+        authManager.signIn(activity)
+            .onSuccess {
+                refreshRemoteBackupState()
+                _backupState.value = BackupUiState.Success("Connexion à Google Drive réussie.")
+            }
+            .onFailure { error ->
+                refreshRemoteBackupState()
+                _backupState.value = BackupUiState.Error("Échec de la connexion Google : ${error.message}")
+            }
+    }
 
     fun triggerManualRemoteBackup() = viewModelScope.launch {
         _backupState.value = BackupUiState.Working("Sauvegarde distante vers Google Drive en cours…")

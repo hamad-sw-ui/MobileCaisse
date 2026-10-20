@@ -1,6 +1,6 @@
 package com.reconsiliation.caisse.platform.remote
 
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import android.app.Activity
 
 class FakeGoogleDriveAuthManager(
     var connected: Boolean = true,
@@ -13,14 +13,13 @@ class FakeGoogleDriveAuthManager(
 
     override fun getConnectedAccountEmail(): String? = accountEmail
 
-    override fun getSignInClient(): GoogleSignInClient? = null
+    override suspend fun signIn(activity: Activity): Result<String> =
+        if (connected) Result.success(accountEmail ?: "test.boutique@gmail.com")
+        else Result.failure(Exception("Non connecté"))
 
     override suspend fun getAccessToken(): Result<String> {
         if (shouldFailToken) {
             return Result.failure(GoogleAuthException("Échec token de test"))
-        }
-        if (!connected) {
-            return Result.failure(GoogleAuthException("Aucun compte Google connecté"))
         }
         return Result.success(mockAccessToken)
     }

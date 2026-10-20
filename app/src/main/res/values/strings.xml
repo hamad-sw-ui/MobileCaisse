@@ -134,6 +134,8 @@
     <string name="label_debt_colon">Dette: %1$s</string>
     <string name="label_name">Nom</string>
     <string name="label_phone">Téléphone</string>
+    <string name="label_email">E-mail</string>
+    <string name="error_invalid_email">Adresse e-mail invalide</string>
     <string name="label_current_debt">Dette actuelle: %1$s</string>
     <string name="label_amount_paid">Montant payé</string>
     <string name="label_select_product_hint">Choisir produit...</string>
@@ -731,4 +733,9 @@
     <string name="label_no_cloud_backups">Aucune sauvegarde distante disponible</string>
     <string name="action_refresh_cloud_list">Rafraîchir la liste</string>
     <string name="status_downloading_cloud">Téléchargement de la sauvegarde distante…</string>
+
+    <!-- Authentification Google Drive via Credential Manager -->
+    <string name="default_web_client_id" translatable="false">REPLACE_WITH_OAUTH_WEB_CLIENT_ID</string>
+    <string name="google_auth_not_configured">Connexion Google non configurée sur cet appareil.</string>
+    <string name="google_sign_in_success">Connexion à Google Drive réussie.</string>
 </resources>

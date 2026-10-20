@@ -375,6 +375,17 @@ fun AppNavigation() {
                                     if (pinInput.isNotEmpty()) pinInput = pinInput.dropLast(1)
                                 }
                             )
+
+                            if (isError) {
+                                Text(
+                                    text = stringResource(
+                                        if (viewModel.requiresManagerPin()) R.string.pin_manager_required
+                                        else R.string.pin_invalid
+                                    ),
+                                    color = RedError,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                             
                             TextButton(onClick = {
                                 viewModel.dismissPinDialog()

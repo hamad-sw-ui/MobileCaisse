@@ -11,6 +11,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Label
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Clear
@@ -19,7 +20,6 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Kitchen
-import androidx.compose.material.icons.filled.Label
 import androidx.compose.material.icons.filled.QrCodeScanner
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.WarningAmber
@@ -273,7 +273,7 @@ fun StockScreen(navController: NavController, initialBarcode: String? = null) {
                                                 printerViewModel.testPrint(address) // Or dedicated printShelfLabel logic
                                             }
                                         }) {
-                                            Icon(Icons.Default.Label, stringResource(R.string.action_label), tint = Color.Gray)
+                                            Icon(Icons.AutoMirrored.Filled.Label, stringResource(R.string.action_label), tint = Color.Gray)
                                         }
                                         IconButton(onClick = { navController.navigate(Screen.StockMovements.createRoute(item.id)) }) {
                                             Icon(Icons.Default.Info, stringResource(R.string.action_movements), tint = Color.Gray)

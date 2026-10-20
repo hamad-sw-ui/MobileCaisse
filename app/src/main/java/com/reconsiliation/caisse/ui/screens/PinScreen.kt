@@ -4,7 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Backspace
+import androidx.compose.material.icons.automirrored.filled.Backspace
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import kotlinx.coroutines.launch
@@ -82,6 +82,7 @@ fun PinScreen(navController:NavController) {
     PinContent(
         pin = pin,
         employeeCode = employeeCode,
+        onEmployeeCodeChange = { employeeCode = it },
         error = error,
         lockoutSeconds = if (lockoutRemaining > 0) ((lockoutRemaining + 999) / 1000).toInt() else 0,
         onKeyPress = { key ->
@@ -124,6 +125,7 @@ fun PinScreen(navController:NavController) {
 fun PinContent(
     pin: String,
     employeeCode: String = "",
+    onEmployeeCodeChange: (String) -> Unit = {},
     error: Boolean,
     onKeyPress: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -140,7 +142,9 @@ fun PinContent(
 
         OutlinedTextField(
             value = employeeCode,
-            onValueChange = { },
+            onValueChange = { newValue ->
+                onEmployeeCodeChange(newValue.trim().uppercase())
+            },
             label = { Text(stringResource(R.string.label_employee_id)) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
@@ -196,7 +200,7 @@ fun PinContent(
                             ) {
                                 if (key == "DEL") {
                                     Icon(
-                                        Icons.Default.Backspace,
+                                        Icons.AutoMirrored.Filled.Backspace,
                                         contentDescription = stringResource(R.string.action_delete)
                                     )
                                 } else {

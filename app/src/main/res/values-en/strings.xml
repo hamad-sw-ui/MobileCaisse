@@ -134,6 +134,8 @@
     <string name="label_debt_colon">Debt: %1$s</string>
     <string name="label_name">Name</string>
     <string name="label_phone">Phone</string>
+    <string name="label_email">Email</string>
+    <string name="error_invalid_email">Invalid email address</string>
     <string name="label_current_debt">Current debt: %1$s</string>
     <string name="label_amount_paid">Amount paid</string>
     <string name="label_select_product_hint">Choose product...</string>
@@ -731,4 +733,9 @@
     <string name="label_no_cloud_backups">No remote backups available</string>
     <string name="action_refresh_cloud_list">Refresh list</string>
     <string name="status_downloading_cloud">Downloading remote backup…</string>
+
+    <!-- Google Drive authentication via Credential Manager -->
+    <string name="default_web_client_id" translatable="false">REPLACE_WITH_OAUTH_WEB_CLIENT_ID</string>
+    <string name="google_auth_not_configured">Google sign-in is not configured on this device.</string>
+    <string name="google_sign_in_success">Google Drive connection successful.</string>
 </resources>

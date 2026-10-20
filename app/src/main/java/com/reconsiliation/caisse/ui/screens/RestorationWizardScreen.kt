@@ -25,7 +25,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
-import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.reconsiliation.caisse.R
 import com.reconsiliation.caisse.platform.remote.RemoteBackupItem
 import com.reconsiliation.caisse.ui.state.BackupUiState
@@ -73,20 +72,6 @@ fun RestorationWizardScreen(navController: NavController) {
             isEncrypted = viewModel.isBackupEncrypted(tmp)
             step = 2
         }
-    }
-
-    val googleSignInLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        val intent = result.data
-        if (intent != null) {
-            try {
-                GoogleSignIn.getSignedInAccountFromIntent(intent)
-            } catch (e: Exception) {
-                // Ignore exception, refresh state
-            }
-        }
-        viewModel.refreshRemoteBackupState()
     }
 
     LaunchedEffect(selectedTab, isGoogleConnected) {
@@ -173,9 +158,9 @@ fun RestorationWizardScreen(navController: NavController) {
                         )
                         Button(
                             onClick = {
-                                val intent = viewModel.getGoogleSignInIntent()
-                                if (intent != null) {
-                                    googleSignInLauncher.launch(intent)
+                                val activity = context as? android.app.Activity
+                                if (activity != null) {
+                                    viewModel.signInToGoogle(activity)
                                 }
                             },
                             modifier = Modifier.heightIn(min = 48.dp)

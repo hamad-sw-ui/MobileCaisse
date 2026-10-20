@@ -136,6 +136,9 @@ dependencies {
     implementation(libs.sqlcipher)
     implementation(libs.androidx.sqlite.ktx)
     implementation(libs.play.services.auth)
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.google.identity.googleid)
     implementation(libs.okhttp)
 
     // BackupManager est du Kotlin/JVM pur (aucune dépendance au framework Android) :

@@ -6,8 +6,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.PictureAsPdf
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -102,7 +102,7 @@ fun CustomerProfileScreen(navController: NavController, customerId: Long) {
                                     onClick = { viewModel.sendDebtReminder(data, boutique?.name, currency) },
                                     colors = ButtonDefaults.buttonColors(containerColor = Primary)
                                 ) {
-                                    Icon(androidx.compose.material.icons.Icons.Default.Send, null)
+                                    Icon(Icons.AutoMirrored.Filled.Send, null)
                                     Spacer(modifier = Modifier.width(4.dp))
                                     Text(stringResource(R.string.action_reminder))
                                 }

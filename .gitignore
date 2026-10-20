@@ -49,4 +49,6 @@ software-factory/cache/pipeline-state.json
 /build_output.txt
 /test_output.txt
 *.fixed
+hs_err_pid*.log
+replay_pid*.log
 

@@ -5,10 +5,10 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.foundation.clickable
 import androidx.compose.material.icons.filled.Link
-import androidx.compose.material.icons.filled.ListAlt
-import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.SmsFailed
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableStateOf
@@ -110,7 +110,7 @@ fun SmsErrorScreen(navController: NavController) {
                                     )
                                     clipboardText = ""
                                 }) {
-                                    Icon(Icons.Default.Send, stringResource(R.string.action_analyze))
+                                    Icon(Icons.AutoMirrored.Filled.Send, stringResource(R.string.action_analyze))
                                 }
                             }
                         },
@@ -168,7 +168,7 @@ fun SmsErrorScreen(navController: NavController) {
                                             }
                                             showResolveDialog = false
                                         },
-                                        leadingContent = { Icon(Icons.Default.ListAlt, null) }
+                                        leadingContent = { Icon(Icons.AutoMirrored.Filled.ListAlt, null) }
                                     )
                                     HorizontalDivider()
                                 }
