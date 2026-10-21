@@ -139,6 +139,7 @@ fun ClosureScreen(navController: NavController) {
         onNavigateBack = { navController.popBackStack() },
         boutiqueName = boutique?.name,
         boutiqueEmail = boutiqueEmail,
+        isManager = viewModel.userRole.collectAsState().value == "MANAGER",
         onSendReport = { subject, body ->
             if (boutiqueEmail.isNotBlank()) {
                 reportPending = true
@@ -179,6 +180,7 @@ fun ClosureContent(
     boutiqueName: String? = null,
     boutiqueEmail: String? = null,
     onSendReport: ((subject: String, body: String) -> Unit)? = null,
+    isManager: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     var realCash by remember { mutableStateOf("") }
@@ -229,10 +231,10 @@ fun ClosureContent(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(stringResource(R.string.closure_summary_date, FormatUtil.formatDate(Date())), style = MaterialTheme.typography.titleLarge, color = Primary)
-                
+
                 ClosureCard(stringResource(R.string.closure_confirmed_momo, operatorName), momoTotal)
                 ClosureCard(stringResource(R.string.closure_debts_today), creditTotal)
-                
+
                 Card(modifier = Modifier.fillMaxWidth()) {
                     Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text(stringResource(R.string.closure_cash_validation), style = MaterialTheme.typography.titleMedium)
@@ -303,7 +305,9 @@ fun ClosureContent(
                     append("Nombre de ventes : ${todayVentes.size}")
                 }
 
-                if (!boutiqueEmail.isNullOrBlank() && onSendReport != null) {
+                // Envoi du rapport de cloture reserve au gerant, coherent avec
+                // les autres ecrans de rapports (Reports, ClosureHistory, ...).
+                if (isManager && !boutiqueEmail.isNullOrBlank() && onSendReport != null) {
                     OutlinedButton(
                         onClick = { onSendReport(reportSubject, reportBody) },
                         modifier = Modifier
@@ -333,16 +337,19 @@ fun ClosureContent(
                     Text(stringResource(R.string.action_export_sales_csv))
                 }
 
-                Button(
-                    onClick = onTotalBackupClick,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .testTag("btn_total_backup"),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                ) {
-                    Icon(Icons.Default.Backup, null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(stringResource(R.string.action_total_backup))
+                // Sauvegarde totale reservee au gerant, comme dans SettingsScreen.
+                if (isManager) {
+                    Button(
+                        onClick = onTotalBackupClick,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_total_backup"),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
+                    ) {
+                        Icon(Icons.Default.Backup, null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.action_total_backup))
+                    }
                 }
                 
                 if (!isLocked) {

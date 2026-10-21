@@ -37,13 +37,40 @@ class SecurityUtilTest {
     }
 
     @Test
+    fun `verifyPin should pass for PIN saved with setup format (salt without suffix)`() = runBlocking {
+        // Reproduction du bug de connexion apres configuration initiale :
+        // completeSetup hachait avec 100000 iterations mais stockait le sel SANS
+        // le suffixe ":iterations". verifyPin partait alors sur 5000 iterations
+        // (legacy) et rejetait le PIN correct. Ce test garantit la coherence
+        // hash/verification pour tout nouveau format introduit.
+        val pin = "1234"
+        val salt = SecurityUtil.generateSalt()
+        val hash = SecurityUtil.hashPinPbkdf2(pin, salt) // iterations par defaut = PBKDF2_ITERATIONS_NEW
+        val storedSaltNoSuffix = salt // comme completeSetup avant correction
+
+        // Le sel sans suffixe doit resoudre vers les iterations NEW (et non legacy)
+        // pour que le hash par defaut soit verifie correctement.
+        assertTrue(
+            "PIN hashed with default iterations must verify with bare salt",
+            SecurityUtil.verifyPin(pin, hash, storedSaltNoSuffix)
+        )
+        assertFalse(
+            "Wrong PIN must still be rejected with bare salt",
+            SecurityUtil.verifyPin("9999", hash, storedSaltNoSuffix)
+        )
+    }
+
+    @Test
     fun `verifyPin should pass with correct PBKDF2 hash and legacy format salt`() = runBlocking {
         val pin = "1234"
         val iterations = 5000
         val salt = SecurityUtil.generateSalt()
         val hash = SecurityUtil.hashPinPbkdf2(pin, salt, iterations)
-        
-        assertTrue("Correct PIN with legacy salt should pass", SecurityUtil.verifyPin(pin, hash, salt))
+                // Les sels legacy reels (saveStaff / changePin) portent toujours le
+        // suffixe ":iterations" ; un sel nu designe desormais le format NEW.
+        val saltWithIterations = "$salt:$iterations"
+
+        assertTrue("Correct PIN with legacy salt should pass", SecurityUtil.verifyPin(pin, hash, saltWithIterations))
     }
 
     @Test

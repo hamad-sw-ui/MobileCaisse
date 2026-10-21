@@ -165,8 +165,13 @@ class MainViewModel @Inject constructor(
         try {
             val sec = com.reconsiliation.caisse.utils.SecurityUtil
             val salt = sec.generateSalt()
+            // Sel au format "salt:iterations" (convention SecurityUtil.verifyPin) :
+            // sans ce suffixe, la verification part sur les iterations legacy (5000)
+            // alors que le hash a ete calcule avec PBKDF2_ITERATIONS_NEW (100000),
+            // et le PIN correct serait rejete (BUG login apres setup).
             val hashed = kotlinx.coroutines.withContext(Dispatchers.Default) { sec.hashPinPbkdf2(pin, salt) }
-            val b = BoutiqueEntity(id = 1, name = name.trim(), ownerName = owner.trim(), phoneNumber = phone.trim(), operator = operator, momoNumber = momoNumber.trim(), isSetupComplete = true, pinHash = hashed, pinSalt = salt, managerPinHash = hashed, managerPinSalt = salt, email = email?.trim()?.takeIf { it.isNotBlank() })
+            val saltWithIterations = "$salt:${com.reconsiliation.caisse.utils.SecurityUtil.PBKDF2_ITERATIONS_NEW}"
+            val b = BoutiqueEntity(id = 1, name = name.trim(), ownerName = owner.trim(), phoneNumber = phone.trim(), operator = operator, momoNumber = momoNumber.trim(), isSetupComplete = true, pinHash = hashed, pinSalt = saltWithIterations, managerPinHash = hashed, managerPinSalt = saltWithIterations, email = email?.trim()?.takeIf { it.isNotBlank() })
             repository.completeSetup(b)
             com.reconsiliation.caisse.data.prefs.PreferencesManager(getApplication()).setSetupComplete(true)
             onResult(null)

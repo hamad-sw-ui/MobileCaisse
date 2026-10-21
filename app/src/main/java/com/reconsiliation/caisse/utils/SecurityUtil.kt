@@ -24,7 +24,7 @@ object SecurityUtil {
     private const val PREFS_NAME = "security_prefs"
     private const val ENCRYPTED_KEY_SET = "encrypted_db_key"
     private const val PBKDF2_ITERATIONS_LEGACY = 5000
-    private const val PBKDF2_ITERATIONS_NEW = 100_000
+    const val PBKDF2_ITERATIONS_NEW = 100_000
     private const val KEY_LENGTH = 256
 
     private fun getSecretKey(): SecretKey {
@@ -107,7 +107,10 @@ object SecurityUtil {
         if (savedSalt != null) {
             val parts = savedSalt.split(":")
             val salt = parts[0]
-            val iterations = if (parts.size > 1) parts[1].toIntOrNull() ?: PBKDF2_ITERATIONS_NEW else PBKDF2_ITERATIONS_LEGACY
+            // Sans suffixe ":iterations", le hash a ete calcule avec les iterations
+            // par defaut (PBKDF2_ITERATIONS_NEW, cf. completeSetup) et non avec le
+            // format legacy : les supposer legacy rejetait tout PIN correct (BUG).
+            val iterations = if (parts.size > 1) parts[1].toIntOrNull() ?: PBKDF2_ITERATIONS_NEW else PBKDF2_ITERATIONS_NEW
             
             val computedHash = hashPinPbkdf2(pin, salt, iterations)
             // Comparaison à temps constant pour PBKDF2 (Base64)
