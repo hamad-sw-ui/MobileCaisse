@@ -34,6 +34,8 @@ data class BackupMetadata(
     val createdAt: String,
     val boutiquePhone: String,
     val boutiqueManagerCode: String,
+    /** E-mail de la boutique : relie la sauvegarde a la boutique (restauration multi-boutiques). */
+    val boutiqueEmail: String? = null,
     /** SHA-256 du fichier de base *en clair*, vérifié après déchiffrement. */
     val checksum: String,
     /** Version du schéma Room au moment de l'export (fournie par l'appelant). */
@@ -54,9 +56,15 @@ data class BackupImportResult(
     val metadata: BackupMetadata,
     val restoredFile: File,
     val phoneMatches: Boolean,
-    val managerCodeMatches: Boolean
+    val managerCodeMatches: Boolean,
+    /**
+     * L'e-mail de la sauvegarde correspond a celui de la boutique courante.
+     * `true` par defaut : une sauvegarde sans e-mail ou une verification non
+     * demandee ne doit jamais etre signalee comme un ecart.
+     */
+    val emailMatches: Boolean = true
 ) {
-    val identityMatches: Boolean get() = phoneMatches && managerCodeMatches
+    val identityMatches: Boolean get() = phoneMatches && managerCodeMatches && emailMatches
 }
 
 /**
@@ -110,6 +118,8 @@ object BackupManager {
      *
      * @param password mot de passe saisi par l'utilisateur ; jamais conservé.
      * @param databaseVersion version réelle du schéma Room (cf. AppDatabase).
+     * @param boutiqueEmail e-mail de la boutique, enregistre dans les metadonnees
+     *   pour relier la sauvegarde a sa boutique (restauration multi-boutiques).
      */
     fun exportBackupWithPassword(
         dbFile: File,
@@ -117,7 +127,8 @@ object BackupManager {
         password: String,
         boutiquePhone: String,
         boutiqueManagerCode: String,
-        databaseVersion: Int
+        databaseVersion: Int,
+        boutiqueEmail: String? = null
     ): Result<File> = runCatching {
         validatePasswordStrength(password)
         validateManagerCode(boutiqueManagerCode)
@@ -136,6 +147,7 @@ object BackupManager {
             createdAt = isoTimestamp(),
             boutiquePhone = boutiquePhone,
             boutiqueManagerCode = boutiqueManagerCode,
+            boutiqueEmail = boutiqueEmail?.trim()?.takeIf { it.isNotBlank() },
             checksum = sha256(dbFile),
             databaseVersion = databaseVersion
         )
@@ -170,7 +182,7 @@ object BackupManager {
     /**
      * Restaure [backupFile] vers [destFile].
      *
-     * Les écarts d'identité ([expectedPhone], [expectedManagerCode]) sont
+     * Les écarts d'identité ([expectedPhone], [expectedManagerCode], [expectedEmail]) sont
      * **signalés** dans le résultat, jamais transformés en exception : la
      * décision de poursuivre appartient à la couche UI.
      */
@@ -179,7 +191,8 @@ object BackupManager {
         destFile: File,
         password: String,
         expectedPhone: String? = null,
-        expectedManagerCode: String? = null
+        expectedManagerCode: String? = null,
+        expectedEmail: String? = null
     ): Result<BackupImportResult> = runCatching {
         require(backupFile.exists() && backupFile.length() > 0) {
             "Fichier de sauvegarde introuvable ou vide"
@@ -258,8 +271,22 @@ object BackupManager {
             restoredFile = destFile,
             phoneMatches = expectedPhone == null || expectedPhone == metadata.boutiquePhone,
             managerCodeMatches =
-                expectedManagerCode == null || expectedManagerCode == metadata.boutiqueManagerCode
+                expectedManagerCode == null || expectedManagerCode == metadata.boutiqueManagerCode,
+            emailMatches = emailsMatch(expectedEmail, metadata.boutiqueEmail)
         )
+    }
+
+    /**
+     * Compare l'e-mail de la boutique courante a celui enregistre dans la sauvegarde.
+     *
+     * - sauvegarde sans e-mail : aucune verification possible, pas d'ecart ;
+     * - boutique sans e-mail alors que la sauvegarde en contient un : ecart ;
+     * - comparaison insensible a la casse et aux espaces superflus.
+     */
+    private fun emailsMatch(expectedEmail: String?, remoteEmail: String?): Boolean {
+        val remote = remoteEmail?.trim()?.takeIf { it.isNotBlank() } ?: return true
+        val current = expectedEmail?.trim()?.takeIf { it.isNotBlank() } ?: return false
+        return current.lowercase() == remote.lowercase()
     }
 
     /** Lit les métadonnées sans restaurer la base (aperçu avant confirmation). */

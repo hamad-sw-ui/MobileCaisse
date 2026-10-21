@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_email_boutique">Shop email: %1$s</string>
+    <string name="backup_email_mismatch">Warning: the connected Google account (%1$s) does not match the shop email (%2$s).</string>
+    <string name="backup_email_missing">No shop email set: fill it in \"Edit shop\" to link your backups.</string>
+    <string name="closure_send_report">Send the report by email</string>
+    <string name="closure_report_sent">Closure report sent to %1$s</string>
+    <string name="closure_report_failed">Failed to send the report: %1$s</string>
+</resources>

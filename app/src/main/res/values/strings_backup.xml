@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="backup_email_boutique">E-mail de la boutique : %1$s</string>
+    <string name="backup_email_mismatch">Attention : le compte Google connecté (%1$s) ne correspond pas à l\'e-mail de la boutique (%2$s).</string>
+    <string name="backup_email_missing">Aucun e-mail de boutique renseigné : renseignez-le dans « Modifier la boutique » pour relier vos sauvegardes.</string>
+    <string name="closure_send_report">Envoyer le rapport par e-mail</string>
+    <string name="closure_report_sent">Rapport de clôture envoyé à %1$s</string>
+    <string name="closure_report_failed">Échec de l\'envoi du rapport : %1$s</string>
+</resources>

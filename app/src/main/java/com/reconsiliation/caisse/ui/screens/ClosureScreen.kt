@@ -24,6 +24,7 @@ import androidx.navigation.NavController
 import com.reconsiliation.caisse.ui.components.BackupPasswordDialog
 import com.reconsiliation.caisse.ui.components.CaisseTextFieldDefaults
 import com.reconsiliation.caisse.ui.navigation.Screen
+import com.reconsiliation.caisse.ui.state.BackupUiState
 import com.reconsiliation.caisse.ui.state.SessionUiState
 import com.reconsiliation.caisse.ui.theme.GreenSuccess
 import com.reconsiliation.caisse.ui.theme.Primary
@@ -54,6 +55,12 @@ fun ClosureScreen(navController: NavController) {
     val snackbarHostState = remember { SnackbarHostState() }
     val sessionCloseError = stringResource(R.string.error_session_close)
 
+    // Envoi du rapport de clôture par e-mail : l'état d'envoi est celui de la
+    // sauvegarde, l'affichage du résultat se fait ici avec les textes localisés.
+    val backupState by backupViewModel.backupState.collectAsState()
+    var reportPending by remember { mutableStateOf(false) }
+    val boutiqueEmail = boutique?.email?.trim().orEmpty()
+
     LaunchedEffect(Unit) {
         sessionViewModel.loadSessionPreview()
     }
@@ -64,6 +71,30 @@ fun ClosureScreen(navController: NavController) {
                 sessionViewModel.clearUiState()
             }
             SessionUiState.Success -> sessionViewModel.clearUiState()
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(backupState) {
+        when (val state = backupState) {
+            is BackupUiState.Success -> {
+                if (reportPending) {
+                    reportPending = false
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.closure_report_sent, boutiqueEmail)
+                    )
+                }
+                backupViewModel.clearBackupState()
+            }
+            is BackupUiState.Error -> {
+                if (reportPending) {
+                    reportPending = false
+                    snackbarHostState.showSnackbar(
+                        context.getString(R.string.closure_report_failed, state.message)
+                    )
+                }
+                backupViewModel.clearBackupState()
+            }
             else -> Unit
         }
     }
@@ -105,7 +136,15 @@ fun ClosureScreen(navController: NavController) {
             }
         },
         onNavigateToNewSale = { navController.navigate(Screen.NewSale.route) },
-        onNavigateBack = { navController.popBackStack() }
+        onNavigateBack = { navController.popBackStack() },
+        boutiqueName = boutique?.name,
+        boutiqueEmail = boutiqueEmail,
+        onSendReport = { subject, body ->
+            if (boutiqueEmail.isNotBlank()) {
+                reportPending = true
+                backupViewModel.sendClosureReport(boutiqueEmail, subject, body)
+            }
+        }
     )
 
     if (showBackupPasswordDialog) {
@@ -137,6 +176,9 @@ fun ClosureContent(
     onCloseSessionSubmit: (countedCash: Double) -> Unit,
     onNavigateToNewSale: () -> Unit,
     onNavigateBack: () -> Unit,
+    boutiqueName: String? = null,
+    boutiqueEmail: String? = null,
+    onSendReport: ((subject: String, body: String) -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     var realCash by remember { mutableStateOf("") }
@@ -239,6 +281,39 @@ fun ClosureContent(
                                 )
                             }
                         }
+                    }
+                }
+
+                // Synthèse de clôture envoyable par e-mail : uniquement si la
+                // boutique dispose d'une adresse renseignée.
+                val reportSubject = buildString {
+                    append("Rapport de clôture")
+                    if (!boutiqueName.isNullOrBlank()) append(" - $boutiqueName")
+                    append(" - ")
+                    append(FormatUtil.formatDate(Date()))
+                }
+                val reportBody = buildString {
+                    append("Rapport de clôture")
+                    if (!boutiqueName.isNullOrBlank()) append(" - $boutiqueName")
+                    append("\n")
+                    append("Date : ${FormatUtil.formatDate(Date())}\n")
+                    append("Montant réel : ${countedCash?.let { c -> FormatUtil.formatCurrency(c) } ?: "non renseigné"}\n")
+                    append("Montant attendu : ${sessionPreview?.expectedCash?.let { c -> FormatUtil.formatCurrency(c) } ?: "non renseigné"}\n")
+                    append("Écart : ${cashGap?.let { g -> FormatUtil.formatCurrency(g) } ?: "non renseigné"}\n")
+                    append("Nombre de ventes : ${todayVentes.size}")
+                }
+
+                if (!boutiqueEmail.isNullOrBlank() && onSendReport != null) {
+                    OutlinedButton(
+                        onClick = { onSendReport(reportSubject, reportBody) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .testTag("btn_send_closure_report"),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = Primary)
+                    ) {
+                        Icon(Icons.Default.Email, null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(stringResource(R.string.closure_send_report))
                     }
                 }
 

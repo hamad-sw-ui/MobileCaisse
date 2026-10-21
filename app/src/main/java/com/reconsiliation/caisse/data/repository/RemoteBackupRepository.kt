@@ -3,6 +3,7 @@ package com.reconsiliation.caisse.data.repository
 import android.content.Context
 import com.reconsiliation.caisse.data.local.AppDatabase
 import com.reconsiliation.caisse.data.local.dao.BoutiqueDao
+import com.reconsiliation.caisse.data.local.entity.BoutiqueEntity
 import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.platform.remote.GoogleDriveAuthManager
 import com.reconsiliation.caisse.platform.remote.RemoteBackupItem
@@ -90,7 +91,10 @@ class RemoteBackupRepository @Inject constructor(
                     password = password,
                     boutiquePhone = boutique.phoneNumber,
                     boutiqueManagerCode = boutique.managerCode,
-                    databaseVersion = 30
+                    databaseVersion = 30,
+                    // Relie l'archive a sa boutique : l'e-mail permet de detecter
+                    // une restauration depuis une autre boutique.
+                    boutiqueEmail = boutique.email
                 ).getOrThrow()
 
                 // 2. Upload binaire vers le cloud
@@ -129,6 +133,17 @@ class RemoteBackupRepository @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Compare l'e-mail de la boutique courante a celui enregistre dans la sauvegarde.
+     *
+     * Une sauvegarde sans e-mail n'est pas verifiee : il n'y a rien a comparer.
+     */
+    fun emailMatches(boutique: BoutiqueEntity?, remoteEmail: String?): Boolean {
+        if (remoteEmail.isNullOrBlank()) return true
+        val current = boutique?.email?.trim()?.lowercase() ?: return false
+        return current == remoteEmail.trim().lowercase()
     }
 
     /**

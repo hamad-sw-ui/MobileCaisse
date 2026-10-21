@@ -3,6 +3,7 @@ package com.reconsiliation.caisse.ui.viewmodel
 import com.reconsiliation.caisse.data.local.entity.BoutiqueEntity
 import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.data.repository.*
+import com.reconsiliation.caisse.platform.EmailSender
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.platform.remote.FakeGoogleDriveAuthManager
 import com.reconsiliation.caisse.platform.remote.FakeRemoteStorageClient
@@ -30,6 +31,11 @@ class BackupViewModelTest {
     private lateinit var preferencesManager: PreferencesManager
     private lateinit var shareManager: FakeShareManager
     private val testDispatcher = StandardTestDispatcher()
+
+    class FakeEmailSender : EmailSender(TestContext()) {
+        override val isConfigured: Boolean = true
+        override fun send(to: String, subject: String, body: String): Result<Unit> = Result.success(Unit)
+    }
 
     class FakeShareManager : ShareManager(TestContext()) {
         var lastSharedFile: File? = null
@@ -90,7 +96,8 @@ class BackupViewModelTest {
             shareManager = shareManager,
             remoteBackupRepository = remoteBackupRepository,
             authManager = fakeAuthManager,
-            preferencesManager = preferencesManager
+            preferencesManager = preferencesManager,
+            emailSender = FakeEmailSender()
         )
     }
 

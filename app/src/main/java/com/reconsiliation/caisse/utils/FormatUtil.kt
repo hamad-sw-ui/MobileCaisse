@@ -65,7 +65,12 @@ object FormatUtil {
         
         sb.append("Mode: ${vente.paymentMethod}\n")
         sb.append("----------------------------\n")
-        sb.append(boutique.receiptFooter ?: "Merci de votre fidélité ! 🙏")
+        // Pied de page : footer personnalise, sinon e-mail de la boutique (mentions
+        // legales), sinon texte par defaut.
+        val footer = boutique.receiptFooter?.takeIf { it.isNotBlank() }
+            ?: boutique.email?.takeIf { it.isNotBlank() }?.let { "Merci de votre fidélité !\n$it" }
+            ?: "Merci de votre fidélité !"
+        sb.append(footer)
         return sb.toString()
     }
 

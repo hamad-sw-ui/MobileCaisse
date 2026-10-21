@@ -192,6 +192,34 @@ fun SettingsScreen(navController: NavController) {
                             color = MaterialTheme.colorScheme.onSurface
                         )
 
+                        // Liaison boutique <-> compte Google : l'e-mail de la boutique
+                        // identifie les sauvegardes lui appartenant.
+                        val boutiqueEmail = boutique?.email?.trim().orEmpty()
+                        val googleEmail = googleAccountEmail?.trim().orEmpty()
+
+                        Text(
+                            text = stringResource(
+                                R.string.backup_email_boutique,
+                                if (boutiqueEmail.isBlank()) "-" else boutiqueEmail
+                            ),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurface
+                        )
+
+                        if (boutiqueEmail.isBlank()) {
+                            Text(
+                                text = stringResource(R.string.backup_email_missing),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else if (googleEmail.isNotBlank() && !boutiqueEmail.equals(googleEmail, ignoreCase = true)) {
+                            Text(
+                                text = stringResource(R.string.backup_email_mismatch, googleEmail, boutiqueEmail),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = RedError
+                            )
+                        }
+
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()

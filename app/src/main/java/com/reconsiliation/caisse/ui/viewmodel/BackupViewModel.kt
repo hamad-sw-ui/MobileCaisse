@@ -9,6 +9,7 @@ import com.reconsiliation.caisse.data.prefs.PreferencesManager
 import com.reconsiliation.caisse.data.repository.MainRepository
 import com.reconsiliation.caisse.data.repository.RemoteBackupRepository
 import com.reconsiliation.caisse.data.work.RemoteBackupWorker
+import com.reconsiliation.caisse.platform.EmailSender
 import com.reconsiliation.caisse.platform.ShareManager
 import com.reconsiliation.caisse.platform.remote.GoogleDriveAuthManager
 import com.reconsiliation.caisse.platform.remote.RemoteBackupItem
@@ -30,7 +31,8 @@ class BackupViewModel @Inject constructor(
     private val shareManager: ShareManager,
     private val remoteBackupRepository: RemoteBackupRepository,
     private val authManager: GoogleDriveAuthManager,
-    private val preferencesManager: PreferencesManager
+    private val preferencesManager: PreferencesManager,
+    private val emailSender: EmailSender
 ) : AndroidViewModel(application) {
 
     private val _backupState = MutableStateFlow<BackupUiState>(BackupUiState.Idle)
@@ -216,6 +218,44 @@ class BackupViewModel @Inject constructor(
                 tempCloudFile.delete()
             }
         }
+    }
+
+    // ==================== Rapports de clôture par e-mail ====================
+
+    /**
+     * Envoie un rapport de clôture a l'e-mail de la boutique.
+     *
+     * Le resultat est expose via [backupState] (et uniquement lui) : l'UI
+     * affiche ensuite le message localise correspondant dans son Snackbar.
+     *
+     * @param to destinataire (e-mail de la boutique).
+     * @param subject objet du message.
+     * @param body corps du message, deja redige par l'UI.
+     */
+    fun sendClosureReport(to: String, subject: String, body: String) = viewModelScope.launch {
+        if (!emailSender.isConfigured) {
+            _backupState.value = BackupUiState.Error(
+                "Aucun service d'envoi d'e-mail n'est configure sur cet appareil."
+            )
+            return@launch
+        }
+
+        _backupState.value = BackupUiState.Working("Envoi du rapport de cloture en cours...")
+
+        val result = withContext(Dispatchers.IO) {
+            emailSender.send(to, subject, body)
+        }
+
+        result.fold(
+            onSuccess = {
+                _backupState.value = BackupUiState.Success("Rapport de cloture envoye a $to.")
+            },
+            onFailure = { error ->
+                _backupState.value = BackupUiState.Error(
+                    error.message ?: "Erreur inconnue lors de l'envoi du rapport"
+                )
+            }
+        )
     }
 
     // ==================== Export / Import Local ====================
